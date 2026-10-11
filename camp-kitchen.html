@@ -523,6 +523,82 @@ details li{margin-bottom:8px}
     return h;
   }
 
+  function formatChecklistText(onlyUnchecked){
+    if(!list)return '';
+    var lines=[];
+    lines.push('⛺ [캠핑음식 도우미] '+list.dish+' ('+list.people+'명 기준)');
+    if(list.summary||list.reason)lines.push(list.summary||list.reason);
+    lines.push('');
+    ['재료','장비','소모품'].forEach(function(g){
+      var its=list.items.filter(function(x){return x.group===g&&(!onlyUnchecked||!x.checked)});
+      if(!its.length)return;
+      lines.push('■ '+g);
+      its.forEach(function(x){
+        var mark=x.checked?'[✓] ':'[ ] ';
+        var amt=x.amount?' ('+x.amount+')':'';
+        var tag=x.tag&&TAGS[x.tag]?' · '+TAGS[x.tag]:'';
+        var alt=x.alt?' (대체: '+x.alt+')':'';
+        lines.push(mark+x.text+amt+tag+alt);
+      });
+      lines.push('');
+    });
+    if(!onlyUnchecked&&list.prepTips&&list.prepTips.length){
+      lines.push('■ 집에서 미리');
+      list.prepTips.forEach(function(t){lines.push('- '+t)});
+      lines.push('');
+    }
+    if(!onlyUnchecked&&list.steps&&list.steps.length){
+      lines.push('■ 조리 순서');
+      list.steps.forEach(function(t,idx){lines.push((idx+1)+'. '+t)});
+    }
+    return lines.join('\n').trim();
+  }
+
+  function showNotice(msg){
+    ui.notice=msg;
+    render();
+    setTimeout(function(){if(ui.notice===msg){ui.notice='';render()}},2600);
+  }
+
+  async function copyChecklist(onlyUnchecked){
+    var txt=formatChecklistText(onlyUnchecked);
+    if(!txt)return;
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(txt);
+      }else{
+        var ta=document.createElement('textarea');
+        ta.value=txt;
+        ta.style.position='fixed';
+        ta.style.opacity='0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      showNotice(onlyUnchecked?'남은 준비물만 클립보드에 복사했어요!':'전체 준비물 목록을 클립보드에 복사했어요!');
+    }catch(e){
+      showNotice('복사하지 못했어요. 다시 시도해 주세요.');
+    }
+  }
+
+  async function shareChecklist(){
+    var txt=formatChecklistText(false);
+    if(!txt)return;
+    if(navigator.share){
+      try{
+        await navigator.share({
+          title:'[캠핑 준비물] '+list.dish,
+          text:txt
+        });
+        return;
+      }catch(e){
+        if(e&&e.name==='AbortError')return;
+      }
+    }
+    await copyChecklist(false);
+  }
+
   function listView(){
     if(!list)return '<section class="card empty"><h2>아직 준비물이 없어요</h2><p>추천 탭에서 요리를 고르면 여기에 챙길 목록이 만들어져요.</p><button class="btn primary" type="button" data-a="tab" data-v="rec">'+FLAME+'메뉴 추천받기</button></section>';
     var done=list.items.filter(function(x){return x.checked}).length,total=list.items.length,pct=total?Math.round(done/total*100):0;
@@ -530,6 +606,14 @@ details li{margin-bottom:8px}
     if(ui.err)h+='<p class="err" role="alert">'+esc(ui.err)+'</p>';
     h+='<section class="hero dish">'+SCENE+'<p class="brand">'+list.people+'명 기준</p><h2>'+esc(list.dish)+'</h2><p class="sum">'+esc(list.summary||list.reason)+'</p>'+
     '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div></section>';
+    h+='<section class="card"><h2>목록 복사 · 공유</h2>'+
+      '<div class="row2">'+
+        '<button class="btn primary" type="button" data-a="copylist">전체 텍스트 복사</button>'+
+        '<button class="btn" type="button" data-a="copyunchecked">안 챙긴 것만 복사</button>'+
+        '<button class="btn" type="button" data-a="sharelist">공유하기</button>'+
+      '</div>'+
+      (ui.notice?'<p class="banner" role="status" style="margin:12px 0 0;font-weight:700;color:var(--brand)">'+esc(ui.notice)+'</p>':'<p class="hint" style="margin:10px 0 0">카카오톡·메모장에 바로 붙여넣거나 동행에게 공유할 수 있어요.</p>')+
+    '</section>';
     if(list.prepTips.length)h+='<section class="card"><h2>집에서 미리</h2><ul class="plain">'+list.prepTips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul></section>';
     ['재료','장비','소모품'].forEach(function(g){
       var its=list.items.filter(function(x){return x.group===g});
@@ -608,6 +692,9 @@ details li{margin-bottom:8px}
     }
     if(a==='clear'){ui.confirmClear=true;render();return}
     if(a==='clear2'){list=null;store.set('cc.list',null);ui.confirmClear=false;render();return}
+    if(a==='copylist'){copyChecklist(false);return}
+    if(a==='copyunchecked'){copyChecklist(true);return}
+    if(a==='sharelist'){shareChecklist();return}
     if(a==='pdec'){profile.people=clampPeople(profile.people-1);ui.people=profile.people;saveProfile();render();return}
     if(a==='pinc'){profile.people=clampPeople(profile.people+1);ui.people=profile.people;saveProfile();render();return}
     if(a==='gear'){
