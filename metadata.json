@@ -1,0 +1,8 @@
+{
+  "name": "캠핑음식 도우미",
+  "description": "장비와 인원만 고르면 메뉴 추천부터 준비물 체크리스트까지 정리해 주는 캠핑 요리 도우미 웹앱",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
