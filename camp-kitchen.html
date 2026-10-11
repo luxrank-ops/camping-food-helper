@@ -64,12 +64,14 @@ button{font-family:var(--font-body)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{appearance:none;border:1.5px solid transparent;background:var(--chip);color:var(--fg);font:500 14px/1 var(--font-body);min-height:44px;padding:0 16px;border-radius:999px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-fg);font-weight:700}
+.chip.sm{min-height:36px;padding:0 12px;font-size:13px}
 .chip.x::after{content:" ×";opacity:.7}
 .step{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border-radius:999px;padding:4px}
 .step button{appearance:none;border:0;background:var(--surface);color:var(--fg);width:44px;height:44px;border-radius:50%;font:700 22px/1 var(--font-body);cursor:pointer;box-shadow:var(--shadow)}
 .step output{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;font-weight:900;font-size:17px}
 .btn{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font:700 15px/1 var(--font-body);min-height:52px;padding:0 20px;border-radius:18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-fg);box-shadow:var(--shadow)}
+.btn.pop{background:var(--pop);border-color:var(--pop);color:var(--pop-fg);box-shadow:var(--shadow)}
 .btn.big{min-height:58px;font-size:16px;border-radius:20px}
 .btn.wide{width:100%}
 .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
@@ -106,6 +108,8 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .dish{padding-bottom:20px}
 .dish h2{font-family:var(--font-display);font-weight:400;font-size:32px;line-height:1.15;margin:30px 0 8px;letter-spacing:.01em;overflow-wrap:anywhere}
 .dish .sum{margin:0;opacity:.9;max-width:26em}
+.dish-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.dish-pill{font-size:12px;font-weight:700;background:rgba(255,255,255,.18);color:var(--hero-fg);padding:4px 10px;border-radius:999px}
 .prog{display:flex;align-items:center;gap:12px;margin-top:20px;font-size:14px;font-variant-numeric:tabular-nums}
 .prog b{font-size:20px;font-weight:900;color:var(--pop)}
 .track{flex:1;height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
@@ -146,6 +150,23 @@ details li{margin-bottom:8px}
 .row2 .btn{flex:1 1 140px}
 .recent{margin:0;padding-left:20px;font-size:14px}
 
+/* 현장 조리 모드 */
+.cook-box{background:var(--hero-bg);color:var(--hero-fg);border-radius:24px;padding:22px 20px;margin-bottom:14px;box-shadow:var(--shadow-up)}
+.cook-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+.cook-badge{font-size:12px;font-weight:900;background:var(--pop);color:var(--pop-fg);padding:4px 10px;border-radius:999px}
+.cook-step-txt{font-size:22px;font-weight:700;line-height:1.45;margin:14px 0 20px;word-break:keep-all}
+.timer-bar{background:rgba(0,0,0,.22);border-radius:18px;padding:14px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px}
+.timer-display{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.timer-clock{font-family:var(--font-display);font-size:36px;color:var(--pop);font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.pairing-box{background:var(--bg);border-radius:16px;padding:12px 14px;margin-top:10px;font-size:14px}
+
+/* 요리 일지 별점 */
+.stars{display:inline-flex;gap:4px}
+.star-btn{appearance:none;border:0;background:var(--chip);color:var(--muted);width:40px;height:40px;border-radius:12px;font-size:20px;cursor:pointer}
+.star-btn.on{background:var(--pop);color:var(--pop-fg)}
+.log-item{border-top:1px solid var(--line);padding:12px 0;display:grid;gap:4px}
+.log-item:first-child{border-top:0;padding-top:0}
+
 /* 하단 알약 탭바 */
 .tabs{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .pill{pointer-events:auto;max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px;box-shadow:var(--shadow-up)}
@@ -170,6 +191,13 @@ details li{margin-bottom:8px}
   var GEAR=['버너','그리들','숯·화로대','코펠','프라이팬','그릴망','더치오븐','스킬렛','토치','쿨러(보냉)'];
   var PEOPLE_PRESETS=[1,2,3,4,6];
   var TAGS={prep:'미리 손질',pack:'챙기기',buy:'현장 구입'};
+  var FILTER_TABS=[
+    {k:'all',label:'전체'},
+    {k:'prep',label:'집에서 손질'},
+    {k:'pack',label:'그대로 챙김'},
+    {k:'buy',label:'현장 구입'},
+    {k:'unchecked',label:'안 챙긴 것만'}
+  ];
   var FLAME='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4.5 5.5 6.5 5.5 12a5.5 5.5 0 0 1-11 0c0-2.2 1-3.4 2.2-4.6 0 2 1 3.2 2.2 3.2C10.5 8 10.5 5.5 12 2z"/></svg>';
   var SCENE='<svg class="scene" viewBox="0 0 200 110" aria-hidden="true"><path d="M0 110L52 36l40 74z" fill="rgba(255,255,255,.08)"/><path d="M60 110L128 14l72 96z" fill="rgba(255,255,255,.13)"/><path d="M112 110l30-52 30 52z" fill="#FFC531"/><path d="M142 82l-12 28h24z" fill="rgba(18,73,58,.9)"/><path d="M40 110c-9-11-6-19 0-28 2 7 8 10 8 18 0 5-3 8-8 10z" fill="#FF7A45"/></svg>';
 
@@ -186,8 +214,15 @@ details li{margin-bottom:8px}
   var profile=store.get('cc.profile',null)||{gear:['버너','그리들','숯·화로대','코펠'],avoid:[],people:2,sample:true};
   var list=store.get('cc.list',null);
   var recent=store.get('cc.recent',[]);
-  var ui={tab:'rec',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',recs:[],seen:[],busy:null,busyName:'',err:'',confirmClear:false,aiOk:null,dishText:''};
-  var sampleFn=null, ctl=null;
+  var logs=store.get('cc.logs',[]);
+
+  var ui={
+    tab:'rec',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
+    recs:[],seen:[],busy:null,busyName:'',err:'',confirmClear:false,aiOk:null,dishText:'',
+    filter:'all',cookMode:false,cookStep:0,timerSec:180,timerRunning:false,wakeLockOn:false,
+    modText:'',logStars:5,logNote:''
+  };
+  var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
 
   function saveProfile(){profile.sample=false;store.set('cc.profile',profile)}
 
@@ -195,7 +230,7 @@ details li{margin-bottom:8px}
     not_granted:'Claude 사용을 허용하지 않으면 추천을 만들 수 없어요. 페이지를 다시 열어 허용해 주세요.',
     sampling_disabled:'이 계정에서는 Claude를 사용할 수 없어요.',
     not_declared:'이 페이지는 Claude 사용이 꺼져 있어요.',
-    capability_disabled:'이 화면에서는 Claude를 쓸 수 없어요.',
+    capability_disabled:'이 화면에서는 AI 연결 대신 내장 맞춤 레시피로 안내해 드려요.',
     rate_limited:'사용량 한도에 닿았어요. 잠시 뒤에 다시 눌러 주세요.',
     session_expired:'로그인이 만료됐어요. 다시 로그인한 뒤 열어 주세요.',
     invalid_json:'답을 읽지 못했어요. 한 번 더 눌러 주세요.',
@@ -207,17 +242,21 @@ details li{margin-bottom:8px}
 
   function gearText(){return profile.gear.length?profile.gear.join(', '):'없음 (휴대용 버너와 코펠만 있다고 가정)'}
   function avoidText(){return profile.avoid.length?profile.avoid.join(', '):'없음'}
+  function likedDishesText(){
+    var favs=logs.filter(function(l){return l.stars>=4}).map(function(l){return l.dish});
+    return favs.length?favs.slice(0,5).join(', '):'없음';
+  }
 
   var CAMP_RECIPES=[
-    {name:'그리들 통삼겹 구이 & 구운 김치',minutes:25,level:'쉬움',equipment:['버너','그리들'],moods:['든든하게','술안주'],meals:['점심','저녁'],base:[{n:'통삼겹살',q:200,u:'g'},{n:'배추김치',q:80,u:'g'},{n:'양파·마늘',q:50,u:'g'}],reason:'그리들 중앙에서 삼겹살 기름에 김치와 마늘을 함께 구워 먹는 캠핑 대표 요리예요.'},
-    {name:'숯불 돈마호크 바비큐',minutes:35,level:'보통',equipment:['숯·화로대','그릴망'],moods:['든든하게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'돈마호크',q:250,u:'g'},{n:'아스파라거스·방울토마토',q:60,u:'g'},{n:'허브솔트',q:5,u:'g'}],reason:'숯불과 그릴망의 은은한 훈연 향으로 캠핑장 저녁 분위기를 살려 주는 메인 요리예요.'},
-    {name:'코펠 얼큰 어묵탕 & 우동',minutes:15,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','술안주'],meals:['저녁','불멍 안주'],base:[{n:'종합 어묵',q:150,u:'g'},{n:'우동 사리',q:0.5,u:'개'},{n:'대파·청양고추',q:30,u:'g'}],reason:'코펠 하나로 쌀쌀한 저녁 바람에 빠르게 끓여 나눠 먹기 좋은 따끈한 국물 요리예요.'},
-    {name:'스킬렛 감바스 알 아히요',minutes:15,level:'쉬움',equipment:['버너','스킬렛','프라이팬'],moods:['가볍게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'칵테일 새우',q:100,u:'g'},{n:'올리브유',q:70,u:'ml'},{n:'통마늘·바게트',q:60,u:'g'}],reason:'프라이팬이나 스킬렛에 마늘과 새우만 넣으면 15분 만에 완성되는 감성 안주예요.'},
-    {name:'더치오븐 무수분 토마토 비프 스튜',minutes:50,level:'보통',equipment:['버너','더치오븐','코펠'],moods:['든든하게','국물 요리'],meals:['저녁'],base:[{n:'소고기 척아이롤',q:180,u:'g'},{n:'완숙 토마토·양파',q:150,u:'g'},{n:'감자·당근',q:80,u:'g'}],reason:'채소 수분만으로 푹 끓여내어 깊은 감칠맛을 내는 캠핑 별미 스튜예요.'},
-    {name:'그리들 차돌박이 숙주볶음',minutes:15,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['가볍게','술안주'],meals:['점심','저녁','불멍 안주'],base:[{n:'차돌박이',q:150,u:'g'},{n:'숙주나물',q:120,u:'g'},{n:'굴소스·다진마늘',q:1,u:'큰술'}],reason:'넓은 그리들이나 팬에 숨만 죽여 빠르게 볶아내는 실패 없는 안주 겸 반찬이에요.'},
-    {name:'코펠 캠핑 부대찌개',minutes:20,level:'쉬움',equipment:['버너','코펠'],moods:['든든하게','국물 요리'],meals:['아침','점심','저녁'],base:[{n:'모둠 햄·소시지',q:150,u:'g'},{n:'신김치·베이크드빈스',q:80,u:'g'},{n:'라면 사리',q:0.5,u:'개'}],reason:'인원수에 맞춰 재료만 넣고 끓이면 호불호 없이 든든하게 즐길 수 있어요.'},
-    {name:'숯불 닭꼬치 & 대파구이',minutes:25,level:'쉬움',equipment:['숯·화로대','토치'],moods:['가볍게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'생닭다리살 꼬치',q:3,u:'꼬치'},{n:'대파',q:0.5,u:'대'},{n:'데리야끼·매운소스',q:2,u:'큰술'}],reason:'불멍하며 숯불 위에 노릇하게 구워 하나씩 집어 먹기 좋은 최고의 안주예요.'},
-    {name:'그리들 김치말이 삼겹 볶음밥 & 계란프라이',minutes:20,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['든든하게','가볍게'],meals:['아침','점심'],base:[{n:'대패삼겹살',q:120,u:'g'},{n:'신김치·즉석밥',q:1,u:'공기'},{n:'달걀·모짜렐라치즈',q:1,u:'개'}],reason:'아침이나 점심에 설거지 걱정 없이 한 판에 든든하게 볶아 먹기 좋아요.'}
+    {name:'그리들 통삼겹 구이 & 구운 김치',minutes:25,level:'쉬움',equipment:['버너','그리들'],moods:['든든하게','술안주'],meals:['점심','저녁'],base:[{n:'통삼겹살',q:200,u:'g'},{n:'배추김치',q:80,u:'g'},{n:'양파·마늘',q:50,u:'g'}],pairing:'시원한 라거 캔맥주 또는 소주 · 그리들 중앙 중불 예열 후 고기 기름에 김치를 구우세요.',reason:'그리들 중앙에서 삼겹살 기름에 김치와 마늘을 함께 구워 먹는 캠핑 대표 요리예요.'},
+    {name:'숯불 돈마호크 바비큐',minutes:35,level:'보통',equipment:['숯·화로대','그릴망'],moods:['든든하게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'돈마호크',q:250,u:'g'},{n:'아스파라거스·방울토마토',q:60,u:'g'},{n:'허브솔트',q:5,u:'g'}],pairing:'위스키 하이볼 또는 레드 와인 · 숯에 하얗게 재가 앉은 뒤 직화와 간접열로 나눠 구우세요.',reason:'숯불과 그릴망의 은은한 훈연 향으로 캠핑장 저녁 분위기를 살려 주는 메인 요리예요.'},
+    {name:'코펠 얼큰 어묵탕 & 우동',minutes:15,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','술안주'],meals:['저녁','불멍 안주'],base:[{n:'종합 어묵',q:150,u:'g'},{n:'우동 사리',q:0.5,u:'개'},{n:'대파·청양고추',q:30,u:'g'}],pairing:'소주 또는 따뜻한 사케 · 강불에서 육수를 먼저 우려낸 뒤 약불로 줄여 온기를 유지하세요.',reason:'코펠 하나로 쌀쌀한 저녁 바람에 빠르게 끓여 나눠 먹기 좋은 따끈한 국물 요리예요.'},
+    {name:'스킬렛 감바스 알 아히요',minutes:15,level:'쉬움',equipment:['버너','스킬렛','프라이팬'],moods:['가볍게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'칵테일 새우',q:100,u:'g'},{n:'올리브유',q:70,u:'ml'},{n:'통마늘·바게트',q:60,u:'g'}],pairing:'화이트 와인 또는 레몬 하이볼 · 올리브유가 타지 않도록 약불에서 마늘 향을 먼저 내세요.',reason:'프라이팬이나 스킬렛에 마늘과 새우만 넣으면 15분 만에 완성되는 감성 안주예요.'},
+    {name:'더치오븐 무수분 토마토 비프 스튜',minutes:50,level:'보통',equipment:['버너','더치오븐','코펠'],moods:['든든하게','국물 요리'],meals:['저녁'],base:[{n:'소고기 척아이롤',q:180,u:'g'},{n:'완숙 토마토·양파',q:150,u:'g'},{n:'감자·당근',q:80,u:'g'}],pairing:'묵직한 레드 와인 또는 에일 맥주 · 뚜껑을 닫고 약불에서 35분 이상 뭉근하게 끓이세요.',reason:'채소 수분만으로 푹 끓여내어 깊은 감칠맛을 내는 캠핑 별미 스튜예요.'},
+    {name:'그리들 차돌박이 숙주볶음',minutes:15,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['가볍게','술안주'],meals:['점심','저녁','불멍 안주'],base:[{n:'차돌박이',q:150,u:'g'},{n:'숙주나물',q:120,u:'g'},{n:'굴소스·다진마늘',q:1,u:'큰술'}],pairing:'시원한 생맥주·캔맥주 · 강불에서 차돌박이를 먼저 볶다가 숙주를 넣고 2분만 빠르게 볶으세요.',reason:'넓은 그리들이나 팬에 숨만 죽여 빠르게 볶아내는 실패 없는 안주 겸 반찬이에요.'},
+    {name:'코펠 캠핑 부대찌개',minutes:20,level:'쉬움',equipment:['버너','코펠'],moods:['든든하게','국물 요리'],meals:['아침','점심','저녁'],base:[{n:'모둠 햄·소시지',q:150,u:'g'},{n:'신김치·베이크드빈스',q:80,u:'g'},{n:'라면 사리',q:0.5,u:'개'}],pairing:'소주·맥주 또는 아침 해장용 보리차 · 중강불에서 10분 끓인 뒤 라면 사리는 마지막 3분에 넣으세요.',reason:'인원수에 맞춰 재료만 넣고 끓이면 호불호 없이 든든하게 즐길 수 있어요.'},
+    {name:'숯불 닭꼬치 & 대파구이',minutes:25,level:'쉬움',equipment:['숯·화로대','토치'],moods:['가볍게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'생닭다리살 꼬치',q:3,u:'꼬치'},{n:'대파',q:0.5,u:'대'},{n:'데리야끼·매운소스',q:2,u:'큰술'}],pairing:'생강 하이볼 또는 청량한 라거 · 소스는 고기가 80% 익은 뒤 발라야 타지 않아요.',reason:'불멍하며 숯불 위에 노릇하게 구워 하나씩 집어 먹기 좋은 최고의 안주예요.'},
+    {name:'그리들 김치말이 삼겹 볶음밥 & 계란프라이',minutes:20,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['든든하게','가볍게'],meals:['아침','점심'],base:[{n:'대패삼겹살',q:120,u:'g'},{n:'신김치·즉석밥',q:1,u:'공기'},{n:'달걀·모짜렐라치즈',q:1,u:'개'}],pairing:'아이스 커피 또는 시원한 탄산수 · 중불에서 밥을 펴서 2분간 눌러 누룽지를 만드세요.',reason:'아침이나 점심에 설거지 걱정 없이 한 판에 든든하게 볶아 먹기 좋아요.'}
   ];
 
   function formatScaledIngredients(baseArr,people){
@@ -230,6 +269,7 @@ details li{margin-bottom:8px}
 
   function matchLocalRecs(people,userGear,meal,mood,avoidArr,excludeNames){
     var gSet=userGear.length?userGear:['버너','코펠'];
+    var favNames=logs.filter(function(l){return l.stars>=4}).map(function(l){return l.dish});
     var scored=CAMP_RECIPES.filter(function(r){
       if(excludeNames&&excludeNames.indexOf(r.name)>=0)return false;
       var fullText=r.name+' '+r.base.map(function(b){return b.n}).join(' ');
@@ -243,6 +283,7 @@ details li{margin-bottom:8px}
       if(matchedGear.length===r.equipment.length)score+=20;
       if(r.meals.indexOf(meal)>=0)score+=10;
       if(r.moods.indexOf(mood)>=0)score+=10;
+      if(favNames.indexOf(r.name)>=0)score+=12;
       if(people>=4&&(r.name.indexOf('찌개')>=0||r.name.indexOf('삼겹')>=0||r.name.indexOf('바비큐')>=0))score+=8;
       if(people===1&&(r.minutes<=20))score+=8;
       var activeEquip=matchedGear.length?matchedGear:r.equipment.slice(0,2);
@@ -274,6 +315,7 @@ details li{margin-bottom:8px}
     '- 원하는 분위기: '+ui.mood+'\n'+
     '- 가진 조리 장비: '+gearText()+'\n'+
     '- 못 먹는 재료 (어떤 요리에도 넣지 말 것): '+avoidText()+'\n'+
+    '- 높게 평가했던 요리 스타일 참고: '+likedDishesText()+'\n'+
     '- 최근에 만든 요리 (피할 것): '+(recent.slice(0,5).join(', ')||'없음')+'\n'+
     '- 이미 추천해서 다시 보여주지 않을 요리: '+(ui.seen.slice(-9).join(', ')||'없음')+'\n\n'+
     '규칙\n'+
@@ -301,12 +343,28 @@ details li{margin-bottom:8px}
     '- equipment는 가진 장비를 우선하고, 없는 장비가 필요하면 alt에 가진 장비로 대신하는 방법을 쓰세요.\n'+
     '- supplies는 호일, 물티슈 같은 소모품입니다.\n'+
     '- prep_tips는 집에서 미리 해 두면 현장이 쉬워지는 방법으로 최대 3개입니다.\n'+
-    '- steps는 현장 조리 순서로 최대 6단계, 한 단계에 한 문장입니다. 고기, 달걀, 해산물이 들어가면 속까지 충분히 익히라는 단계를 넣으세요.\n'+
+    '- steps는 현장 조리 순서로 최대 6단계, 한 단계에 한 문장입니다. 조리 시간(예: 5분, 10분)을 자연스럽게 포함하고, 고기·달걀·해산물이 들어가면 속까지 충분히 익히라는 단계를 넣으세요.\n'+
+    '- pairing은 어울리는 주류/음료와 화력·예열 팁 한 줄입니다.\n'+
     '- tips는 캠핑 꿀팁으로 최대 2개입니다.\n'+
-    '- 요리 이름은 사용자가 직접 정했을 수 있습니다. 이름 그대로 만들고, 캠핑에서 만들기 어렵다면 캠핑용으로 간단히 바꾼 방법을 안내하세요.\n'+
-    '- 온도와 시간은 확실한 것만 쓰고, 확신이 없으면 숫자를 쓰지 마세요.\n\n'+
+    '- 요리 이름은 사용자가 직접 정했을 수 있습니다. 이름 그대로 만들고, 캠핑에서 만들기 어렵다면 캠핑용으로 간단히 바꾼 방법을 안내하세요.\n\n'+
     'JSON 객체만 출력하세요. 예:\n'+
-    '{"summary":"요리 한 줄 소개","ingredients":[{"name":"재료","amount":"300g","when":"prep","alt":"대체 재료"}],"equipment":[{"name":"장비","alt":""}],"supplies":["호일"],"prep_tips":["집에서 할 일"],"steps":["조리 단계"],"tips":["꿀팁"]}';
+    '{"summary":"요리 한 줄 소개","pairing":"어울리는 주류와 화력 팁","ingredients":[{"name":"재료","amount":"300g","when":"prep","alt":"대체 재료"}],"equipment":[{"name":"장비","alt":""}],"supplies":["호일"],"prep_tips":["집에서 할 일"],"steps":["조리 단계"],"tips":["꿀팁"]}';
+  }
+
+  function modifyPrompt(curList,reqText){
+    var ingDesc=curList.items.filter(function(x){return x.group==='재료'}).map(function(x){
+      return x.text+'('+x.amount+', '+x.tag+')';
+    }).join(', ');
+    var eqDesc=curList.items.filter(function(x){return x.group==='장비'}).map(function(x){return x.text}).join(', ');
+    return '당신은 한국 캠핑 요리 도우미입니다. 사용자의 요청에 맞춰 현재 준비물과 조리 순서를 수정하세요.\n\n'+
+    '현재 요리: '+curList.dish+' ('+curList.people+'명 기준)\n'+
+    '현재 재료: '+ingDesc+'\n'+
+    '현재 장비: '+eqDesc+'\n'+
+    '현재 조리 순서: '+(curList.steps||[]).join(' / ')+'\n'+
+    '못 먹는 재료: '+avoidText()+'\n'+
+    '사용자 수정 요청: "'+reqText+'"\n\n'+
+    'JSON 객체만 출력하세요. 예:\n'+
+    '{"people":'+curList.people+',"summary":"수정된 한 줄 요약","ingredients":[{"name":"재료","amount":"300g","when":"prep","alt":"대체 재료"}],"equipment":[{"name":"장비","alt":""}],"supplies":["호일"],"prep_tips":["집에서 할 일"],"steps":["조리 단계"],"tips":["꿀팁"]}';
   }
 
   async function getRecs(more){
@@ -368,9 +426,10 @@ details li{margin-bottom:8px}
       });
     }else{
       items.push({id:'i'+(n++),group:'재료',text:rec.name+' 주재료',amount:people+'인분',alt:'',tag:'prep',checked:false});
-      items.push({id:'i'+(n++),group:'재료',text:'양파·대파·마늘',amount:(people*50)+'g',alt:'',tag:'prep',checked:false});
+      items.push({id:'i'+(n++),group:'재료',text:'양파·대파·마늘',amount:(people*50)+'g',alt:'쪽파',tag:'prep',checked:false});
     }
     items.push({id:'i'+(n++),group:'재료',text:'소금·후추·식용유',amount:'적당량',alt:'허브솔트',tag:'pack',checked:false});
+    items.push({id:'i'+(n++),group:'재료',text:'생수·얼음·쌈채소',amount:people+'인분',alt:'',tag:'buy',checked:false});
     var eqList=(rec.equipment&&rec.equipment.length)?rec.equipment:(userGear.length?userGear.slice(0,2):['버너','코펠']);
     eqList.forEach(function(eq){
       items.push({id:'i'+(n++),group:'장비',text:eq,amount:'',alt:'',tag:'',checked:false});
@@ -380,18 +439,20 @@ details li{margin-bottom:8px}
     });
     return {
       dish:rec.name,
+      dishes:[rec.name],
       reason:rec.reason||('보유 장비('+eqList.join(', ')+')로 만드는 캠핑 요리'),
       people:people,
       summary:people+'명 기준 · '+eqList.join(', ')+' 활용 캠핑 레시피',
+      pairing:(found&&found.pairing)||'시원한 캔맥주 또는 하이볼 · 중불에서 예열 후 조리하세요.',
       items:items,
       prepTips:[
         '채소와 고기는 집에서 한입 크기로 손질해 지퍼백이나 밀폐용기에 담아 오면 현장에서 쓰레기가 줄어요.',
         '양념장이나 소스는 작은 공병에 미리 합쳐 담아 오세요.'
       ],
       steps:[
-        '화기와 조리 도구('+eqList.join(', ')+')를 평평하고 바람이 덜 타는 야외 테이블에 설치합니다.',
-        '예열된 조리 도구에 주재료를 올리고 중불에서 타지 않게 익혀 주세요.',
-        '고기·해산물 등 주재료는 속까지 완전히 익었는지 확인한 뒤 채소와 함께 곁들여 완성합니다.'
+        '화기와 조리 도구('+eqList.join(', ')+')를 평평하고 바람이 덜 타는 야외 테이블에 설치하고 3분간 예열합니다.',
+        '예열된 조리 도구에 주재료를 올리고 중불에서 10분간 타지 않게 익혀 주세요.',
+        '고기·해산물 등 주재료는 속까지 완전히 익었는지 확인한 뒤 채소와 함께 5분간 더 볶아 완성합니다.'
       ],
       tips:[
         '야외에서는 바람 때문에 화력이 약해질 수 있으니 방풍판을 함께 사용하면 조리 시간이 줄어들어요.'
@@ -399,14 +460,81 @@ details li{margin-bottom:8px}
     };
   }
 
-  async function pickDish(rec){
+  function sumAmounts(a1,a2){
+    if(!a1)return a2||'';
+    if(!a2)return a1||'';
+    if(a1===a2&&a1==='적당량')return '적당량';
+    var m1=String(a1).match(/^([0-9.]+)\s*(.*)$/);
+    var m2=String(a2).match(/^([0-9.]+)\s*(.*)$/);
+    if(m1&&m2&&m1[2]===m2[2]){
+      var sum=Math.round((Number(m1[1])+Number(m2[1]))*10)/10;
+      return sum+m1[2];
+    }
+    return a1+' + '+a2;
+  }
+
+  function mergePrepLists(cur,incoming){
+    if(!cur)return incoming;
+    var dishes=(cur.dishes&&cur.dishes.length?cur.dishes.slice():[cur.dish]);
+    var incDishes=(incoming.dishes&&incoming.dishes.length?incoming.dishes:[incoming.dish]);
+    incDishes.forEach(function(d){if(dishes.indexOf(d)<0)dishes.push(d)});
+
+    var mergedItems=cur.items.map(function(x){return Object.assign({},x)});
+    var maxId=mergedItems.length;
+    incoming.items.forEach(function(item){
+      var existing=null;
+      for(var i=0;i<mergedItems.length;i++){
+        if(mergedItems[i].group===item.group&&mergedItems[i].text===item.text){
+          existing=mergedItems[i];break;
+        }
+      }
+      if(existing){
+        if(item.group==='재료'){
+          existing.amount=sumAmounts(existing.amount,item.amount);
+        }
+      }else{
+        var copyItem=Object.assign({},item,{id:'i'+(maxId++)});
+        mergedItems.push(copyItem);
+      }
+    });
+
+    var prepTips=(cur.prepTips||[]).slice();
+    (incoming.prepTips||[]).forEach(function(t){if(prepTips.indexOf(t)<0)prepTips.push(t)});
+
+    var steps=(cur.steps||[]).slice();
+    (incoming.steps||[]).forEach(function(s){
+      var labeled='['+incoming.dish+'] '+s;
+      if(steps.indexOf(s)<0&&steps.indexOf(labeled)<0)steps.push(labeled);
+    });
+
+    var tips=(cur.tips||[]).slice();
+    (incoming.tips||[]).forEach(function(t){if(tips.indexOf(t)<0)tips.push(t)});
+
+    return {
+      dish:dishes.join(' + '),
+      dishes:dishes,
+      reason:dishes.length+'가지 캠핑 코스 요리 합산 준비물',
+      people:incoming.people||cur.people,
+      summary:dishes.length+'가지 메뉴 통합 체크리스트 ('+(incoming.people||cur.people)+'명 기준)',
+      pairing:[cur.pairing,incoming.pairing].filter(Boolean).join(' / '),
+      items:mergedItems,
+      prepTips:prepTips.slice(0,5),
+      steps:steps.slice(0,12),
+      tips:tips.slice(0,4)
+    };
+  }
+
+  async function pickDish(rec,mergeMode){
     if(!rec||ui.busy)return;
     if(!sampleFn){
-      list=buildLocalPrepList(rec,ui.people,profile.gear);
+      var nextList=buildLocalPrepList(rec,ui.people,profile.gear);
+      list=mergeMode&&list?mergePrepLists(list,nextList):nextList;
       store.set('cc.list',list);
       recent=[rec.name].concat(recent.filter(function(r){return r!==rec.name})).slice(0,8);
       store.set('cc.recent',recent);
-      ui.tab='list';ui.confirmClear=false;ui.dishText='';window.scrollTo(0,0);render();
+      ui.tab='list';ui.confirmClear=false;ui.dishText='';ui.cookStep=0;window.scrollTo(0,0);
+      if(mergeMode)showNotice('「'+rec.name+'」 준비물을 기존 목록에 합산했어요!');
+      else render();
       return;
     }
     ctl=new AbortController();
@@ -427,20 +555,228 @@ details li{margin-bottom:8px}
         items.push({id:'i'+(n++),group:'소모품',text:o.name,amount:'',alt:'',tag:'',checked:false});
       });
       if(!items.length)throw {code:'invalid_json'};
-      list={dish:rec.name,reason:rec.reason,people:ui.people,summary:str(d.summary),items:items,prepTips:strs(d.prep_tips,3),steps:strs(d.steps,6),tips:strs(d.tips,2)};
+      var built={
+        dish:rec.name,
+        dishes:[rec.name],
+        reason:rec.reason,
+        people:ui.people,
+        summary:str(d.summary),
+        pairing:str(d.pairing)||'시원한 맥주·하이볼과 잘 어울려요.',
+        items:items,
+        prepTips:strs(d.prep_tips,3),
+        steps:strs(d.steps,6),
+        tips:strs(d.tips,2)
+      };
+      list=mergeMode&&list?mergePrepLists(list,built):built;
       store.set('cc.list',list);
       recent=[rec.name].concat(recent.filter(function(r){return r!==rec.name})).slice(0,8);
       store.set('cc.recent',recent);
-      ui.tab='list';ui.confirmClear=false;ui.dishText='';window.scrollTo(0,0);
+      ui.tab='list';ui.confirmClear=false;ui.dishText='';ui.cookStep=0;window.scrollTo(0,0);
+      if(mergeMode)showNotice('「'+rec.name+'」 준비물을 기존 목록에 합산했어요!');
     }catch(e){
       if(!e||e.code!=='cancelled'){
-        list=buildLocalPrepList(rec,ui.people,profile.gear);
+        var fallbackList=buildLocalPrepList(rec,ui.people,profile.gear);
+        list=mergeMode&&list?mergePrepLists(list,fallbackList):fallbackList;
         store.set('cc.list',list);
         recent=[rec.name].concat(recent.filter(function(r){return r!==rec.name})).slice(0,8);
         store.set('cc.recent',recent);
-        ui.tab='list';ui.confirmClear=false;ui.dishText='';window.scrollTo(0,0);
+        ui.tab='list';ui.confirmClear=false;ui.dishText='';ui.cookStep=0;window.scrollTo(0,0);
+        if(mergeMode)showNotice('「'+rec.name+'」 준비물을 기존 목록에 합산했어요!');
       }
     }finally{ui.busy=null;ctl=null;render()}
+  }
+
+  function applyLocalModify(curList,text){
+    if(!curList)return;
+    var t=str(text);
+    if(!t)return;
+    var oldP=curList.people||2;
+    var pMatch=t.match(/(\d+)\s*명/);
+    if(t.indexOf('한 명 늘')>=0||t.indexOf('+1명')>=0||t.indexOf('1명 추가')>=0){
+      pMatch=[null,String(oldP+1)];
+    }else if(t.indexOf('한 명 줄')>=0||t.indexOf('-1명')>=0){
+      pMatch=[null,String(Math.max(1,oldP-1))];
+    }
+    if(pMatch){
+      var newP=clampPeople(Number(pMatch[1])||oldP);
+      var ratio=newP/oldP;
+      curList.people=newP;
+      ui.people=newP;
+      curList.items.forEach(function(item){
+        if(item.group==='재료'&&item.amount){
+          item.amount=String(item.amount).replace(/([0-9.]+)/g,function(num){
+            return String(Math.round(Number(num)*ratio*10)/10);
+          });
+        }
+      });
+      curList.summary=newP+'명 기준으로 수량을 조정한 준비물이에요.';
+      showNotice(newP+'명 기준으로 재료 수량을 즉시 변경했어요!');
+      return;
+    }
+
+    var repMatch=t.match(/(.+?)\s*(?:대신|빼고)\s*(.+?)(?:으로|로)?\s*(?:바꿔|변경|대체)?$/);
+    if(repMatch){
+      var fromWord=str(repMatch[1]);
+      var toWord=str(repMatch[2]).replace(/(으로|로|바꿔줘|바꿔|변경|추가)$/,'').trim();
+      var changed=false;
+      curList.items.forEach(function(item){
+        if(item.text.indexOf(fromWord)>=0){
+          item.text=item.text.replace(fromWord,toWord);
+          changed=true;
+        }
+      });
+      if(!changed){
+        curList.items.unshift({id:'i'+Date.now(),group:'재료',text:toWord,amount:curList.people+'인분',alt:fromWord+' 대체',tag:'pack',checked:false});
+      }
+      showNotice('「'+fromWord+'」 대신 「'+toWord+'」(으)로 준비물을 수정했어요!');
+      return;
+    }
+
+    if(t.indexOf('집에서 다 손질')>=0||t.indexOf('미리 손질')>=0){
+      curList.items.forEach(function(item){if(item.group==='재료')item.tag='prep'});
+      showNotice('모든 재료를 [집에서 미리 손질]로 변경했어요!');
+      return;
+    }
+
+    if(t.indexOf('매운')>=0||t.indexOf('아이')>=0||t.indexOf('순한')>=0){
+      curList.items=curList.items.filter(function(item){return item.text.indexOf('청양고추')<0&&item.text.indexOf('매운')<0});
+      curList.tips=(curList.tips||[]).concat(['아이와 함께 먹을 수 있도록 매운 고추·향신료는 빼거나 따로 곁들이세요.']);
+      showNotice('매운 재료를 빼고 순한 맛 기준으로 조정했어요!');
+      return;
+    }
+
+    if(t.indexOf('빼줘')>=0||t.indexOf('제외')>=0||t.indexOf('없어')>=0){
+      var target=t.replace(/(빼줘|제외해줘|제외|없어|요|음)$/g,'').trim();
+      var beforeLen=curList.items.length;
+      curList.items=curList.items.filter(function(x){return x.text.indexOf(target)<0});
+      if(curList.items.length<beforeLen){
+        showNotice('「'+target+'」 항목을 목록에서 뺐어요!');
+        return;
+      }
+    }
+
+    var cleanAdd=t.replace(/(추가해줘|추가|넣어줘|도 챙겨줘)$/,'').trim();
+    curList.items.unshift({
+      id:'i'+Date.now(),
+      group:'재료',
+      text:cleanAdd,
+      amount:curList.people+'인분',
+      alt:'',
+      tag:'pack',
+      checked:false
+    });
+    showNotice('「'+cleanAdd+'」 항목을 준비물에 반영했어요!');
+  }
+
+  async function modifyChecklist(reqText){
+    if(!list||ui.busy)return;
+    var clean=str(reqText);
+    if(!clean)return;
+    if(!sampleFn){
+      applyLocalModify(list,clean);
+      store.set('cc.list',list);
+      ui.modText='';
+      render();
+      return;
+    }
+    ctl=new AbortController();
+    ui.busy='mod';ui.err='';render();
+    try{
+      var d=await sampleFn.json(modifyPrompt(list,clean),{signal:ctl.signal,cache:false});
+      var items=[],n=0;
+      (Array.isArray(d&&d.ingredients)?d.ingredients:[]).forEach(function(x){
+        var name=str(x&&x.name);if(!name)return;
+        items.push({id:'i'+(n++),group:'재료',text:name,amount:str(x.amount),alt:str(x.alt),tag:TAGS[x.when]?x.when:'pack',checked:false});
+      });
+      (Array.isArray(d&&d.equipment)?d.equipment:[]).forEach(function(x){
+        var o=nm(x);if(!o.name)return;
+        items.push({id:'i'+(n++),group:'장비',text:o.name,amount:'',alt:o.alt,tag:'',checked:false});
+      });
+      (Array.isArray(d&&d.supplies)?d.supplies:[]).forEach(function(x){
+        var o=nm(x);if(!o.name)return;
+        items.push({id:'i'+(n++),group:'소모품',text:o.name,amount:'',alt:'',tag:'',checked:false});
+      });
+      if(!items.length)throw {code:'invalid_json'};
+      list.people=clampPeople(Number(d.people)||list.people);
+      ui.people=list.people;
+      list.summary=str(d.summary)||list.summary;
+      list.items=items;
+      if(Array.isArray(d.prep_tips)&&d.prep_tips.length)list.prepTips=strs(d.prep_tips,4);
+      if(Array.isArray(d.steps)&&d.steps.length)list.steps=strs(d.steps,8);
+      if(Array.isArray(d.tips)&&d.tips.length)list.tips=strs(d.tips,3);
+      store.set('cc.list',list);
+      ui.modText='';
+      showNotice('요청하신 내용으로 준비물과 조리 순서를 수정했어요!');
+    }catch(e){
+      if(!e||e.code!=='cancelled'){
+        applyLocalModify(list,clean);
+        store.set('cc.list',list);
+        ui.modText='';
+      }
+    }finally{ui.busy=null;ctl=null;render()}
+  }
+
+  function detectStepSeconds(stepText){
+    if(!stepText)return 180;
+    var minMatch=String(stepText).match(/(\d+)\s*분/);
+    if(minMatch)return Math.min(3600,Math.max(30,Number(minMatch[1])*60));
+    var secMatch=String(stepText).match(/(\d+)\s*초/);
+    if(secMatch)return Math.min(3600,Math.max(10,Number(secMatch[1])));
+    return 180;
+  }
+
+  function formatTimer(sec){
+    var s=Math.max(0,Math.floor(sec));
+    var m=Math.floor(s/60);
+    var r=s%60;
+    return (m<10?'0'+m:m)+':'+(r<10?'0'+r:r);
+  }
+
+  function toggleTimer(){
+    if(ui.timerRunning){
+      clearInterval(timerId);
+      timerId=null;
+      ui.timerRunning=false;
+      render();
+      return;
+    }
+    if(ui.timerSec<=0)ui.timerSec=180;
+    ui.timerRunning=true;
+    timerId=setInterval(function(){
+      if(ui.timerSec>0){
+        ui.timerSec--;
+        var clockEl=document.getElementById('cook-timer-clock');
+        if(clockEl)clockEl.textContent=formatTimer(ui.timerSec);
+        if(ui.timerSec===0){
+          clearInterval(timerId);
+          timerId=null;
+          ui.timerRunning=false;
+          if(navigator.vibrate)navigator.vibrate([250,120,250]);
+          showNotice('⏰ 타이머가 끝났어요! 불 세기와 익힘 정도를 확인하세요.');
+        }
+      }
+    },1000);
+    render();
+  }
+
+  async function toggleWakeLock(enable){
+    if(!('wakeLock' in navigator))return;
+    try{
+      if(enable&&!wakeLockSentinel){
+        wakeLockSentinel=await navigator.wakeLock.request('screen');
+        ui.wakeLockOn=true;
+        wakeLockSentinel.addEventListener('release',function(){
+          wakeLockSentinel=null;
+          ui.wakeLockOn=false;
+        });
+      }else if(!enable&&wakeLockSentinel){
+        await wakeLockSentinel.release();
+        wakeLockSentinel=null;
+        ui.wakeLockOn=false;
+      }
+    }catch(e){
+      ui.wakeLockOn=false;
+    }
   }
 
   function chips(act,arr,cur){
@@ -467,11 +803,11 @@ details li{margin-bottom:8px}
   function head(){
     var s='<span class="season">'+month+'월 · '+season+'</span>';
     if(ui.tab==='rec')return '<section class="hero home">'+SCENE+'<div class="hero-top"><span class="brand">캠핑음식 도우미</span>'+s+'</div><h1>오늘 캠핑,<br><em>뭐 해먹지?</em></h1><p class="sub">장비와 인원만 고르면 메뉴부터 준비물까지 정리해 줘요.</p></section>';
-    return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물':'내 정보')+'</h1>'+s+'</header>';
+    return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+s+'</header>';
   }
   function banner(){
     var h='';
-    if(ui.aiOk===false)h+='<p class="banner">이 화면에서는 Claude 추천을 쓸 수 없어요. claude.ai 앱이나 웹에서 이 페이지를 열어 주세요.</p>';
+    if(ui.notice)h+='<p class="banner" role="status" style="font-weight:700;color:var(--brand)">'+esc(ui.notice)+'</p>';
     return h;
   }
 
@@ -486,19 +822,33 @@ details li{margin-bottom:8px}
     if(r.equipment&&r.equipment.length)parts.push('사용 장비: '+r.equipment.join(', '));
     var metaLine=parts.map(function(p){return '<span>'+esc(p)+'</span>'}).join('<span aria-hidden="true">·</span>');
     var ingHtml=r.ingredientsPreview?'<p class="rec-ings"><b>예상 주요 재료</b> · '+esc(r.ingredientsPreview)+'</p>':'';
+    var btns='<button class="btn primary wide" type="button" data-a="pick" data-i="'+i+'">'+(list?'새 준비물로 만들기':'이 요리로 준비물 만들기')+'</button>';
+    if(list){
+      btns='<div class="row2">'+
+        '<button class="btn primary" type="button" data-a="pick" data-i="'+i+'">새 목록으로 시작</button>'+
+        '<button class="btn pop" type="button" data-a="merge" data-i="'+i+'">＋ 현재 목록에 합산</button>'+
+      '</div>';
+    }
     return '<article class="card rec">'+
       '<div class="rec-top"><h3>'+esc(r.name)+'</h3>'+(r.minutes?'<span class="time">'+r.minutes+'분</span>':'')+'</div>'+
       '<p class="rec-meta-line">'+metaLine+'</p>'+
       '<p class="why">'+esc(r.reason)+'</p>'+
       ingHtml+
-      '<button class="btn primary wide" type="button" data-a="pick" data-i="'+i+'">이 요리로 준비물 만들기</button>'+
+      btns+
     '</article>';
   }
 
   function recView(){
-    var off=(ui.busy||ui.aiOk===false)?' disabled':'';
+    var off=ui.busy?' disabled':'';
     var activeRecs=ui.recs.length?ui.recs:matchLocalRecs(ui.people,profile.gear,ui.meal,ui.mood,profile.avoid,[]);
-    var h='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
+    var h='';
+    if(list){
+      h+='<section class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<span>현재 식단: <b>'+esc(list.dish)+'</b> ('+list.people+'명)</span>'+
+        '<button class="link" type="button" data-a="tab" data-v="list">준비물 보기 →</button>'+
+      '</section>';
+    }
+    h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
     peopleAndGearFields(false)+
     '</section>'+
     '<section class="card"><h2>오늘 캠핑 조건</h2>'+
@@ -519,7 +869,9 @@ details li{margin-bottom:8px}
       });
       h+='<button class="btn wide" type="button" data-a="more" style="margin-bottom:14px">다른 요리로 추천받기</button>';
     }
-    h+='<form class="card" data-form="dish"><h2>만들 요리가 정해져 있다면</h2><div class="addrow" style="margin-top:0"><input id="dish-add" type="text" maxlength="40" placeholder="예: 부대찌개, 감바스" value="'+esc(ui.dishText)+'" aria-label="만들 요리 이름"><button class="btn primary" type="submit"'+off+'>준비물 만들기</button></div><p class="hint" style="margin:12px 0 0">위 인원과 내 장비, 못 먹는 재료 기준으로 만들어요.</p></form>';
+    h+='<form class="card" data-form="dish"><h2>만들 요리가 정해져 있다면</h2>'+
+      '<div class="addrow" style="margin-top:0"><input id="dish-add" type="text" maxlength="40" placeholder="예: 부대찌개, 감바스, 토마호크" value="'+esc(ui.dishText)+'" aria-label="만들 요리 이름"><button class="btn primary" type="submit"'+off+'>새로 만들기</button>'+(list?'<button class="btn pop" type="button" data-a="mergedish"'+off+'>＋합산</button>':'')+'</div>'+
+      '<p class="hint" style="margin:12px 0 0">여러 끼니(저녁 + 안주 + 아침)를 차례대로 합산해 장보기 목록 하나로 묶을 수 있어요.</p></form>';
     return h;
   }
 
@@ -557,7 +909,7 @@ details li{margin-bottom:8px}
   function showNotice(msg){
     ui.notice=msg;
     render();
-    setTimeout(function(){if(ui.notice===msg){ui.notice='';render()}},2600);
+    setTimeout(function(){if(ui.notice===msg){ui.notice='';render()}},2800);
   }
 
   async function copyChecklist(onlyUnchecked){
@@ -599,38 +951,131 @@ details li{margin-bottom:8px}
     await copyChecklist(false);
   }
 
+  function cookModeCard(){
+    var steps=(list&&list.steps&&list.steps.length)?list.steps:['재료를 준비해 조리를 시작하세요.'];
+    var idx=Math.max(0,Math.min(steps.length-1,ui.cookStep||0));
+    var curStep=steps[idx];
+    return '<section class="cook-box" aria-live="polite">'+
+      '<div class="cook-top">'+
+        '<span class="cook-badge">현장 조리 모드 · 단계 '+(idx+1)+' / '+steps.length+'</span>'+
+        '<button class="chip sm" type="button" data-a="cookmode" style="min-height:32px;background:rgba(255,255,255,.15);color:#fff">'+(ui.wakeLockOn?'화면켜짐 유지중 · ':'')+'닫기 ✕</button>'+
+      '</div>'+
+      '<p class="cook-step-txt">'+esc(curStep)+'</p>'+
+      '<div class="timer-bar">'+
+        '<div class="timer-display">'+
+          '<div><small style="opacity:.8;display:block;font-size:12px">조리 타이머</small><span class="timer-clock" id="cook-timer-clock">'+formatTimer(ui.timerSec)+'</span></div>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button class="btn pop" type="button" data-a="timer-toggle" style="min-height:44px;padding:0 16px">'+(ui.timerRunning?'일시정지':'시작')+'</button>'+
+            '<button class="btn" type="button" data-a="timer-set" data-v="180" style="min-height:44px;padding:0 12px">리셋</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="chips">'+
+          '<button class="chip sm" type="button" data-a="timer-set" data-v="60">1분</button>'+
+          '<button class="chip sm" type="button" data-a="timer-set" data-v="180">3분</button>'+
+          '<button class="chip sm" type="button" data-a="timer-set" data-v="300">5분</button>'+
+          '<button class="chip sm" type="button" data-a="timer-set" data-v="600">10분</button>'+
+          '<button class="chip sm" type="button" data-a="timer-set" data-v="900">15분</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="row2">'+
+        '<button class="btn" type="button" data-a="cook-prev"'+(idx===0?' disabled':'')+'>← 이전 단계</button>'+
+        '<button class="btn pop" type="button" data-a="cook-next">'+(idx===steps.length-1?'조리 완료 🎉':'다음 단계 →')+'</button>'+
+      '</div>'+
+    '</section>';
+  }
+
+  function filterMatchesItem(x){
+    if(ui.filter==='all')return true;
+    if(ui.filter==='unchecked')return !x.checked;
+    if(ui.filter==='prep')return x.tag==='prep';
+    if(ui.filter==='pack')return x.tag==='pack'||(!x.tag&&x.group!=='재료');
+    if(ui.filter==='buy')return x.tag==='buy';
+    return true;
+  }
+
   function listView(){
     if(!list)return '<section class="card empty"><h2>아직 준비물이 없어요</h2><p>추천 탭에서 요리를 고르면 여기에 챙길 목록이 만들어져요.</p><button class="btn primary" type="button" data-a="tab" data-v="rec">'+FLAME+'메뉴 추천받기</button></section>';
     var done=list.items.filter(function(x){return x.checked}).length,total=list.items.length,pct=total?Math.round(done/total*100):0;
+    var dishes=list.dishes&&list.dishes.length?list.dishes:[list.dish];
     var h='';
     if(ui.err)h+='<p class="err" role="alert">'+esc(ui.err)+'</p>';
-    h+='<section class="hero dish">'+SCENE+'<p class="brand">'+list.people+'명 기준</p><h2>'+esc(list.dish)+'</h2><p class="sum">'+esc(list.summary||list.reason)+'</p>'+
+    h+='<section class="hero dish">'+SCENE+'<p class="brand">'+list.people+'명 기준 · '+dishes.length+'가지 메뉴</p><h2>'+esc(list.dish)+'</h2><p class="sum">'+esc(list.summary||list.reason)+'</p>'+
+    (dishes.length>1?'<div class="dish-pills">'+dishes.map(function(d){return '<span class="dish-pill">⛺ '+esc(d)+'</span>'}).join('')+'</div>':'')+
     '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div></section>';
-    h+='<section class="card"><h2>목록 복사 · 공유</h2>'+
+
+    if(ui.cookMode){
+      h+=cookModeCard();
+    }else if(list.steps&&list.steps.length){
+      h+='<section class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'+
+        '<div><h2 style="margin-bottom:4px">현장 조리 모드</h2><p class="hint" style="margin:0">큰 글씨와 단계별 타이머·화면 꺼짐 방지로 한 손 조리해요.</p></div>'+
+        '<button class="btn pop" type="button" data-a="cookmode">🔥 조리 모드 켜기</button>'+
+      '</section>';
+    }
+
+    if(ui.busy==='mod')h+=loadingCard('요청하신 대로 준비물을 수정하고 있어요…');
+    h+='<form class="card" data-form="modify"><h2>대화로 준비물·인원 즉시 수정</h2>'+
+      '<div class="chips" style="margin-bottom:10px">'+
+        '<button class="chip sm" type="button" data-a="quickmod" data-v="인원 '+clampPeople(list.people+1)+'명으로 늘려줘">인원 +1명</button>'+
+        (list.people>1?'<button class="chip sm" type="button" data-a="quickmod" data-v="인원 '+clampPeople(list.people-1)+'명으로 줄여줘">인원 -1명</button>':'')+
+        '<button class="chip sm" type="button" data-a="quickmod" data-v="아이도 먹을 수 있게 매운 재료 빼줘">아이용 순한 맛</button>'+
+        '<button class="chip sm" type="button" data-a="quickmod" data-v="집에서 다 손질해 갈래">전부 집에서 손질</button>'+
+      '</div>'+
+      '<div class="addrow" style="margin-top:0"><input id="mod-input" type="text" maxlength="60" placeholder="예: 삼겹살 대신 목살로 바꿔줘, 쌈채소 추가" value="'+esc(ui.modText)+'" aria-label="수정할 내용 입력"><button class="btn primary" type="submit"'+(ui.busy?' disabled':'')+'>적용</button></div>'+
+    '</form>';
+
+    h+='<section class="card"><h2>동선별 보기 · 복사 · 공유</h2>'+
+      '<div class="chips" style="margin-bottom:12px">'+
+        FILTER_TABS.map(function(f){
+          return '<button class="chip sm" type="button" data-a="filter" data-v="'+f.k+'" aria-pressed="'+(ui.filter===f.k)+'">'+esc(f.label)+'</button>';
+        }).join('')+
+      '</div>'+
       '<div class="row2">'+
         '<button class="btn primary" type="button" data-a="copylist">전체 텍스트 복사</button>'+
         '<button class="btn" type="button" data-a="copyunchecked">안 챙긴 것만 복사</button>'+
         '<button class="btn" type="button" data-a="sharelist">공유하기</button>'+
       '</div>'+
-      (ui.notice?'<p class="banner" role="status" style="margin:12px 0 0;font-weight:700;color:var(--brand)">'+esc(ui.notice)+'</p>':'<p class="hint" style="margin:10px 0 0">카카오톡·메모장에 바로 붙여넣거나 동행에게 공유할 수 있어요.</p>')+
+      '<p class="hint" style="margin:10px 0 0">다른 메뉴를 더 추가하려면 <button class="link" type="button" data-a="tab" data-v="rec">추천 탭에서 [＋합산]</button>을 눌러 주세요.</p>'+
     '</section>';
-    if(list.prepTips.length)h+='<section class="card"><h2>집에서 미리</h2><ul class="plain">'+list.prepTips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul></section>';
+
+    if(list.prepTips&&list.prepTips.length)h+='<section class="card"><h2>집에서 미리 (밀키트화 팁)</h2><ul class="plain">'+list.prepTips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul></section>';
+
     ['재료','장비','소모품'].forEach(function(g){
-      var its=list.items.filter(function(x){return x.group===g});
+      var allIts=list.items.filter(function(x){return x.group===g});
+      var its=allIts.filter(filterMatchesItem);
       if(!its.length)return;
-      var gd=its.filter(function(x){return x.checked}).length;
-      h+='<section class="card group"><h3>'+g+'<small>'+gd+'/'+its.length+'</small></h3><ul class="list">'+its.map(function(x){
+      var gd=allIts.filter(function(x){return x.checked}).length;
+      h+='<section class="card group"><h3>'+g+'<small>'+gd+'/'+allIts.length+'</small></h3><ul class="list">'+its.map(function(x){
         var side='';
         if(x.amount)side+='<span class="amt">'+esc(x.amount)+'</span>';
-        if(x.tag)side+='<span class="tag '+x.tag+'">'+TAGS[x.tag]+'</span>';
+        if(x.tag&&TAGS[x.tag])side+='<span class="tag '+x.tag+'">'+TAGS[x.tag]+'</span>';
         return '<li class="item'+(x.checked?' done':'')+'"><label><input type="checkbox" data-a="toggle" data-id="'+esc(x.id)+'"'+(x.checked?' checked':'')+'>'+
         '<span class="txt"><b>'+esc(x.text)+'</b>'+(x.alt?'<small>없으면 '+esc(x.alt)+'</small>':'')+'</span><span class="side">'+side+'</span></label></li>';
       }).join('')+'</ul></section>';
     });
-    if(list.steps.length)h+='<section class="card"><details><summary>조리 순서</summary><ol>'+list.steps.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ol></details></section>';
-    if(list.tips.length)h+='<section class="card"><h2>캠핑 꿀팁</h2><ul class="plain">'+list.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul></section>';
+
+    if(list.steps&&list.steps.length)h+='<section class="card"><details open><summary>조리 순서 ('+list.steps.length+'단계)</summary><ol>'+list.steps.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ol></details></section>';
+    if(list.pairing||(list.tips&&list.tips.length)){
+      h+='<section class="card"><h2>캠핑 꿀팁 · 주류 페어링</h2>'+
+        (list.pairing?'<div class="pairing-box">🍺 <b>추천 페어링 & 화력</b> · '+esc(list.pairing)+'</div>':'')+
+        (list.tips&&list.tips.length?'<ul class="plain" style="margin-top:10px">'+list.tips.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>':'')+
+      '</section>';
+    }
+
+    h+='<form class="card" data-form="log"><h2>캠핑 요리 일지에 기록 남기기</h2>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
+        '<span class="lab">이번 요리 만족도</span>'+
+        '<div class="stars" role="group" aria-label="별점 선택">'+
+          [1,2,3,4,5].map(function(n){
+            return '<button class="star-btn'+(ui.logStars>=n?' on':'')+'" type="button" data-a="star" data-v="'+n+'" aria-label="'+n+'점">★</button>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+      '<div class="addrow" style="margin-top:0"><input id="log-note" type="text" maxlength="80" placeholder="예: 2명에 고기 400g 딱 좋았음, 숯불 약불 유지" value="'+esc(ui.logNote)+'" aria-label="요리 한줄 메모"><button class="btn primary" type="submit">일지 저장</button></div>'+
+      '<p class="hint" style="margin:10px 0 0">높은 별점을 준 요리는 다음 AI 추천에 우선 반영돼요.</p>'+
+    '</form>';
+
     h+='<section class="safety"><h2>안전 확인</h2><ul><li>화기는 환기가 잘 되는 야외에서만 쓰고, 텐트 안에서는 쓰지 않아요.</li><li>고기, 달걀, 해산물은 속까지 충분히 익혀요.</li><li>식재료는 보냉 가방에 아이스팩과 함께 두고, 상온에 오래 두지 않아요.</li><li>알레르기와 못 먹는 재료는 AI 답을 믿지 말고 직접 확인해요.</li></ul></section>';
-    h+='<div class="row2"><button class="btn" type="button" data-a="tab" data-v="rec">다른 요리 고르기</button>';
+    h+='<div class="row2"><button class="btn" type="button" data-a="tab" data-v="rec">다른 요리 추가/변경</button>';
     h+=ui.confirmClear?'<button class="btn" type="button" data-a="clear2" style="color:var(--ember);border-color:var(--ember)">정말 지우기</button>':'<button class="btn" type="button" data-a="clear">목록 지우기</button>';
     h+='</div>';
     return h;
@@ -645,8 +1090,26 @@ details li{margin-bottom:8px}
     '<form class="addrow" data-form="gear"><input id="gear-add" type="text" maxlength="20" placeholder="장비 직접 추가" aria-label="장비 직접 추가"><button class="btn" type="submit">추가</button></form></section>';
     h+='<section class="card"><h2>못 먹는 재료</h2>'+(profile.avoid.length?'<div class="chips">'+profile.avoid.map(function(a){return '<button class="chip x" type="button" data-a="rmavoid" data-v="'+esc(a)+'" aria-label="'+esc(a)+' 빼기">'+esc(a)+'</button>'}).join('')+'</div>':'<p class="hint" style="margin:0">아직 없어요. 추천과 대체 재료에서 모두 빠져요.</p>')+
     '<form class="addrow" data-form="avoid"><input id="avoid-add" type="text" maxlength="20" placeholder="예: 땅콩, 새우" aria-label="못 먹는 재료 추가"><button class="btn" type="submit">추가</button></form></section>';
+
+    h+='<section class="card"><h2>캠핑 요리 일지 ('+logs.length+')</h2>'+
+      (logs.length?'<div>'+logs.map(function(l,idx){
+        return '<div class="log-item">'+
+          '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b>'+esc(l.dish)+'</b><span style="color:var(--pop-fg);background:var(--pop);padding:2px 8px;border-radius:999px;font-size:12px;font-weight:900">'+'★'.repeat(l.stars||5)+'</span></div>'+
+          (l.note?'<p style="margin:2px 0;font-size:14px">'+esc(l.note)+'</p>':'')+
+          '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)"><span>'+esc(l.date)+' · '+(l.people||2)+'명</span><button class="link" type="button" data-a="replaylog" data-i="'+idx+'" style="font-size:12px">다시 준비물 만들기</button></div>'+
+        '</div>';
+      }).join('')+'</div>':'<p class="hint" style="margin:0">준비물 탭 하단에서 요리 별점과 한줄 메모를 남기면 여기에 기록돼요.</p>')+
+    '</section>';
+
     h+='<section class="card"><h2>최근 고른 요리</h2>'+(recent.length?'<ol class="recent">'+recent.map(function(r){return '<li>'+esc(r)+'</li>'}).join('')+'</ol><p class="hint" style="margin:12px 0 0">추천할 때 최근 5개는 피해요.</p><div style="margin-top:12px"><button class="btn" type="button" data-a="clearrecent">기록 지우기</button></div>':'<p class="hint" style="margin:0">요리를 고르면 여기에 쌓여요.</p>')+'</section>';
-    h+='<p class="hint">내 정보와 목록은 이 폰의 브라우저에 저장돼요. 브라우저 데이터를 지우면 함께 사라져요.</p>';
+
+    h+='<section class="card"><h2>데이터 백업 · 복원</h2>'+
+      '<div class="row2">'+
+        '<button class="btn" type="button" data-a="exportdata">백업 파일 저장</button>'+
+        '<label class="btn" style="cursor:pointer">백업 파일 불러오기<input type="file" id="import-file" accept=".json,application/json" style="display:none"></label>'+
+      '</div>'+
+      '<p class="hint" style="margin:10px 0 0">폰을 바꾸거나 브라우저 캐시를 비우기 전에 내 장비·일지·준비물을 파일로 보관할 수 있어요.</p>'+
+    '</section>';
     return h;
   }
 
@@ -663,6 +1126,7 @@ details li{margin-bottom:8px}
     var a=b.getAttribute('data-a'),v=b.getAttribute('data-v');
     if(a==='tab'){ui.tab=v;ui.confirmClear=false;window.scrollTo(0,0);render();return}
     if(a==='style'||a==='meal'||a==='time'||a==='mood'){ui[a]=v;render();return}
+    if(a==='filter'){ui.filter=v;render();return}
     if(a==='dec'){ui.people=clampPeople(ui.people-1);ui.recs=[];render();return}
     if(a==='inc'){ui.people=clampPeople(ui.people+1);ui.recs=[];render();return}
     if(a==='setpeople'){ui.people=clampPeople(Number(v)||2);ui.recs=[];render();return}
@@ -679,9 +1143,93 @@ details li{margin-bottom:8px}
     }
     if(a==='recs'){getRecs(false);return}
     if(a==='more'){getRecs(true);return}
-    if(a==='pick'){
+    if(a==='pick'||a==='merge'){
       var pool=(ui.CurrentRenderedRecs&&ui.CurrentRenderedRecs.length)?ui.CurrentRenderedRecs:ui.recs;
-      pickDish(pool[Number(b.getAttribute('data-i'))]);
+      pickDish(pool[Number(b.getAttribute('data-i'))],a==='merge');
+      return;
+    }
+    if(a==='mergedish'){
+      var dIn=document.getElementById('dish-add');
+      var dVal=str(dIn&&dIn.value);
+      if(dVal){
+        ui.dishText=dVal;
+        pickDish({name:dVal,minutes:0,level:'',equipment:[],reason:'직접 추가한 요리'},true);
+      }
+      return;
+    }
+    if(a==='cookmode'){
+      ui.cookMode=!ui.cookMode;
+      if(ui.cookMode){
+        ui.cookStep=0;
+        var firstStep=(list&&list.steps&&list.steps[0])||'';
+        ui.timerSec=detectStepSeconds(firstStep);
+        toggleWakeLock(true);
+      }else{
+        if(ui.timerRunning)toggleTimer();
+        toggleWakeLock(false);
+      }
+      render();
+      return;
+    }
+    if(a==='cook-prev'){
+      if(ui.cookStep>0){
+        ui.cookStep--;
+        ui.timerSec=detectStepSeconds(list&&list.steps&&list.steps[ui.cookStep]);
+      }
+      render();
+      return;
+    }
+    if(a==='cook-next'){
+      var maxS=(list&&list.steps)?list.steps.length-1:0;
+      if(ui.cookStep<maxS){
+        ui.cookStep++;
+        ui.timerSec=detectStepSeconds(list&&list.steps&&list.steps[ui.cookStep]);
+      }else{
+        ui.cookMode=false;
+        toggleWakeLock(false);
+        showNotice('맛있는 캠핑 요리가 완성되었어요! 아래에서 별점 일지를 남겨보세요.');
+      }
+      render();
+      return;
+    }
+    if(a==='timer-toggle'){toggleTimer();return}
+    if(a==='timer-set'){
+      if(ui.timerRunning)toggleTimer();
+      ui.timerSec=Number(v)||180;
+      render();
+      return;
+    }
+    if(a==='quickmod'){
+      modifyChecklist(v);
+      return;
+    }
+    if(a==='star'){
+      ui.logStars=Number(v)||5;
+      var noteEl=document.getElementById('log-note');
+      if(noteEl)ui.logNote=noteEl.value;
+      render();
+      return;
+    }
+    if(a==='replaylog'){
+      var logEntry=logs[Number(b.getAttribute('data-i'))];
+      if(logEntry){
+        ui.people=logEntry.people||ui.people;
+        pickDish({name:logEntry.dish,minutes:0,level:'',equipment:[],reason:'일지에서 다시 불러온 요리'},false);
+      }
+      return;
+    }
+    if(a==='exportdata'){
+      var payload=JSON.stringify({profile:profile,list:list,recent:recent,logs:logs},null,2);
+      var blob=new Blob([payload],{type:'application/json'});
+      var url=URL.createObjectURL(blob);
+      var link=document.createElement('a');
+      link.href=url;
+      link.download='camping-food-backup.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showNotice('백업 파일(camping-food-backup.json)을 저장했어요!');
       return;
     }
     if(a==='stop'){if(ctl)ctl.abort();return}
@@ -691,7 +1239,7 @@ details li{margin-bottom:8px}
       store.set('cc.list',list);render();return;
     }
     if(a==='clear'){ui.confirmClear=true;render();return}
-    if(a==='clear2'){list=null;store.set('cc.list',null);ui.confirmClear=false;render();return}
+    if(a==='clear2'){list=null;store.set('cc.list',null);ui.confirmClear=false;ui.cookMode=false;render();return}
     if(a==='copylist'){copyChecklist(false);return}
     if(a==='copyunchecked'){copyChecklist(true);return}
     if(a==='sharelist'){shareChecklist();return}
@@ -706,15 +1254,53 @@ details li{margin-bottom:8px}
     if(a==='clearrecent'){recent=[];store.set('cc.recent',recent);render();return}
   });
 
+  document.addEventListener('change',function(e){
+    if(e.target&&e.target.id==='import-file'){
+      var file=e.target.files&&e.target.files[0];
+      if(!file)return;
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        try{
+          var parsed=JSON.parse(String(ev.target.result||''));
+          if(parsed.profile){profile=parsed.profile;store.set('cc.profile',profile);ui.people=profile.people||2}
+          if(parsed.list!==undefined){list=parsed.list;store.set('cc.list',list)}
+          if(Array.isArray(parsed.recent)){recent=parsed.recent;store.set('cc.recent',recent)}
+          if(Array.isArray(parsed.logs)){logs=parsed.logs;store.set('cc.logs',logs)}
+          showNotice('백업 데이터를 성공적으로 복원했어요!');
+        }catch(err){
+          showNotice('올바른 백업 파일이 아니에요.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  });
+
   document.addEventListener('submit',function(e){
     var f=e.target.closest('[data-form]');
     if(!f)return;
     e.preventDefault();
     var kind=f.getAttribute('data-form');
     var input=f.querySelector('input');
-    var val=str(input.value);
+    var val=str(input&&input.value);
+    if(kind==='log'){
+      if(!list)return;
+      var today=new Date().toISOString().slice(0,10);
+      logs.unshift({
+        dish:list.dish,
+        people:list.people,
+        stars:ui.logStars||5,
+        note:val,
+        date:today
+      });
+      logs=logs.slice(0,30);
+      store.set('cc.logs',logs);
+      ui.logNote='';
+      showNotice('캠핑 요리 일지에 저장했어요! (내 정보 탭에서 확인 가능)');
+      return;
+    }
     if(!val)return;
-    if(kind==='dish'){ui.dishText=val;pickDish({name:val,minutes:0,level:'',equipment:[],reason:'직접 고른 요리'});return}
+    if(kind==='modify'){ui.modText=val;modifyChecklist(val);return}
+    if(kind==='dish'){ui.dishText=val;pickDish({name:val,minutes:0,level:'',equipment:[],reason:'직접 고른 요리'},false);return}
     if(kind==='gear'){if(profile.gear.indexOf(val)<0)profile.gear.push(val)}
     if(kind==='avoid'){if(profile.avoid.indexOf(val)<0)profile.avoid.push(val)}
     saveProfile();render();
