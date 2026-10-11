@@ -2,8 +2,9 @@
 
 나 혼자 쓰는 캠핑 요리 도우미 웹앱과 기획안입니다.
 
+- **바로 접속 주소 (GitHub Pages)**: https://luxrank-ops.github.io/camping-food-helper/
 - `캠핑음식앱_기획안.md`: 개인용 앱 기획안 (v0.4)
-- `camp-kitchen.html`: 1단계 웹앱 (조건 입력 → AI 메뉴 추천 → 준비물 체크리스트, 요리 직접 지정)
+- `camp-kitchen.html` / `index.html`: 1단계 웹앱 (인원·장비 입력 → 맞춤 메뉴 추천 → 준비물 체크리스트, 요리 직접 지정)
 
 ## 참고
 
