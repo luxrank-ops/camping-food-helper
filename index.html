@@ -167,6 +167,67 @@ details li{margin-bottom:8px}
 .log-item{border-top:1px solid var(--line);padding:12px 0;display:grid;gap:4px}
 .log-item:first-child{border-top:0;padding-top:0}
 
+/* 캠핑지 찾기 · 자동완성 */
+.loc-card{overflow:visible}
+.ac-wrap{position:relative}
+.loc-row{display:flex;gap:8px;align-items:stretch}
+.loc-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
+.loc-row .btn{min-height:48px;border-radius:16px;white-space:nowrap}
+.ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-up);max-height:min(56vh,360px);overflow-y:auto}
+.ac-list[hidden]{display:none}
+.ac-list::-webkit-scrollbar{width:8px}
+.ac-sec{padding:8px 12px 4px;font-size:11px;font-weight:900;color:var(--muted);letter-spacing:.04em}
+.ac-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;cursor:pointer}
+.ac-item b{display:block;font-weight:700;overflow-wrap:anywhere}
+.ac-item small{display:block;color:var(--muted);font-size:12px}
+.ac-item .ac-dist{font-size:12px;font-weight:900;color:var(--brand);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (hover:hover){.ac-item:hover{background:var(--chip)}}
+.ac-item[aria-selected="true"]{background:var(--chip)}
+.ac-item[data-src="osm"] .ac-dist::after,.ac-item[data-src="geo"] .ac-dist::after{content:" · 실시간";font-size:11px;color:var(--muted)}
+.ac-item[data-src="gps"] .ac-dist::after{content:" · GPS";font-size:11px;color:var(--muted)}
+.ac-note{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;font-size:13px;color:var(--muted);line-height:1.45}
+.ac-note .chip{margin-left:auto}
+.picked{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--chip);border-radius:16px;padding:12px 14px;margin-top:12px;font-size:14px}
+.picked small{color:var(--muted);font-size:12px}
+.picked b{font-weight:900}
+
+/* 캠핑지 날씨 */
+.wx-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.wx-tags{display:flex;gap:6px;flex-wrap:wrap}
+.wx-tag{font-size:12px;font-weight:900;border-radius:999px;padding:4px 10px;background:var(--pop);color:var(--pop-fg);white-space:nowrap}
+.wx-tag.warn{background:var(--soft);color:var(--ember)}
+.wx-now{display:flex;align-items:center;gap:12px;margin-top:14px}
+.wx-ico{font-size:38px;line-height:1}
+.wx-temp{font-family:var(--font-display);font-size:40px;line-height:1;font-variant-numeric:tabular-nums;margin-right:8px}
+.wx-feels{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.wx-cond{margin-left:auto;text-align:right;font-size:15px}
+.wx-cond small{color:var(--muted);font-size:12px}
+.wx-loc{font-size:13px;color:var(--muted);margin:12px 0 0;overflow-wrap:anywhere}
+.wx-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.wx-cell{background:var(--bg);border-radius:14px;padding:10px 6px;text-align:center;font-size:11px;color:var(--muted)}
+.wx-cell b{display:block;font-size:16px;color:var(--fg);font-variant-numeric:tabular-nums;margin-top:2px}
+.wx-hours{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.wx-hour{flex:none;min-width:62px;background:var(--bg);border-radius:14px;padding:8px 6px;text-align:center;font-size:11px;color:var(--muted)}
+.wx-hour b{display:block;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
+.wx-hour small{display:block;font-size:11px}
+.wx-h-ic{font-size:15px;line-height:1.4}
+.wx-days{display:grid;gap:7px;margin-top:12px}
+.wx-day{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.wx-d-plus{white-space:nowrap;font-weight:700}
+.wx-d-bar{height:8px;border-radius:99px;background:var(--chip);overflow:hidden;display:block}
+.wx-d-bar i{display:block;height:100%;background:linear-gradient(90deg,rgba(90,150,220,.75),rgba(255,197,49,.95));border-radius:99px}
+.wx-d-temp{white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:700}
+.wx-tip{background:var(--soft);border-radius:16px;padding:12px 14px;margin:14px 0 0;font-size:13px;color:var(--ember);font-weight:500;line-height:1.5}
+.wx-h3{font-size:16px;font-weight:900;margin:18px 0 0}
+.wx-menu{display:grid;gap:8px;margin-top:10px}
+.wx-menu-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--bg);border:1.5px solid transparent;border-radius:16px;padding:10px 12px;text-align:left;cursor:pointer;font:inherit;color:var(--fg)}
+@media (hover:hover){.wx-menu-item:hover{border-color:var(--brand)}}
+.wx-menu-item b{font-weight:700}
+.wx-menu-item small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.wx-menu-item .go{font-size:12px;font-weight:900;color:var(--brand);white-space:nowrap}
+.wx-strip{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@media (max-width:420px){.wx-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 /* 하단 알약 탭바 */
 .tabs{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none}
 .pill{pointer-events:auto;max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px;box-shadow:var(--shadow-up)}
@@ -182,6 +243,7 @@ details li{margin-bottom:8px}
   <button type="button" data-a="tab" data-v="me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20L12 4l9 16H3z"/><path d="M12 20v-7"/></svg>내 정보</button>
 </div></nav>
 
+<script src="data/campgrounds.js"></script>
 <script>
 (function(){
   var STYLES=['오토캠핑','차박','백패킹','솔캠'];
@@ -211,7 +273,9 @@ details li{margin-bottom:8px}
   var month=new Date().getMonth()+1;
   var season=month>=3&&month<=5?'봄':(month>=6&&month<=8?'여름':(month>=9&&month<=11?'가을':'겨울'));
 
-  var profile=store.get('cc.profile',null)||{gear:['버너','그리들','숯·화로대','코펠'],avoid:[],people:2,sample:true};
+  var profile=store.get('cc.profile',null)||{gear:['버너','그리들','숯·화로대','코펠'],avoid:[],people:2,sample:true,camp:null,wxAware:true};
+  if(profile.wxAware===undefined)profile.wxAware=true;
+  if(profile.camp===undefined)profile.camp=null;
   var list=store.get('cc.list',null);
   var recent=store.get('cc.recent',[]);
   var logs=store.get('cc.logs',[]);
@@ -220,7 +284,9 @@ details li{margin-bottom:8px}
     tab:'rec',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
     recs:[],seen:[],busy:null,busyName:'',err:'',confirmClear:false,aiOk:null,dishText:'',
     filter:'all',cookMode:false,cookStep:0,timerSec:180,timerRunning:false,wakeLockOn:false,
-    modText:'',logStars:5,logNote:''
+    modText:'',logStars:5,logNote:'',
+    wxQ:'',wxSug:[],wxPick:[],wxOpen:false,wxIdx:-1,wxBusy:false,wx:null,wxKey:'',wxLoc:null,
+    wxErr:'',wxStale:false,myLoc:null,locBusy:false,osmCamps:[],osmBusy:false,osmErr:false,places:[],placesQ:'',notice:''
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
 
@@ -256,8 +322,36 @@ details li{margin-bottom:8px}
     {name:'그리들 차돌박이 숙주볶음',minutes:15,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['가볍게','술안주'],meals:['점심','저녁','불멍 안주'],base:[{n:'차돌박이',q:150,u:'g'},{n:'숙주나물',q:120,u:'g'},{n:'굴소스·다진마늘',q:1,u:'큰술'}],pairing:'시원한 생맥주·캔맥주 · 강불에서 차돌박이를 먼저 볶다가 숙주를 넣고 2분만 빠르게 볶으세요.',reason:'넓은 그리들이나 팬에 숨만 죽여 빠르게 볶아내는 실패 없는 안주 겸 반찬이에요.'},
     {name:'코펠 캠핑 부대찌개',minutes:20,level:'쉬움',equipment:['버너','코펠'],moods:['든든하게','국물 요리'],meals:['아침','점심','저녁'],base:[{n:'모둠 햄·소시지',q:150,u:'g'},{n:'신김치·베이크드빈스',q:80,u:'g'},{n:'라면 사리',q:0.5,u:'개'}],pairing:'소주·맥주 또는 아침 해장용 보리차 · 중강불에서 10분 끓인 뒤 라면 사리는 마지막 3분에 넣으세요.',reason:'인원수에 맞춰 재료만 넣고 끓이면 호불호 없이 든든하게 즐길 수 있어요.'},
     {name:'숯불 닭꼬치 & 대파구이',minutes:25,level:'쉬움',equipment:['숯·화로대','토치'],moods:['가볍게','술안주'],meals:['저녁','불멍 안주'],base:[{n:'생닭다리살 꼬치',q:3,u:'꼬치'},{n:'대파',q:0.5,u:'대'},{n:'데리야끼·매운소스',q:2,u:'큰술'}],pairing:'생강 하이볼 또는 청량한 라거 · 소스는 고기가 80% 익은 뒤 발라야 타지 않아요.',reason:'불멍하며 숯불 위에 노릇하게 구워 하나씩 집어 먹기 좋은 최고의 안주예요.'},
-    {name:'그리들 김치말이 삼겹 볶음밥 & 계란프라이',minutes:20,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['든든하게','가볍게'],meals:['아침','점심'],base:[{n:'대패삼겹살',q:120,u:'g'},{n:'신김치·즉석밥',q:1,u:'공기'},{n:'달걀·모짜렐라치즈',q:1,u:'개'}],pairing:'아이스 커피 또는 시원한 탄산수 · 중불에서 밥을 펴서 2분간 눌러 누룽지를 만드세요.',reason:'아침이나 점심에 설거지 걱정 없이 한 판에 든든하게 볶아 먹기 좋아요.'}
+    {name:'그리들 김치말이 삼겹 볶음밥 & 계란프라이',minutes:20,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['든든하게','가볍게'],meals:['아침','점심'],base:[{n:'대패삼겹살',q:120,u:'g'},{n:'신김치·즉석밥',q:1,u:'공기'},{n:'달걀·모짜렐라치즈',q:1,u:'개'}],pairing:'아이스 커피 또는 시원한 탄산수 · 중불에서 밥을 펴서 2분간 눌러 누룽지를 만드세요.',reason:'아침이나 점심에 설거지 걱정 없이 한 판에 든든하게 볶아 먹기 좋아요.'},
+    {name:'코펠 김치찌개 & 라면 사리',minutes:20,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','든든하게'],meals:['아침','점심','저녁'],base:[{n:'신김치',q:150,u:'g'},{n:'돼지고기 앞다리',q:150,u:'g'},{n:'라면 사리·두부',q:1,u:'개'}],pairing:'소주 또는 따뜻한 보리차 · 강불에서 끓이다가 라면 사리는 마지막 3분에 넣으세요.',reason:'비 오거나 추운 날 한 냄비로 뜨끈하게 먹기 좋은 국물 요리예요.'},
+    {name:'코펠 순두부찌개 & 계란말이',minutes:20,level:'쉬움',equipment:['버너','코펠','프라이팬'],moods:['국물 요리','가볍게'],meals:['아침','저녁'],base:[{n:'순두부',q:1,u:'팩'},{n:'다진 돼지고기',q:100,u:'g'},{n:'달걀',q:3,u:'개'}],pairing:'막걸리 또는 따뜻한 차 · 계란말이는 약불에서 천천히 말아 주세요.',reason:'부드럽게 넘어가서 아침이나 쌀쌀한 저녁에 부담 없이 좋아요.'},
+    {name:'핫초코 마시멜로 & 스모어',minutes:10,level:'쉬움',equipment:['버너','코펠'],moods:['가볍게','술안주'],meals:['불멍 안주','아침'],base:[{n:'핫초코 파우더',q:40,u:'g'},{n:'우유·물',q:400,u:'ml'},{n:'마시멜로·크래커',q:100,u:'g'}],pairing:'불멍용 디저트 · 우유는 타지 않게 약불에서 데우고, 마시멜로는 꼬치에 꿰어 살짝만 구우세요.',reason:'손 시릴 때 10분이면 만들 수 있는 따뜻한 불멍 간식이에요.'},
+    {name:'코펠 비빔국수 & 열무김치',minutes:15,level:'쉬움',equipment:['버너','코펠'],moods:['가볍게','술안주'],meals:['점심','저녁'],base:[{n:'소면',q:100,u:'g'},{n:'비빔양념장',q:3,u:'큰술'},{n:'열무김치·오이',q:100,u:'g'}],pairing:'시원한 탄산수 또는 생맥주 · 면은 찬물에 두어 번 헹궈 물기를 완전히 빼세요.',reason:'더운 날 불 앞에 오래 서 있지 않고 15분에 끝나는 시원한 한 그릇이에요.'}
   ];
+
+  function wxActiveTags(){
+    var wx=profile.wxAware?wxContext():null;
+    return wx?wx.info.tags:[];
+  }
+  var wxAllMenuNames=null;
+  function wxWithOtherRule(name,tags){
+    if(!wxAllMenuNames){
+      wxAllMenuNames={};
+      Object.keys(WX_RULES).forEach(function(k){
+        wxMenuNames(k).forEach(function(n){wxAllMenuNames[n]=1});
+      });
+    }
+    return !!wxAllMenuNames[name]&&!tags.some(function(t){return wxMenuNames(t).indexOf(name)>=0});
+  }
+  function wxRecipeScore(name){
+    var tags=wxActiveTags();
+    if(!tags.length)return {score:0,hit:false,tag:null};
+    for(var i=0;i<tags.length;i++){
+      if(wxMenuNames(tags[i]).indexOf(name)>=0)return {score:(i===0?22:14),hit:true,tag:tags[i]};
+    }
+    if(wxWithOtherRule(name,tags))return {score:-10,hit:false,tag:null};
+    return {score:0,hit:false,tag:null};
+  }
 
   function formatScaledIngredients(baseArr,people){
     if(!Array.isArray(baseArr)||!baseArr.length)return '';
@@ -286,6 +380,9 @@ details li{margin-bottom:8px}
       if(favNames.indexOf(r.name)>=0)score+=12;
       if(people>=4&&(r.name.indexOf('찌개')>=0||r.name.indexOf('삼겹')>=0||r.name.indexOf('바비큐')>=0))score+=8;
       if(people===1&&(r.minutes<=20))score+=8;
+      var wxs=wxRecipeScore(r.name);
+      score+=wxs.score;
+      var wxNote=wxs.hit?(' '+WX_RULES[wxs.tag].icon+' '+WX_RULES[wxs.tag].label+' 날씨에 특히 맞아요.'):'';
       var activeEquip=matchedGear.length?matchedGear:r.equipment.slice(0,2);
       return {
         score:score,
@@ -296,7 +393,7 @@ details li{margin-bottom:8px}
           equipment:activeEquip,
           people:people,
           ingredientsPreview:formatScaledIngredients(r.base,people),
-          reason:people+'명 기준 · 보유하신 '+activeEquip.join(', ')+' 장비에 딱 맞는 요리예요. '+r.reason
+          reason:people+'명 기준 · 보유하신 '+activeEquip.join(', ')+' 장비에 딱 맞는 요리예요. '+r.reason+wxNote
         }
       };
     });
@@ -312,6 +409,7 @@ details li{margin-bottom:8px}
     '- 끼니: '+ui.meal+'\n'+
     '- 조리 시간: '+ui.time+'\n'+
     '- 계절: '+season+'\n'+
+    wxPromptBlock()+
     '- 원하는 분위기: '+ui.mood+'\n'+
     '- 가진 조리 장비: '+gearText()+'\n'+
     '- 못 먹는 재료 (어떤 요리에도 넣지 말 것): '+avoidText()+'\n'+
@@ -334,6 +432,7 @@ details li{margin-bottom:8px}
     '인원: '+ui.people+'명\n'+
     '캠핑 스타일: '+ui.style+'\n'+
     '계절: '+season+'\n'+
+    wxPromptBlock()+
     '가진 조리 장비: '+gearText()+'\n'+
     '못 먹는 재료 (재료와 대체 재료 어디에도 넣지 말 것): '+avoidText()+'\n\n'+
     '규칙\n'+
@@ -346,6 +445,8 @@ details li{margin-bottom:8px}
     '- steps는 현장 조리 순서로 최대 6단계, 한 단계에 한 문장입니다. 조리 시간(예: 5분, 10분)을 자연스럽게 포함하고, 고기·달걀·해산물이 들어가면 속까지 충분히 익히라는 단계를 넣으세요.\n'+
     '- pairing은 어울리는 주류/음료와 화력·예열 팁 한 줄입니다.\n'+
     '- tips는 캠핑 꿀팁으로 최대 2개입니다.\n'+
+    wxStorageLine()+
+    (wxContext()?'- 조리 순서(steps)에도 날씨에 맞는 주의(바람 막기, 뜨겁게 내기, 보냉 등)를 자연스럽게 한 단계 넣으세요.\n':'')+
     '- 요리 이름은 사용자가 직접 정했을 수 있습니다. 이름 그대로 만들고, 캠핑에서 만들기 어렵다면 캠핑용으로 간단히 바꾼 방법을 안내하세요.\n\n'+
     'JSON 객체만 출력하세요. 예:\n'+
     '{"summary":"요리 한 줄 소개","pairing":"어울리는 주류와 화력 팁","ingredients":[{"name":"재료","amount":"300g","when":"prep","alt":"대체 재료"}],"equipment":[{"name":"장비","alt":""}],"supplies":["호일"],"prep_tips":["집에서 할 일"],"steps":["조리 단계"],"tips":["꿀팁"]}';
@@ -783,6 +884,721 @@ details li{margin-bottom:8px}
     return arr.map(function(v){return '<button class="chip" type="button" data-a="'+act+'" data-v="'+esc(v)+'" aria-pressed="'+(cur===v)+'">'+esc(v)+'</button>'}).join('');
   }
 
+  /* ============================================================
+     캠핑지 찾기(자동완성) · 캠핑지 날씨 · 날씨 맞춤 메뉴
+     - 캠핑장 목록: data/campgrounds.js (한국관광공사 고캠핑 공공데이터 4,018곳)
+     - 내 위치: 브라우저 geolocation / 주변 보강: OpenStreetMap Overpass(실시간)
+     - 날씨: 키가 필요 없는 Open-Meteo (지역 검색은 Open-Meteo geocoding)
+     - 네트워크·위치가 막혀도 '지금 날씨 직접 고르기'로 맞춤 메뉴는 그대로 동작한다.
+     ============================================================ */
+
+  var SIDO_FALLBACK=['서울','인천','대전','세종','광주','대구','울산','부산','경기','강원','충북','충남','전북','전남','경북','경남','제주'];
+  var KIND_FALLBACK=[[1,'일반야영장'],[2,'자동차야영장'],[4,'글램핑'],[8,'카라반'],[16,'캠프닉']];
+  var WMO={
+    0:['맑음','☀️'],1:['대체로 맑음','🌤️'],2:['구름 조금','⛅'],3:['흐림','☁️'],
+    45:['안개','🌫️'],48:['서리 안개','🌫️'],
+    51:['약한 이슬비','🌦️'],53:['이슬비','🌦️'],55:['강한 이슬비','🌧️'],56:['어는 이슬비','🌧️'],57:['어는 이슬비','🌧️'],
+    61:['약한 비','🌦️'],63:['비','🌧️'],65:['강한 비','🌧️'],66:['어는 비','🌧️'],67:['어는 비','🌧️'],
+    71:['약한 눈','🌨️'],73:['눈','🌨️'],75:['많은 눈','❄️'],77:['눈알갱이','🌨️'],
+    80:['약한 소나기','🌦️'],81:['소나기','🌧️'],82:['강한 소나기','⛈️'],85:['소낙눈','🌨️'],86:['많은 소낙눈','❄️'],
+    95:['뇌우','⛈️'],96:['뇌우·우박','⛈️'],99:['뇌우·우박','⛈️']
+  };
+  var RAIN_CODES=[51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+  var SNOW_CODES=[71,73,75,77,85,86];
+  function wmo(code){return WMO[code]||['날씨 정보','🌡️']}
+  function deg(v){return (v==null||!isFinite(v))?'-':Math.round(v)+'°'}
+
+  /* 날씨 → 메뉴/준비물 규칙. menus의 요리 이름은 CAMP_RECIPES와 이어져 오프라인에서도 준비물이 만들어진다. */
+  var WX_RULES={
+    snow:{label:'눈',icon:'❄️',line:'눈이 와요. 몸을 녹이는 뜨끈한 국물과 부피 있는 메뉴로 가세요.',
+      prescribe:'눈이 오는 추운 날씨입니다. 뜨끈한 국물·한 냄비 요리처럼 몸을 녹이는 메뉴를 고르고, 야외 화기 앞에 오래 서 있어야 하는 메뉴는 피하세요.',
+      menus:[
+        {n:'코펠 김치찌개 & 라면 사리',w:'국물+사리로 열량과 온기를 같이 챙겨요',min:20},
+        {n:'코펠 캠핑 부대찌개',w:'한 냄비에 넣고 끓이면 끝나요',min:20},
+        {n:'코펠 얼큰 어묵탕 & 우동',w:'15분이면 뜨끈한 국물 완성',min:15},
+        {n:'핫초코 마시멜로 & 스모어',w:'불멍하며 마시는 따뜻한 간식',min:10}
+      ],
+      tip:'텐트 안 화기는 절대 금지예요. 조리 중에도 랜턴과 핫팩을 곁에 두세요.',
+      gear:[['핫팩','소모품'],['방한 장갑·모자','소모품'],['보온병(뜨거운 물)','소모품'],['미끄럼 방지 매트','장비'],['여분 랜턴·배터리','장비']]},
+    rain:{label:'비',icon:'🌧️',line:'비 예보예요. 뜨끈한 국물 요리와 한 냄비 요리가 잘 맞아요.',
+      prescribe:'비가 오는 날씨입니다. 타프 아래에서 조리할 수 있는 한 냄비·국물 요리를 우선하고, 숯불처럼 오래 불 앞에 있어야 하는 메뉴는 피하세요.',
+      menus:[
+        {n:'코펠 얼큰 어묵탕 & 우동',w:'끓이기만 하면 되는 15분 국물 요리',min:15},
+        {n:'코펠 캠핑 부대찌개',w:'재료만 넣고 끓이면 끝',min:20},
+        {n:'코펠 순두부찌개 & 계란말이',w:'뜨끈한 국물 + 곁들임 한 접시',min:20},
+        {n:'그리들 김치말이 삼겹 볶음밥 & 계란프라이',w:'타프 아래 한 판으로 정리돼요',min:20}
+      ],
+      tip:'타프는 물이 고이지 않게 한쪽을 낮게 매고, 조리 도구는 마른 자리에 두세요.',
+      gear:[['타프·그늘막','장비'],['방수포·바닥시트','장비'],['우비·장화','소모품'],['여분 수건·행주','소모품'],['지퍼백(전자기기 방수)','소모품']]},
+    cold:{label:'추위',icon:'🥶',line:'체감온도가 5도 이하로 떨어져요. 국물과 고기로 열량을 채우세요.',
+      prescribe:'체감온도가 5도 이하인 추운 날씨입니다. 뜨끈한 국물이나 고기 구이처럼 열량과 온기를 주는 메뉴를 고르세요.',
+      menus:[
+        {n:'코펠 김치찌개 & 라면 사리',w:'얼큰한 국물로 몸을 녹여요',min:20},
+        {n:'그리들 통삼겹 구이 & 구운 김치',w:'기름에 김치까지 구워 뜨끈한 한 끼',min:25},
+        {n:'더치오븐 무수분 토마토 비프 스튜',w:'뭉근하게 끓여 열기까지 챙겨요',min:50},
+        {n:'핫초코 마시멜로 & 스모어',w:'손 시릴 때 마시는 따뜻한 음료',min:10}
+      ],
+      tip:'추울수록 화력이 약해져 조리 시간이 20~30% 길어져요. 뜨거운 물은 보온병에 미리 담아 두세요.',
+      gear:[['핫팩','소모품'],['보온병','소모품'],['장작·숯 여유분','소모품'],['여분 담요','장비'],['따뜻한 차 티백','소모품']]},
+    chilly:{label:'쌀쌀',icon:'🧣',line:'제법 쌀쌀해요. 뜨끈한 국물 한 그릇을 곁들이면 좋아요.',
+      prescribe:'쌀쌀한 날씨입니다. 따뜻한 국물이나 화기 앞에서 만드는 메뉴를 곁들이세요.',
+      menus:[
+        {n:'코펠 얼큰 어묵탕 & 우동',w:'뜨끈한 국물로 시작하기 좋아요',min:15},
+        {n:'코펠 순두부찌개 & 계란말이',w:'부담 없이 뜨끈하게',min:20},
+        {n:'숯불 닭꼬치 & 대파구이',w:'불 앞에 서 있으면 저절로 따뜻해져요',min:25}
+      ],
+      tip:'해가 지면 기온이 뚝 떨어져요. 저녁 메뉴는 국물 위주로 미리 정해 두세요.',
+      gear:[['핫팩','소모품'],['긴팔·바람막이','소모품'],['보온병','소모품']]},
+    wind:{label:'강풍',icon:'💨',line:'바람이 강해요. 화력이 약해지고 불티가 튀니 방풍과 화기 관리가 우선이에요.',
+      prescribe:'바람이 강한 날씨입니다. 냄비 요리나 강불 단시간 조리처럼 바람 영향을 덜 받는 메뉴를 고르고, 불티가 멀리 날아가는 숯불 위주 메뉴는 피하세요.',
+      menus:[
+        {n:'코펠 캠핑 부대찌개',w:'버너 위에서 뚜껑 닫고 끓여요',min:20},
+        {n:'그리들 차돌박이 숙주볶음',w:'강불에서 3분이면 끝나요',min:15},
+        {n:'스킬렛 감바스 알 아히요',w:'약불로 천천히, 바람 영향이 적어요',min:15}
+      ],
+      tip:'숯불은 불티가 멀리 날아가요. 캠핑장 화로대 위치와 소화 설비를 먼저 확인하세요.',
+      gear:[['방풍판','장비'],['파라코드·팩','소모품'],['테이블 고정용 스트링','소모품'],['숯 여유분','소모품'],['물 양동이(불씨 대비)','장비']]},
+    hot:{label:'무더위',icon:'🥵',line:'무더위예요. 재료 상함과 화기 앞 체온 상승을 피하는 메뉴가 좋아요.',
+      prescribe:'무더운 날씨입니다. 조리 시간이 짧고 뜨겁지 않은 가벼운 메뉴를 고르고, 오래 끓이는 국물 요리는 피하세요.',
+      menus:[
+        {n:'코펠 비빔국수 & 열무김치',w:'불 앞에 오래 서 있지 않아요',min:15},
+        {n:'스킬렛 감바스 알 아히요',w:'짧게 조리하고 빵과 함께',min:15},
+        {n:'그리들 차돌박이 숙주볶음',w:'강불 3분이면 끝나요',min:15}
+      ],
+      tip:'고기·해산물은 5도 이하 보냉 필수예요. 상온에 2시간 넘게 둔 음식은 버리세요.',
+      gear:[['얼음·보냉제 추가','소모품'],['쿨러 2개(음료·식재료 분리)','장비'],['모기 기피제','소모품'],['전해질 음료','소모품']]},
+    warm:{label:'더움',icon:'😎',line:'더운 편이에요. 가볍고 산뜻한 메뉴가 잘 맞아요.',
+      prescribe:'더운 편인 날씨입니다. 조리가 짧고 산뜻한 메뉴를 고르고 재료 보냉을 강조하세요.',
+      menus:[
+        {n:'코펠 비빔국수 & 열무김치',w:'시원하고 가볍게',min:15},
+        {n:'스킬렛 감바스 알 아히요',w:'15분 완성, 뜨겁지 않게',min:15},
+        {n:'그리들 차돌박이 숙주볶음',w:'숙주로 산뜻하게',min:15}
+      ],
+      tip:'쿨러에 얼음을 넉넉히 넣고, 자주 여는 음료 쿨러와 식재료 쿨러를 나눠 쓰세요.',
+      gear:[['얼음 여유분','소모품']]},
+    mild:{label:'좋음',icon:'⛺',line:'요리하기 좋은 날씨예요. 불멍 겸 숯불 요리를 즐겨 보세요.',
+      prescribe:'요리하기 좋은 날씨입니다. 숯불·그리들 요리처럼 캠핑다운 메뉴를 고르세요.',
+      menus:[
+        {n:'숯불 돈마호크 바비큐',w:'날씨 좋은 날의 캠핑 메인',min:35},
+        {n:'그리들 통삼겹 구이 & 구운 김치',w:'실패 없는 캠핑 대표 메뉴',min:25},
+        {n:'숯불 닭꼬치 & 대파구이',w:'불멍하며 하나씩 구워 먹어요',min:25},
+        {n:'스킬렛 감바스 알 아히요',w:'가볍게 곁들이는 안주',min:15}
+      ],
+      tip:'불멍 계획이 있다면 숯·장작을 넉넉히 챙기고, 물을 옆에 두세요.',
+      gear:[['숯·장작 여유분','소모품'],['불멍용 랜턴','장비']]}
+  };
+  var MANUAL_WX=[
+    {k:'rain-chilly',label:'☔ 비 · 쌀쌀',code:63,temp:11,feels:9,wind:4,prec:1.2},
+    {k:'rain-hot',label:'🌧️ 비 · 더움',code:80,temp:26,feels:29,wind:3,prec:2},
+    {k:'snow-cold',label:'❄️ 눈 · 추움',code:73,temp:1,feels:-3,wind:3,prec:1.5},
+    {k:'clear-cold',label:'☀️ 맑음 · 추움',code:0,temp:3,feels:1,wind:2,prec:0},
+    {k:'clear-mild',label:'🌤️ 맑음 · 보통',code:1,temp:18,feels:18,wind:2,prec:0},
+    {k:'clear-hot',label:'☀️ 맑음 · 더움',code:0,temp:30,feels:32,wind:2,prec:0},
+    {k:'wind-chilly',label:'💨 바람 · 쌀쌀',code:3,temp:10,feels:7,wind:11,prec:0}
+  ];
+
+  /* ---------- 캠핑장 데이터(로컬 번들) ---------- */
+  var campCache=null;
+  function camps(){
+    if(campCache)return campCache;
+    var raw=(typeof window!=='undefined'&&window.CAMP_GROUNDS_DATA)||null;
+    var sido=(raw&&raw.sido)||SIDO_FALLBACK, kinds=(raw&&raw.kinds)||KIND_FALLBACK;
+    campCache={sido:sido,kinds:kinds,list:[]};
+    if(!raw||!raw.rows)return campCache;
+    raw.rows.split('\n').forEach(function(line){
+      if(!line)return;
+      var p=line.split('|');
+      if(p.length<5)return;
+      var ll=p[3].split(',');
+      var lat=Number(ll[0]),lon=Number(ll[1]);
+      if(!isFinite(lat)||!isFinite(lon)||!lat||!lon)return;
+      var mask=parseInt(p[4],36)||1,sname=sido[parseInt(p[2],36)]||'';
+      campCache.list.push({name:p[0],sido:sname,sg:p[1],region:(sname+' '+p[1]).trim(),lat:lat,lon:lon,kind:mask,kindText:kindText(mask),src:'data'});
+    });
+    return campCache;
+  }
+  function kindText(mask){
+    var out=[];
+    camps().kinds.forEach(function(k){if(mask&k[0])out.push(k[1])});
+    return out.join('·')||'야영장';
+  }
+  var CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  function initials(s){
+    var out='';
+    String(s).split('').forEach(function(ch){
+      var code=ch.charCodeAt(0)-0xAC00;
+      out+=(code<0||code>11171)?ch:CHO.charAt(Math.floor(code/588));
+    });
+    return out;
+  }
+  function distKm(a,b){
+    var R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLon=(b.lon-a.lon)*Math.PI/180;
+    var la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;
+    var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  }
+  function fmtKm(km){
+    if(km==null||!isFinite(km))return '';
+    if(km<1)return Math.max(10,Math.round(km*1000/10)*10)+'m';
+    if(km<10)return (Math.round(km*10)/10)+'km';
+    return Math.round(km)+'km';
+  }
+  function campMatch(c,q){
+    var name=String(c.name).replace(/\s+/g,''),nq=String(q).replace(/\s+/g,'');
+    if(nq.length<1)return 0;
+    if(name.indexOf(nq)===0)return 100;
+    if(name.indexOf(nq)>0)return 80;
+    if(initials(name).indexOf(initials(nq))===0)return 55;
+    if(String(c.sg||'').indexOf(nq)>=0||String(c.sido||'').indexOf(nq)>=0)return 45;
+    if(String(c.region||'').indexOf(nq)>=0)return 35;
+    return 0;
+  }
+  /* 번들 데이터 + 실시간(OSM) 결과를 합친 목록 */
+  function campPool(){
+    var pool=camps().list.slice(),seen={};
+    pool.forEach(function(c){seen[c.name.replace(/\s+/g,'')]=1});
+    (ui.osmCamps||[]).forEach(function(c){
+      if(seen[c.name.replace(/\s+/g,'')])return;
+      seen[c.name.replace(/\s+/g,'')]=1;
+      pool.push(c);
+    });
+    return pool;
+  }
+  function nearbyCamps(loc,limit,maxKm){
+    var arr=campPool().map(function(c){return {c:c,d:distKm(loc,c)}}).filter(function(x){return x.d<=(maxKm||80)});
+    arr.sort(function(a,b){return a.d-b.d});
+    return arr.slice(0,limit||8).map(function(x){return x.c});
+  }
+
+  /* ---------- 네트워크 도우미 ---------- */
+  function fetchTimeout(url,ms,opts){
+    var ac=new AbortController();
+    var timer=setTimeout(function(){ac.abort()},ms||12000);
+    return fetch(url,Object.assign({signal:ac.signal},opts||{})).then(
+      function(r){clearTimeout(timer);return r},
+      function(e){clearTimeout(timer);throw e}
+    );
+  }
+
+  /* ---------- 현재 위치 ---------- */
+  function getMyLocation(){
+    return new Promise(function(resolve,reject){
+      if(!navigator.geolocation){reject('unsupported');return}
+      navigator.geolocation.getCurrentPosition(
+        function(pos){resolve({lat:pos.coords.latitude,lon:pos.coords.longitude,acc:pos.coords.accuracy,at:Date.now()})},
+        function(){reject('denied')},
+        {enableHighAccuracy:false,timeout:9000,maximumAge:600000}
+      );
+    });
+  }
+  async function useMyLocation(){
+    ui.wxQ='';ui.wxIdx=-1;ui.wxOpen=true;ui.locBusy=true;render();
+    try{
+      var pos=await getMyLocation();
+      ui.myLoc=pos;store.set('cc.loc',pos);
+      var near=nearbyCamps(pos,1,25)[0];
+      var loc={
+        name:(near?'현재 위치 · '+near.name+' 근처':'현재 위치'),
+        region:(near?near.region:''),lat:pos.lat,lon:pos.lon,
+        kindText:'GPS',src:'gps',at:Date.now()
+      };
+      ui.wxLoc=loc;
+      profile.camp={name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon,src:'gps'};
+      saveProfile();
+      loadOsmNearby();
+      await loadWeather();
+    }catch(e){
+      showNotice(e==='unsupported'?'이 브라우저에서는 위치를 쓸 수 없어요. 캠핑장 이름이나 지역으로 찾아보세요.':'위치 사용을 허용하지 않아 인근 캠핑장을 찾지 못했어요. 이름이나 지역으로 검색해 주세요.');
+      ui.wxOpen=true;render();
+    }finally{ui.locBusy=false;updateSuggest()}
+  }
+
+  /* ---------- 실시간 주변 야영지(OpenStreetMap Overpass) ---------- */
+  async function loadOsmNearby(force){
+    var loc=ui.myLoc;
+    if(!loc)return;
+    var key=loc.lat.toFixed(2)+','+loc.lon.toFixed(2);
+    var cached=store.get('cc.osm',null);
+    if(!force&&cached&&cached.key===key&&Date.now()-(cached.at||0)<12*3600*1000){
+      ui.osmCamps=cached.list||[];
+      return;
+    }
+    ui.osmBusy=true;updateSuggest();
+    try{
+      var at=loc.lat.toFixed(4)+','+loc.lon.toFixed(4);
+      var q='[out:json][timeout:18];(node["tourism"="camp_site"](around:30000,'+at+');way["tourism"="camp_site"](around:30000,'+at+'););out center 80;';
+      var res=await fetchTimeout('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),16000);
+      var d=await res.json();
+      var out=[];
+      ((d&&d.elements)||[]).forEach(function(el){
+        var t=el.tags||{},nm=str(t.name||t['name:ko']||'');
+        if(!nm)return;
+        var lat=(el.lat!=null?el.lat:(el.center&&el.center.lat));
+        var lon=(el.lon!=null?el.lon:(el.center&&el.center.lon));
+        if(lat==null||lon==null)return;
+        out.push({name:nm,sido:'',sg:'',region:(t['addr:province']||t['addr:city']||'실시간 지도(OSM)'),lat:lat,lon:lon,kind:0,kindText:'야영지(OSM)',src:'osm'});
+      });
+      ui.osmCamps=out;
+      store.set('cc.osm',{key:key,at:Date.now(),list:out});
+    }catch(e){ui.osmErr=true}
+    finally{ui.osmBusy=false;if(ui.wxOpen)updateSuggest()}
+  }
+
+  /* ---------- 지역·장소 검색(지오코딩) ---------- */
+  var placeCache={},placeTimer=null;
+  async function loadPlaces(q){
+    var key=str(q);
+    if(key.length<2)return;
+    if(placeCache[key]){
+      if(str(ui.wxQ)===key){ui.places=placeCache[key];updateSuggest()}
+      return;
+    }
+    try{
+      var res=await fetchTimeout('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(key)+'&count=5&language=ko&format=json',9000);
+      var d=await res.json();
+      var out=((d&&d.results)||[]).map(function(r){
+        return {name:str(r.name),sido:'',sg:'',region:[r.admin1,r.country].filter(Boolean).join(' · '),lat:r.latitude,lon:r.longitude,kind:0,kindText:'지역',src:'geo'};
+      });
+      placeCache[key]=out;
+      if(str(ui.wxQ)===key){ui.places=out;updateSuggest()}
+    }catch(e){}
+  }
+
+  /* ---------- 자동완성 목록 만들기 ---------- */
+  function suggestGroups(){
+    var q=str(ui.wxQ),my=ui.myLoc,groups=[];
+    if(!q){
+      if(profile.camp){
+        groups.push({title:'선택한 캠핑지',items:[{name:profile.camp.name,region:profile.camp.region||'',lat:profile.camp.lat,lon:profile.camp.lon,kindText:'저장됨',src:'picked'}]});
+      }
+      var recents=(store.get('cc.camps',[])||[]).filter(function(c){return !(profile.camp&&c.name===profile.camp.name)});
+      if(recents.length)groups.push({title:'최근 찾은 캠핑지',items:recents.slice(0,4).map(function(c){return {name:c.name,region:c.region||'',lat:c.lat,lon:c.lon,kindText:'최근',src:'recent'}})});
+      if(my){
+        var near=nearbyCamps(my,8,80);
+        if(near.length)groups.push({title:'📍 내 주변 캠핑장 (가까운 순)',items:near});
+        var osm=(ui.osmCamps||[]).slice().map(function(c){c.d=distKm(my,c);return c}).sort(function(a,b){return a.d-b.d}).slice(0,5);
+        if(osm.length)groups.push({title:'📡 실시간 지도에서 찾은 주변 야영지',items:osm});
+      }
+      return groups;
+    }
+    var matches=campPool().map(function(c){return {c:c,s:campMatch(c,q)}}).filter(function(x){return x.s>0});
+    matches.sort(function(a,b){
+      if(b.s!==a.s)return b.s-a.s;
+      if(my)return distKm(my,a.c)-distKm(my,b.c);
+      return String(a.c.name).localeCompare(String(b.c.name));
+    });
+    if(matches.length)groups.push({title:'⛺ 캠핑장 이름·지역',items:matches.slice(0,7).map(function(x){return x.c})});
+    if(ui.places&&ui.places.length)groups.push({title:'🗺️ 지역·장소로 찾기 (그 지역 날씨)',items:ui.places.slice(0,4)});
+    return groups;
+  }
+  function suggestRows(){
+    var q=str(ui.wxQ),rows=[],groups=suggestGroups(),my=ui.myLoc,any=false;
+    groups.forEach(function(g){
+      if(!g.items.length)return;
+      rows.push({sec:g.title});
+      g.items.forEach(function(c){
+        any=true;
+        rows.push({name:c.name,region:c.region||'',kindText:c.kindText||'',src:c.src||'data',lat:c.lat,lon:c.lon,dist:my?distKm(my,c):null});
+      });
+    });
+    if(!any){
+      if(q)rows.push({hint:'「'+q+'」와 맞는 캠핑장이 없어요. 지역 이름(예: 가평, 제주)이나 다른 키워드로 검색해 보세요.'});
+      else if(!my)rows.push({hint:'현재 위치를 허용하면 가까운 캠핑장부터 찾아 드려요.',action:'loc-use',btn:'📍 내 위치로 찾기'});
+      else rows.push({hint:'주변 80km 안에서 캠핑장을 찾지 못했어요. 이름이나 지역 이름으로 검색해 보세요.'});
+    }
+    if(!q&&my&&!ui.osmErr)rows.push({
+      hint:ui.osmBusy?'실시간 지도에서 주변 야영지를 찾는 중이에요…':'실시간 지도(OpenStreetMap)로 주변 야영지를 더 찾아볼 수 있어요.',
+      action:ui.osmBusy?'':'osm-load',
+      btn:ui.osmBusy?'':'📡 실시간으로 더 찾기'
+    });
+    return rows;
+  }
+  function updateSuggest(){
+    var box=document.getElementById('camp-ac');
+    if(!box)return;
+    var rows=suggestRows();
+    ui.wxSug=rows;
+    ui.wxPick=[];
+    var html='';
+    rows.forEach(function(r,i){
+      if(r.sec){html+='<li class="ac-sec" role="presentation">'+esc(r.sec)+'</li>';return}
+      if(r.hint){
+        html+='<li class="ac-note" role="presentation"><span>'+esc(r.hint)+'</span>'+(r.btn?'<button class="chip sm" type="button" data-a="'+esc(r.action)+'">'+esc(r.btn)+'</button>':'')+'</li>';
+        return;
+      }
+      ui.wxPick.push(i);
+      var sel=(ui.wxIdx>=0&&ui.wxPick[ui.wxIdx]===i);
+      html+='<li class="ac-item" id="ac-opt-'+i+'" role="option" aria-selected="'+(sel?'true':'false')+'" data-a="ac-pick" data-i="'+i+'" data-src="'+esc(r.src)+'">'+
+        '<span><b>'+esc(r.name)+'</b><small>'+esc([r.region,r.kindText].filter(Boolean).join(' · '))+'</small></span>'+
+        (r.dist!=null?'<span class="ac-dist">'+esc(fmtKm(r.dist))+'</span>':'')+
+      '</li>';
+    });
+    if(!html)html='<li class="ac-note"><span>캠핑장 이름이나 지역 이름을 입력해 보세요.</span></li>';
+    box.innerHTML=html;
+    var open=!!ui.wxOpen;
+    box.hidden=!open;
+    var input=document.getElementById('camp-search');
+    if(input){
+      input.setAttribute('aria-expanded',open?'true':'false');
+      var aid=(ui.wxIdx>=0&&ui.wxPick[ui.wxIdx]!=null)?('ac-opt-'+ui.wxPick[ui.wxIdx]):'';
+      if(aid)input.setAttribute('aria-activedescendant',aid);else input.removeAttribute('aria-activedescendant');
+    }
+  }
+  function moveSuggest(delta){
+    var n=ui.wxPick?ui.wxPick.length:0;
+    if(!n)return;
+    if(ui.wxIdx<0)ui.wxIdx=delta>0?0:n-1;
+    else ui.wxIdx=(ui.wxIdx+delta+n)%n;
+    var row=ui.wxSug[ui.wxPick[ui.wxIdx]];
+    updateSuggest();
+    var el=document.getElementById('ac-opt-'+ui.wxPick[ui.wxIdx]);
+    if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'});
+  }
+  function selectSuggest(i){
+    var row=ui.wxSug[Number(i)];
+    if(!row||!row.name)return;
+    chooseCamp(row);
+  }
+  function chooseCamp(c){
+    ui.wxOpen=false;ui.wxQ='';ui.wxIdx=-1;ui.places=[];
+    var loc={name:c.name,region:c.region||'',kindText:c.kindText||'',lat:c.lat,lon:c.lon,src:c.src||'data',at:Date.now()};
+    ui.wxLoc=loc;
+    profile.camp={name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon,src:loc.src};
+    saveProfile();
+    var recents=(store.get('cc.camps',[])||[]).filter(function(x){return x.name!==loc.name});
+    recents.unshift({name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon});
+    store.set('cc.camps',recents.slice(0,6));
+    ui.wx=null;ui.wxKey='';
+    loadWeather();
+  }
+  function clearCamp(){
+    profile.camp=null;ui.wxLoc=null;ui.wx=null;ui.wxKey='';ui.wxQ='';ui.wxOpen=false;ui.places=[];
+    saveProfile();render();
+  }
+
+  /* ---------- 날씨 ---------- */
+  function wxKey(loc){return Number(loc.lat).toFixed(2)+','+Number(loc.lon).toFixed(2)}
+  function wxUrl(lat,lon){
+    return 'https://api.open-meteo.com/v1/forecast?latitude='+Number(lat).toFixed(4)+'&longitude='+Number(lon).toFixed(4)+
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m'+
+      '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m'+
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset'+
+      '&timezone=Asia%2FSeoul&forecast_days=4';
+  }
+  function parseWx(d){
+    var c=d.current||{},h=d.hourly||{},dy=d.daily||{};
+    var hours=[];
+    if(Array.isArray(h.time)&&h.time.length){
+      var nowIso=String(c.time||'').slice(0,13)||String(h.time[0]).slice(0,13);
+      var start=0;
+      for(var i=0;i<h.time.length;i++){if(String(h.time[i]).slice(0,13)>=nowIso){start=i;break}}
+      for(var j=start;j<h.time.length&&j<start+12;j++){
+        hours.push({
+          t:String(h.time[j]).slice(11,16),
+          temp:pick(h.temperature_2m,j),pop:pick(h.precipitation_probability,j),
+          prec:pick(h.precipitation,j),code:pick(h.weather_code,j),wind:pick(h.wind_speed_10m,j)
+        });
+      }
+    }
+    var days=[];
+    if(Array.isArray(dy.time)){
+      for(var k=0;k<dy.time.length&&k<4;k++){
+        days.push({
+          d:dy.time[k],code:pick(dy.weather_code,k),tmin:pick(dy.temperature_2m_min,k),tmax:pick(dy.temperature_2m_max,k),
+          pop:pick(dy.precipitation_probability_max,k),prec:pick(dy.precipitation_sum,k),wind:pick(dy.wind_speed_10m_max,k)
+        });
+      }
+    }
+    return {
+      at:Date.now(),t:c.time||'',temp:(c.temperature_2m==null?null:c.temperature_2m),feels:(c.apparent_temperature==null?null:c.apparent_temperature),
+      hum:c.relative_humidity_2m,prec:c.precipitation,code:c.weather_code,wind:c.wind_speed_10m,gust:c.wind_gusts_10m,
+      sunrise:Array.isArray(dy.sunrise)?dy.sunrise[0]:null,sunset:Array.isArray(dy.sunset)?dy.sunset[0]:null,
+      hours:hours,days:days
+    };
+  }
+  function pick(arr,i){return (arr&&arr[i]!=null)?arr[i]:null}
+  function wxInfo(w){
+    if(!w)return null;
+    var code=w.code,feels=(w.feels==null)?(w.temp==null?15:w.temp):w.feels;
+    var pop=0;
+    (w.hours||[]).slice(0,6).forEach(function(h){if(h.pop!=null&&h.pop>pop)pop=h.pop});
+    if(!pop&&w.days&&w.days[0]&&w.days[0].pop!=null)pop=w.days[0].pop;
+    var snowNow=(SNOW_CODES.indexOf(code)>=0)||(w.prec>0.3&&(w.temp!=null&&w.temp<1.5));
+    var rainNow=!snowNow&&((RAIN_CODES.indexOf(code)>=0)||w.prec>0.3||pop>=60);
+    var tags=[];
+    if(snowNow)tags.push('snow');else if(rainNow)tags.push('rain');
+    if(w.wind>=8||w.gust>=14)tags.push('wind');
+    if(feels<=5)tags.push('cold');else if(feels<=12)tags.push('chilly');
+    if(feels>=29)tags.push('hot');else if(feels>=24)tags.push('warm');
+    if(!tags.length)tags.push('mild');
+    return {tags:tags,primary:tags[0],label:(w.manual?w.label:wmo(code)[0]),icon:wmo(code)[1],pop:pop,feels:feels,rain:rainNow,snow:snowNow,manual:!!w.manual};
+  }
+  function wxMenus(info){
+    var out=[],seen={};
+    info.tags.slice(0,2).forEach(function(t){
+      (WX_RULES[t]&&WX_RULES[t].menus||[]).forEach(function(m){
+        if(seen[m.n])return;
+        seen[m.n]=1;
+        out.push({n:m.n,w:m.w,min:m.min,label:WX_RULES[t].label});
+      });
+    });
+    return out.slice(0,4);
+  }
+  function wxGear(info){
+    var out=[],seen={};
+    info.tags.forEach(function(t){
+      (WX_RULES[t]&&WX_RULES[t].gear||[]).forEach(function(g){
+        if(seen[g[0]])return;
+        seen[g[0]]=1;
+        out.push({n:g[0],g:g[1]||'소모품'});
+      });
+    });
+    return out.slice(0,6);
+  }
+  async function loadWeather(){
+    var loc=ui.wxLoc;
+    if(!loc){render();return}
+    ui.wxBusy=true;ui.wxErr='';render();
+    var key=wxKey(loc);
+    try{
+      var res=await fetchTimeout(wxUrl(loc.lat,loc.lon),12000);
+      if(!res.ok)throw new Error('http '+res.status);
+      var data=parseWx(await res.json());
+      ui.wx=data;ui.wxKey=key;ui.wxErr='';ui.wxStale=false;
+      store.set('cc.wx',{key:key,at:Date.now(),data:data,loc:loc});
+    }catch(e){
+      var cached=store.get('cc.wx',null);
+      if(cached&&cached.key===key&&cached.data){
+        ui.wx=cached.data;ui.wxKey=key;ui.wxStale=true;
+        showNotice('신호가 약해 저장해 둔 예보를 보여드려요.');
+      }else{
+        ui.wxErr='날씨를 못 불러왔어요. 신호가 약하거나 날씨 서비스가 잠시 막힌 상태예요. 아래에서 지금 날씨를 직접 골라도 맞춤 메뉴는 그대로 나와요.';
+      }
+    }finally{ui.wxBusy=false;render()}
+  }
+  function setManualWx(k){
+    var p=null;
+    MANUAL_WX.forEach(function(x){if(x.k===k)p=x});
+    if(!p)return;
+    ui.wx={manual:true,label:p.label,at:Date.now(),temp:p.temp,feels:p.feels,code:p.code,prec:p.prec,wind:p.wind,gust:p.wind,hours:[],days:[],sunrise:null,sunset:null};
+    ui.wxKey='manual:'+p.k;ui.wxErr='';ui.wxStale=false;
+    showNotice('「'+p.label+'」 기준으로 날씨 맞춤 메뉴를 골랐어요.');
+    render();
+  }
+
+  /* ---------- 날씨가 준비물·추천에 반영되는 부분 ---------- */
+  function wxContext(){
+    var w=ui.wx;
+    if(!w)return null;
+    var info=wxInfo(w);
+    var loc=ui.wxLoc||profile.camp||null;
+    return {
+      info:info,
+      tag:info.primary,
+      icon:WX_RULES[info.primary].icon,
+      label:info.label,
+      summary:(w.manual?'':wmo(w.code)[0]+' ')+deg(info.feels)+' · 강수확률 '+info.pop+'%',
+      where:loc?(loc.name+(loc.region?' ('+loc.region+')':'')):'캠핑지',
+      name:loc?loc.name:'캠핑지',
+      line:WX_RULES[info.primary].line,
+      prescribe:WX_RULES[info.primary].prescribe
+    };
+  }
+  var wxMenuNameCache={};
+  function wxMenuNames(tag){
+    if(wxMenuNameCache[tag])return wxMenuNameCache[tag];
+    var arr=(WX_RULES[tag]&&WX_RULES[tag].menus||[]).map(function(m){return m.n});
+    wxMenuNameCache[tag]=arr;
+    return arr;
+  }
+  function wxPromptBlock(){
+    var wx=profile.wxAware?wxContext():null;
+    if(!wx)return '';
+    return '- 캠핑지: '+wx.where+'\n'+
+      '- 캠핑지 날씨: '+wx.summary+' (기온 '+(ui.wx.temp==null?'-':deg(ui.wx.temp))+', 풍속 '+(ui.wx.wind==null?'-':ui.wx.wind)+'m/s)\n'+
+      '- 날씨 요구사항: '+wx.prescribe+'\n';
+  }
+  function wxStorageLine(){
+    var wx=profile.wxAware?wxContext():null;
+    if(!wx)return '';
+    var line='- 날씨에 맞는 보관·조리 안내를 준비물과 팁에 반영하세요.';
+    if(ui.wx&&(ui.wx.temp!=null&&ui.wx.temp>=24))line='- 더운 날씨이므로 상하기 쉬운 재료는 보냉·조리 직전 손질을 안내하고, 실온 방치 시간을 짧게 쓰세요.';
+    else if(wx.info.rain||wx.info.snow)line='- 비·눈 예보이므로 타프 아래 조리, 방수·바닥 습기 대비, 따뜻한 국물 제공을 팁에 넣으세요.';
+    else if(ui.wx&&(ui.wx.feels!=null&&ui.wx.feels<=7))line='- 추운 날씨이므로 뜨거운 물 보온, 국물 요리, 화력 보강 팁을 넣으세요.';
+    return line+'\n';
+  }
+
+  /* ---------- 날씨 대비 준비물 ---------- */
+  function addWeatherGear(){
+    var wx=wxContext();
+    if(!wx){showNotice('먼저 캠핑지를 고르거나 날씨를 선택해 주세요.');return}
+    var gear=wxGear(wx.info);
+    if(!gear.length)return;
+    var stamp=Date.now();
+    var items=gear.map(function(g,i){
+      return {id:'w'+(stamp+i),group:g.g,text:g.n,amount:'',alt:'',tag:'',checked:false,note:'날씨 대비'};
+    });
+    if(!list){
+      list={
+        dish:wx.name+' 날씨 대비 준비물',
+        dishes:[wx.name+' 날씨 대비 준비물'],
+        reason:wx.icon+' '+wx.label+' 예보에 맞춘 준비물이에요.',
+        people:ui.people,
+        summary:wx.icon+' '+wx.label+' 날씨 기준 · '+wx.where,
+        pairing:'',
+        items:items,
+        prepTips:[WX_RULES[wx.tag].tip],
+        steps:[],
+        tips:[WX_RULES[wx.tag].tip]
+      };
+    }else{
+      var added=0;
+      gear.forEach(function(g,i){
+        var exists=list.items.some(function(x){return x.group===g.g&&x.text===g.n});
+        if(!exists){
+          list.items.push({id:'w'+(stamp+i),group:g.g,text:g.n,amount:'',alt:'',tag:'',checked:false});
+          added++;
+        }
+      });
+      list.prepTips=(list.prepTips||[]);
+      if(list.prepTips.indexOf(WX_RULES[wx.tag].tip)<0)list.prepTips.push(WX_RULES[wx.tag].tip);
+      if(!added){showNotice('날씨 대비 준비물이 이미 목록에 있어요.');return}
+    }
+    store.set('cc.list',list);
+    ui.tab='list';window.scrollTo(0,0);
+    showNotice(wx.icon+' '+wx.label+' 날씨 대비 준비물 '+gear.length+'개를 준비물 목록에 넣었어요!');
+  }
+  function pickWeatherMenu(name){
+    var info=ui.wx?wxInfo(ui.wx):null;
+    var reason=info?(WX_RULES[info.primary].icon+' '+WX_RULES[info.primary].label+' 날씨에 맞춰 고른 메뉴예요.'):'날씨 맞춤 메뉴';
+    pickDish({name:name,minutes:0,level:'',equipment:[],reason:reason},false);
+  }
+  function wxAiRecs(){
+    var wx=wxContext();
+    var turnedOn=false;
+    if(wx&&!profile.wxAware){profile.wxAware=true;turnedOn=true;saveProfile();render()}
+    if(wx){
+      var mood=({rain:'국물 요리',snow:'국물 요리',cold:'든든하게',chilly:'국물 요리',wind:'든든하게',hot:'가볍게',warm:'가볍게',mild:'든든하게'})[wx.tag];
+      if(mood)ui.mood=mood;
+      showNotice((turnedOn?'날씨 맞춤 추천을 켜고, ':'')+wx.icon+' '+wx.label+' 날씨에 맞춰 분위기를 「'+ui.mood+'」로 두고 추천을 시작해요.');
+    }
+    getRecs(false);
+  }
+
+  /* ---------- 화면: 캠핑지 찾기 카드 ---------- */
+  function pickedCampRow(){
+    var camp=profile.camp||ui.wxLoc;
+    if(!camp)return '';
+    var dist=(ui.myLoc&&camp.lat!=null)?fmtKm(distKm(ui.myLoc,camp)):'';
+    var info=ui.wx?wxInfo(ui.wx):null;
+    return '<div class="picked">'+
+      '<span>⛺ <b>'+esc(camp.name)+'</b><br><small>'+esc([camp.region||'',dist&&('내 위치에서 '+dist)].filter(Boolean).join(' · ')||'선택한 캠핑지')+'</small></span>'+
+      '<span style="display:flex;gap:6px;align-items:center">'+
+        (info?'<span class="wx-tag">'+info.icon+' '+esc(info.label)+'</span>':'')+
+        '<button class="chip sm" type="button" data-a="wx-clear">지우기 ✕</button>'+
+      '</span>'+
+    '</div>';
+  }
+  function locCard(){
+    var h='<section class="card loc-card" id="loc-card"><h2>캠핑지 찾기</h2>'+
+      '<p class="hint" style="margin:0 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
+      '<div class="ac-wrap">'+
+        '<div class="loc-row">'+
+          '<input id="camp-search" class="loc-input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="camp-ac" autocomplete="off" spellcheck="false" placeholder="예: 자라섬, 가평, 제주 서귀포" aria-label="캠핑장 또는 지역 검색" value="'+esc(ui.wxQ)+'">'+
+          '<button class="btn" type="button" data-a="loc-use"'+(ui.locBusy?' disabled':'')+'>'+(ui.locBusy?'찾는 중…':'📍 내 위치')+'</button>'+
+        '</div>'+
+        '<ul class="ac-list" id="camp-ac" role="listbox" aria-label="캠핑장 제안" hidden></ul>'+
+      '</div>'+
+      pickedCampRow();
+    if(!ui.myLoc)h+='<p class="hint" style="margin:12px 0 0">📡 <b>내 위치</b>를 누르면 GPS로 반경 30km 안의 캠핑장을 가까운 순서로 보여드려요. (위치 정보는 이 폰에만 저장돼요.)</p>';
+    else h+='<p class="hint" style="margin:12px 0 0">📍 현재 위치: '+esc(ui.myLoc.lat.toFixed(3))+', '+esc(ui.myLoc.lon.toFixed(3))+(ui.osmCamps&&ui.osmCamps.length?' · 실시간 지도에서 '+ui.osmCamps.length+'곳을 함께 반영했어요.':'')+'</p>';
+    if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
+    return h+'</section>';
+  }
+  function manualWxPicker(){
+    return '<div class="field" style="margin:16px 0 0"><span class="lab">지금 날씨를 직접 고르기 (네트워크 없이도 동작)</span>'+
+      '<div class="chips">'+MANUAL_WX.map(function(p){
+        return '<button class="chip sm" type="button" data-a="wx-manual" data-v="'+esc(p.k)+'" aria-pressed="'+(ui.wxKey==='manual:'+p.k)+'">'+esc(p.label)+'</button>';
+      }).join('')+'</div></div>';
+  }
+
+  /* ---------- 화면: 날씨 카드 ---------- */
+  function wxHoursHtml(w){
+    if(!w.hours||!w.hours.length)return '';
+    return '<div class="wx-hours">'+w.hours.slice(0,8).map(function(h){
+      var ic=wmo(h.code)[1];
+      return '<div class="wx-hour">'+esc(String(h.t).slice(0,2))+'시<div class="wx-h-ic">'+ic+'</div><b>'+deg(h.temp)+'</b>'+
+        (h.pop!=null?'<small>💧'+Math.round(h.pop)+'%</small>':'')+'</div>';
+    }).join('')+'</div>';
+  }
+  function wxDaysHtml(w){
+    if(!w.days||!w.days.length)return '';
+    var names=['오늘','내일','모레'];
+    return '<div class="wx-days">'+w.days.map(function(d,i){
+      var ic=wmo(d.code)[1],lab=names[i]||String(d.d||'').slice(5);
+      return '<div class="wx-day"><span class="wx-d-plus">'+esc(lab)+' '+ic+'</span>'+
+        '<span class="wx-d-bar"><i style="width:'+Math.max(4,Math.min(100,((d.pop==null?0:d.pop))))+'%"></i></span>'+
+        '<span class="wx-d-temp">'+deg(d.tmin)+'~'+deg(d.tmax)+(d.pop!=null?' · 💧'+Math.round(d.pop)+'%':'')+'</span></div>';
+    }).join('')+'</div>';
+  }
+  function wxCard(){
+    if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)return '';
+    if(ui.wxBusy){
+      return '<section class="card"><h2>캠핑지 날씨</h2><div class="loading" role="status"><span class="spin" aria-hidden="true"></span><p>'+esc((ui.wxLoc&&ui.wxLoc.name)||'캠핑지')+' 날씨를 불러오는 중이에요…</p></div></section>';
+    }
+    var h='';
+    if(ui.wxErr){
+      h+='<section class="card"><h2>캠핑지 날씨</h2><p class="err" role="alert">'+esc(ui.wxErr)+'</p>'+
+        '<button class="btn wide" type="button" data-a="wx-refresh">날씨 다시 불러오기</button>'+manualWxPicker()+'</section>';
+      return h;
+    }
+    var w=ui.wx,info=wxInfo(w),wx=wxContext(),loc=ui.wxLoc||profile.camp||{name:'캠핑지'};
+    var rule=WX_RULES[info.primary];
+    var dist=(ui.myLoc&&loc.lat!=null)?fmtKm(distKm(ui.myLoc,loc)):'';
+    h+='<section class="card"><div class="wx-head"><h2 style="margin:0">캠핑지 날씨</h2>'+
+      '<div class="wx-tags">'+info.tags.slice(0,3).map(function(t,i){
+        return '<span class="wx-tag'+(i?' warn':'')+'">'+WX_RULES[t].icon+' '+esc(WX_RULES[t].label)+'</span>';
+      }).join('')+'</div></div>'+
+      '<div class="wx-now">'+
+        '<span class="wx-ico" aria-hidden="true">'+wmo(w.code)[1]+'</span>'+
+        '<span><span class="wx-temp">'+deg(w.temp)+'</span><span class="wx-feels">체감 '+deg(info.feels)+'</span></span>'+
+        '<span class="wx-cond"><b>'+esc(info.label)+'</b><br><small>강수확률 '+(info.pop||0)+'%</small></span>'+
+      '</div>'+
+      '<p class="wx-loc">⛺ <b>'+esc(loc.name)+'</b>'+(loc.region?' · '+esc(loc.region):'')+(dist?' · 현재 위치에서 '+esc(dist):'')+
+        (w.manual?' · <b>직접 고른 날씨</b>':(ui.wxStale?' · <b>저장해 둔 예보</b>':' · '+esc(String(w.t||'').slice(11,16))+' 기준'))+'</p>'+
+      '<div class="wx-grid">'+
+        '<div class="wx-cell">강수확률<b>'+(info.pop||0)+'%</b></div>'+
+        '<div class="wx-cell">풍속<b>'+(w.wind==null?'-':Math.round(w.wind))+'m/s</b></div>'+
+        '<div class="wx-cell">습도<b>'+(w.hum==null?'-':Math.round(w.hum)+'%')+'</b></div>'+
+        '<div class="wx-cell">'+(w.sunset?'일몰':'오늘 최고')+'<b>'+(w.sunset?esc(String(w.sunset).slice(11,16)):deg(w.days&&w.days[0]?w.days[0].tmax:null))+'</b></div>'+
+      '</div>'+
+      wxHoursHtml(w)+wxDaysHtml(w)+
+      '<p class="wx-tip">'+rule.icon+' <b>'+esc(rule.label)+'</b> · '+esc(rule.line)+'<br>'+esc(rule.tip)+'</p>'+
+      (w.manual?manualWxPicker():'')+
+      '<h3 class="wx-h3">날씨에 맞는 메뉴</h3>'+
+      '<div class="wx-menu">'+wxMenus(info).map(function(m){
+        return '<button class="wx-menu-item" type="button" data-a="wx-menu" data-v="'+esc(m.n)+'">'+
+          '<span><b>'+esc(m.n)+'</b><small>'+esc(m.label)+' 날씨 · '+esc(m.w)+'</small></span>'+
+          '<span class="go">'+(m.min?m.min+'분 · ':'')+'준비물 →</span></button>';
+      }).join('')+'</div>'+
+      '<div class="row2" style="margin-top:14px">'+
+        '<button class="btn primary" type="button" data-a="wx-ai">AI 추천에 날씨 반영</button>'+
+        '<button class="btn" type="button" data-a="wx-gear">날씨 대비 준비물 추가</button>'+
+        '<button class="btn" type="button" data-a="wx-refresh">날씨 새로고침</button>'+
+      '</div>'+
+      (list?'<p class="hint" style="margin:10px 0 0">진행 중인 준비물이 있어요. 날씨 메뉴를 고르면 <b>새 목록으로 시작</b>해요(추천 탭의 [＋합산]을 쓰면 기존 목록에 더할 수 있어요).</p>':'')+
+      '<p class="hint" style="margin:12px 0 0">'+(profile.wxAware?'날씨는 AI 추천·준비물에도 함께 전달돼요. ':'<b>날씨 맞춤 추천이 꺼져 있어요.</b> 내 정보 탭에서 켤 수 있어요. ')+
+      '기상 자료: Open-Meteo · 캠핑장 위치: 한국관광공사 고캠핑 정보(2024-09)</p>'+
+    '</section>';
+    return h;
+  }
+  function wxStrip(){
+    var wx=wxContext();
+    if(!wx)return '';
+    return '<section class="banner wx-strip"><span>'+wx.icon+' <b>'+esc(wx.name)+'</b> '+esc(wx.label)+' · '+esc(wx.summary)+'</span>'+
+      '<span style="display:flex;gap:6px"><button class="chip sm" type="button" data-a="wx-gear">날씨 대비 준비물</button><button class="chip sm" type="button" data-a="tab" data-v="rec">날씨 메뉴 →</button></span></section>';
+  }
+
   function peopleAndGearFields(isProfile){
     var gearAll=GEAR.concat(profile.gear.filter(function(g){return GEAR.indexOf(g)<0}));
     var curPeople=isProfile?profile.people:ui.people;
@@ -802,6 +1618,8 @@ details li{margin-bottom:8px}
 
   function head(){
     var s='<span class="season">'+month+'월 · '+season+'</span>';
+    var wxi=(ui.wx&&profile.wxAware)?wxInfo(ui.wx):null;
+    if(wxi)s='<span class="season" style="background:var(--chip);color:var(--muted)">'+wxi.icon+' '+deg(ui.wx.temp)+' '+wxi.label+'</span>'+s;
     if(ui.tab==='rec')return '<section class="hero home">'+SCENE+'<div class="hero-top"><span class="brand">캠핑음식 도우미</span>'+s+'</div><h1>오늘 캠핑,<br><em>뭐 해먹지?</em></h1><p class="sub">장비와 인원만 고르면 메뉴부터 준비물까지 정리해 줘요.</p></section>';
     return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+s+'</header>';
   }
@@ -848,6 +1666,8 @@ details li{margin-bottom:8px}
         '<button class="link" type="button" data-a="tab" data-v="list">준비물 보기 →</button>'+
       '</section>';
     }
+    h+=locCard();
+    h+=wxCard();
     h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
     peopleAndGearFields(false)+
     '</section>'+
@@ -863,7 +1683,8 @@ details li{margin-bottom:8px}
     else if(ui.busy==='prep')h+=loadingCard('「'+ui.busyName+'」 준비물을 만드는 중이에요…');
     else if(activeRecs.length){
       ui.CurrentRenderedRecs=activeRecs;
-      h+='<div class="sec-title"><h2>'+(ui.recs.length?'AI 추천 캠핑 요리':'내 인원·장비 맞춤 추천 요리')+' ('+ui.people+'명)</h2></div>';
+      var wxSec=wxContext();
+      h+='<div class="sec-title"><h2>'+(ui.recs.length?'AI 추천 캠핑 요리':(wxSec?wxSec.icon+' '+esc(wxSec.label)+' 날씨 맞춤 추천 요리':'내 인원·장비 맞춤 추천 요리'))+' ('+ui.people+'명)</h2></div>';
       activeRecs.forEach(function(r,i){
         h+=recommendationCard(r,i);
       });
@@ -1003,6 +1824,7 @@ details li{margin-bottom:8px}
     (dishes.length>1?'<div class="dish-pills">'+dishes.map(function(d){return '<span class="dish-pill">⛺ '+esc(d)+'</span>'}).join('')+'</div>':'')+
     '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div></section>';
 
+    h+=wxStrip();
     if(ui.cookMode){
       h+=cookModeCard();
     }else if(list.steps&&list.steps.length){
@@ -1103,6 +1925,22 @@ details li{margin-bottom:8px}
 
     h+='<section class="card"><h2>최근 고른 요리</h2>'+(recent.length?'<ol class="recent">'+recent.map(function(r){return '<li>'+esc(r)+'</li>'}).join('')+'</ol><p class="hint" style="margin:12px 0 0">추천할 때 최근 5개는 피해요.</p><div style="margin-top:12px"><button class="btn" type="button" data-a="clearrecent">기록 지우기</button></div>':'<p class="hint" style="margin:0">요리를 고르면 여기에 쌓여요.</p>')+'</section>';
 
+    h+='<section class="card"><h2>캠핑지 · 날씨 맞춤</h2>'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px">'+
+        '<span class="lab">저장된 캠핑지</span>'+
+        '<span>'+(profile.camp?('<b>'+esc(profile.camp.name)+'</b>'+(profile.camp.region?' · '+esc(profile.camp.region):'')):'아직 없어요')+'</span>'+
+      '</div>'+
+      '<div class="chips" style="margin-bottom:12px">'+
+        '<button class="chip sm" type="button" data-a="wxaware" aria-pressed="'+profile.wxAware+'">날씨 맞춤 추천 '+(profile.wxAware?'켜짐':'꺼짐')+'</button>'+
+        '<button class="chip sm" type="button" data-a="loc-use">📍 내 위치 새로 찾기</button>'+
+      '</div>'+
+      '<div class="row2">'+
+        '<button class="btn" type="button" data-a="tab" data-v="rec">캠핑지 검색하러 가기</button>'+
+        (profile.camp?'<button class="btn" type="button" data-a="wx-clear">저장된 캠핑지 지우기</button>':'')+
+      '</div>'+
+      '<p class="hint" style="margin:12px 0 0">고른 캠핑지의 날씨는 메뉴 추천과 준비물 팁에 함께 전달돼요. 날씨: Open-Meteo · 캠핑장 위치: 한국관광공사 고캠핑 정보(2024-09).</p>'+
+    '</section>';
+
     h+='<section class="card"><h2>데이터 백업 · 복원</h2>'+
       '<div class="row2">'+
         '<button class="btn" type="button" data-a="exportdata">백업 파일 저장</button>'+
@@ -1116,6 +1954,7 @@ details li{margin-bottom:8px}
   function render(){
     document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-current',b.getAttribute('data-v')===ui.tab?'page':'false')});
     document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='list'?listView():meView()));
+    if(ui.wxOpen)updateSuggest();
   }
 
   function clampPeople(n){return Math.max(1,Math.min(20,n))}
@@ -1233,6 +2072,16 @@ details li{margin-bottom:8px}
       return;
     }
     if(a==='stop'){if(ctl)ctl.abort();return}
+    if(a==='loc-use'){useMyLocation();return}
+    if(a==='osm-load'){loadOsmNearby(true);return}
+    if(a==='ac-pick'){selectSuggest(b.getAttribute('data-i'));return}
+    if(a==='wx-clear'){clearCamp();return}
+    if(a==='wx-refresh'){if(ui.wxLoc)loadWeather();else if(profile.camp){ui.wxLoc=profile.camp;loadWeather();}else showNotice('먼저 캠핑지를 골라 주세요.');return}
+    if(a==='wx-manual'){setManualWx(v);return}
+    if(a==='wx-menu'){pickWeatherMenu(v);return}
+    if(a==='wx-gear'){addWeatherGear();return}
+    if(a==='wx-ai'){wxAiRecs();return}
+    if(a==='wxaware'){profile.wxAware=!profile.wxAware;saveProfile();showNotice('날씨 맞춤 추천을 '+(profile.wxAware?'켰어요.':'껐어요.'));return}
     if(a==='toggle'){
       var id=b.getAttribute('data-id');
       list.items.forEach(function(x){if(x.id===id)x.checked=!x.checked});
@@ -1252,6 +2101,46 @@ details li{margin-bottom:8px}
     }
     if(a==='rmavoid'){profile.avoid=profile.avoid.filter(function(x){return x!==v});saveProfile();render();return}
     if(a==='clearrecent'){recent=[];store.set('cc.recent',recent);render();return}
+  });
+
+  document.addEventListener('input',function(e){
+    if(!e.target||e.target.id!=='camp-search')return;
+    ui.wxQ=e.target.value;
+    ui.wxOpen=true;ui.wxIdx=-1;
+    var q=str(ui.wxQ);
+    if(q!==ui.placesQ){ui.places=[];ui.placesQ=q}
+    clearTimeout(placeTimer);
+    if(q.length>=2)placeTimer=setTimeout(function(){loadPlaces(q)},380);
+    updateSuggest();
+  });
+
+  document.addEventListener('focusin',function(e){
+    if(!e.target||e.target.id!=='camp-search')return;
+    if(!ui.wxOpen){ui.wxOpen=true;ui.wxIdx=-1;updateSuggest()}
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(!e.target||e.target.id!=='camp-search')return;
+    var box=document.getElementById('camp-ac');
+    var open=!!(box&&!box.hidden);
+    if(e.key==='ArrowDown'){e.preventDefault();if(!open){ui.wxOpen=true;updateSuggest()}else moveSuggest(1);return}
+    if(e.key==='ArrowUp'){e.preventDefault();if(open)moveSuggest(-1);return}
+    if(e.key==='Enter'){
+      if(open&&ui.wxPick&&ui.wxPick.length){
+        e.preventDefault();
+        var idx=ui.wxIdx<0?0:ui.wxIdx;
+        selectSuggest(ui.wxPick[idx]);
+      }
+      return;
+    }
+    if(e.key==='Escape'){ui.wxOpen=false;ui.wxIdx=-1;updateSuggest();return}
+    if(e.key==='Tab'){ui.wxOpen=false;updateSuggest();return}
+  });
+
+  document.addEventListener('click',function(e){
+    if(!e.target||!e.target.closest)return;
+    if(e.target.closest('.ac-wrap'))return;
+    if(ui.wxOpen){ui.wxOpen=false;ui.wxIdx=-1;updateSuggest()}
   });
 
   document.addEventListener('change',function(e){
@@ -1331,7 +2220,25 @@ details li{margin-bottom:8px}
       };
     }
     ui.aiOk=!!sampleFn;
-    render();
+
+    var savedLoc=store.get('cc.loc',null);
+    if(savedLoc&&savedLoc.lat&&savedLoc.lon)ui.myLoc=savedLoc;
+    if(profile.camp&&profile.camp.lat!=null){
+      ui.wxLoc={name:profile.camp.name,region:profile.camp.region||'',lat:profile.camp.lat,lon:profile.camp.lon,src:profile.camp.src||'data'};
+      var cachedWx=store.get('cc.wx',null);
+      if(cachedWx&&cachedWx.key===wxKey(ui.wxLoc)&&cachedWx.data){
+        ui.wx=cachedWx.data;
+        ui.wxKey=cachedWx.key;
+        ui.wxStale=(Date.now()-(cachedWx.at||0))>3*3600*1000;
+      }
+      render();
+      if(ui.myLoc)loadOsmNearby();
+      if(!ui.wx||ui.wxStale)loadWeather();
+      else updateSuggest();
+    }else{
+      render();
+      if(ui.myLoc)loadOsmNearby();
+    }
   })();
 })();
 </script>
