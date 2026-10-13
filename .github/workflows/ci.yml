@@ -1,0 +1,73 @@
+# 푸시·PR마다 실행되는 정적 검증 파이프라인.
+# 목적: 배포 전에 문법 오류, 브라우저에서 깨지는 서버 전용 코드, HTML 구조 오류,
+#       알려진 취약 의존성을 잡아낸다. 배포 자체는 Vercel이 main 머지 시 수행한다.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 같은 브랜치에서 새 푸시가 오면 이전 실행은 취소한다
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server-syntax:
+    name: 백엔드 문법 검사 (node --check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: server.js 문법 검사
+        run: node --check server.js
+      - name: 서버리스 함수·lib·스크립트 문법 검사
+        run: |
+          set -e
+          for f in api/*.js lib/*.js scripts/*.mjs; do
+            echo "checking $f"
+            node --check "$f"
+          done
+
+  client-env-scan:
+    name: 클라이언트 번들 정적 스캔 (process.env 등)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 브라우저로 내려가는 코드에 서버 전용 참조가 있는지 검사
+        run: node scripts/check-client-env.mjs
+
+  html-validate:
+    name: HTML 유효성 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: html-validate 실행
+        # 버전을 고정해서 검사 결과가 임의로 바뀌지 않게 한다
+        run: npx --yes html-validate@8.29.0 index.html camp-kitchen.html
+
+  dependency-audit:
+    name: 의존성 취약점 점검 (npm audit, 운영 의존성 기준)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: lockfile 생성 (저장소에는 lockfile이 없으므로 임시로만 만든다)
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: high 이상 취약점이 있으면 실패
+        run: npm audit --omit=dev --audit-level=high
