@@ -7,8 +7,26 @@ import { generateImageUrl } from './lib/generate-image.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 로컬 개발용 .env 로딩 (Vercel 등 배포 환경에서는 대시보드 환경변수가 주입되므로 파일이 없어도 됨)
-try { process.loadEnvFile(path.join(__dirname, '.env')); } catch {}
+import fs from 'fs';
+
+// 로컬 개발용 .env 로딩 (.env 파일이 있으면 우선 적용)
+try {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    for (const line of envContent.split('\n')) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match && !line.trim().startsWith('#')) {
+        const key = match[1];
+        let val = (match[2] || '').trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (val) process.env[key] = val;
+      }
+    }
+  }
+} catch {}
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
