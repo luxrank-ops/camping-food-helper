@@ -31,17 +31,20 @@ app.post('/api/generate-image', async (req, res) => {
       },
     });
 
-    const response = await ai.models.generateContent({
-      model: 'imagen-3.0-generate-003',
-      contents: prompt,
+    const response = await ai.models.generateImages({
+      model: 'imagen-3.0-generate-002',
+      prompt: prompt,
+      config: {
+        numberOfImages: 1,
+        outputMimeType: 'image/jpeg',
+      },
     });
 
-    const imageUrl = response.candidates?.[0]?.image?.uri;
-    if (!imageUrl) {
-      return res.status(502).json({ error: 'Image generation failed' });
+    const b64 = response.generatedImages?.[0]?.image?.imageBytes;
+    if (b64) {
+      return res.json({ imageUrl: `data:image/jpeg;base64,${b64}` });
     }
-
-    return res.json({ imageUrl });
+    return res.status(502).json({ error: 'Image generation failed' });
   } catch (err) {
     console.error('[Image Generation] /api/generate-image error:', err);
     return res.status(502).json({ error: 'Image generation failed' });
@@ -63,7 +66,7 @@ app.post('/api/sample', async (req, res) => {
       apiKey: process.env.GEMINI_API_KEY,
       httpOptions: {
         headers: {
-          'User-Agent': 'aistudio-build',
+          'User-Agent': 'camping-food-helper',
         },
       },
     });
@@ -84,7 +87,7 @@ app.post('/api/sample', async (req, res) => {
     const parsed = JSON.parse(text.trim());
     return res.json(parsed);
   } catch (err) {
-    console.error('[AI Studio] /api/sample error:', err);
+    console.error('[Express API] /api/sample error:', err);
     return res.status(502).json({ code: 'upstream_error' });
   }
 });

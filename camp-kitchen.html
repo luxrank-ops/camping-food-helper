@@ -524,14 +524,14 @@ details li{margin-bottom:8px}
     if(found&&found.base){
       found.base.forEach(function(b,idx){
         var amt=(Math.round(b.q*people*10)/10)+b.u;
-        items.push({id:'i'+(n++),group:'재료',text:b.n,amount:amt,alt:'',tag:idx===0?'prep':'pack',checked:false});
+        items.push({id:'i'+(n++),group:'재료',text:b.n,amount:amt,price:'',alt:'',tag:idx===0?'prep':'pack',checked:false});
       });
     }else{
-      items.push({id:'i'+(n++),group:'재료',text:rec.name+' 주재료',amount:people+'인분',alt:'',tag:'prep',checked:false});
-      items.push({id:'i'+(n++),group:'재료',text:'양파·대파·마늘',amount:(people*50)+'g',alt:'쪽파',tag:'prep',checked:false});
+      items.push({id:'i'+(n++),group:'재료',text:rec.name+' 주재료',amount:people+'인분',price:'',alt:'',tag:'prep',checked:false});
+      items.push({id:'i'+(n++),group:'재료',text:'양파·대파·마늘',amount:(people*50)+'g',price:'',alt:'쪽파',tag:'prep',checked:false});
     }
-    items.push({id:'i'+(n++),group:'재료',text:'소금·후추·식용유',amount:'적당량',alt:'허브솔트',tag:'pack',checked:false});
-    items.push({id:'i'+(n++),group:'재료',text:'생수·얼음·쌈채소',amount:people+'인분',alt:'',tag:'buy',checked:false});
+    items.push({id:'i'+(n++),group:'재료',text:'소금·후추·식용유',amount:'적당량',price:'',alt:'허브솔트',tag:'pack',checked:false});
+    items.push({id:'i'+(n++),group:'재료',text:'생수·얼음·쌈채소',amount:people+'인분',price:'',alt:'',tag:'buy',checked:false});
     var eqList=(rec.equipment&&rec.equipment.length)?rec.equipment:(userGear.length?userGear.slice(0,2):['버너','코펠']);
     eqList.forEach(function(eq){
       items.push({id:'i'+(n++),group:'장비',text:eq,amount:'',alt:'',tag:'',checked:false});
@@ -573,6 +573,59 @@ details li{margin-bottom:8px}
       return sum+m1[2];
     }
     return a1+' + '+a2;
+  }
+
+  function formatCurrency(amount) {
+    if(amount === 0 || !amount) return '0원';
+    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', currencyDisplay: 'narrowSymbol' }).format(amount);
+  }
+
+  function calculateTotalBudget() {
+    if(!list)return 0;
+    var total = 0;
+    list.items.forEach(function(item) {
+      if(item.group==='재료' && item.price) {
+        var price = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0;
+        total += price;
+      }
+    });
+    return total;
+  }
+
+  function getPrepItems() {
+    if(!list)return [];
+    return list.items.filter(function(item) {
+      return item.tag==='prep' && item.group==='재료';
+    });
+  }
+
+  async function generateRecipeImage(dishName) {
+    try {
+      var response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: 'High-quality photo of Korean camping food: ' + dishName + ', delicious, appetizing, professional food photography, outdoor camping setting, natural lighting, 4K' })
+      });
+      if(response.ok) {
+        var data = await response.json();
+        return data.imageUrl;
+      }
+    } catch(e) {
+      console.error('Image generation failed:', e);
+    }
+    return null;
+  }
+
+  var recipeImagesCache = {};
+  async function getRecipeImageUrl(dishName) {
+    if(recipeImagesCache[dishName]) {
+      return recipeImagesCache[dishName];
+    }
+    var url = await generateRecipeImage(dishName);
+    if(url) {
+      recipeImagesCache[dishName] = url;
+    }
+    return url;
   }
 
   function mergePrepLists(cur,incoming){
@@ -626,8 +679,22 @@ details li{margin-bottom:8px}
     };
   }
 
+  function checkEquipmentMatch(recEquipment, userEquipment) {
+    var required = recEquipment || [];
+    var userGear = userEquipment || profile.gear || [];
+    var missing = required.filter(function(eq) { return userGear.indexOf(eq) < 0; });
+    return { missing: missing, hasMissing: missing.length > 0, matched: required.filter(function(eq) { return userGear.indexOf(eq) >= 0; }) };
+  }
+
   async function pickDish(rec,mergeMode){
     if(!rec||ui.busy)return;
+    
+    var eqCheck = checkEquipmentMatch(rec.equipment, profile.gear);
+    if(eqCheck.hasMissing) {
+      var missingText = eqCheck.missing.join(', ');
+      showNotice('⚠️ 부족한 장비: ' + missingText + '. 이 요리를 만들려면 추가 장비가 필요해요!');
+    }
+    
     if(!sampleFn){
       var nextList=buildLocalPrepList(rec,ui.people,profile.gear);
       list=mergeMode&&list?mergePrepLists(list,nextList):nextList;
@@ -1678,7 +1745,14 @@ details li{margin-bottom:8px}
         '<button class="btn pop" type="button" data-a="merge" data-i="'+i+'">＋ 현재 목록에 합산</button>'+
       '</div>';
     }
+    var imageHtml = '';
+    if(r.imageUrl) {
+      imageHtml = '<img src="'+esc(r.imageUrl)+'" alt="'+esc(r.name)+'" style="width:100%;border-radius:14px;margin-bottom:12px;object-fit:cover;aspect-ratio:16/9;">';
+    } else {
+      imageHtml = '<div style="width:100%;height:140px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--brand-fg);font-family:var(--font-display);font-size:24px;">🍳 '+esc(r.name)+'</div>';
+    }
     return '<article class="card rec">'+
+      imageHtml+
       '<div class="rec-top"><h3>'+esc(r.name)+'</h3>'+(r.minutes?'<span class="time">'+r.minutes+'분</span>':'')+'</div>'+
       '<p class="rec-meta-line">'+metaLine+'</p>'+
       '<p class="why">'+esc(r.reason)+'</p>'+
@@ -1699,6 +1773,27 @@ details li{margin-bottom:8px}
     }
     h+=locCard();
     h+=wxCard();
+    
+    if(ui.recs.length && !ui.imageLoading && ui.recs.some(function(r){return !r.imageUrl})) {
+      ui.imageLoading = true;
+      setTimeout(async function() {
+        for(var i = 0; i < ui.recs.length; i++) {
+          if(!ui.recs[i].imageUrl) {
+            try {
+              var url = await getRecipeImageUrl(ui.recs[i].name);
+              if(url) {
+                ui.recs[i].imageUrl = url;
+              }
+            } catch(e) {
+              console.error('Failed to load image for recipe:', e);
+            }
+          }
+        }
+        ui.imageLoading = false;
+        render();
+      }, 100);
+    }
+    
     h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
     peopleAndGearFields(false)+
     '</section>'+
@@ -1857,7 +1952,9 @@ details li{margin-bottom:8px}
     if(ui.err)h+='<p class="err" role="alert">'+esc(ui.err)+'</p>';
     h+='<section class="hero dish">'+SCENE+'<p class="brand">'+list.people+'명 기준 · '+dishes.length+'가지 메뉴</p><h2>'+esc(list.dish)+'</h2><p class="sum">'+esc(list.summary||list.reason)+'</p>'+
     (dishes.length>1?'<div class="dish-pills">'+dishes.map(function(d){return '<span class="dish-pill">⛺ '+esc(d)+'</span>'}).join('')+'</div>':'')+
-    '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div></section>';
+    '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div>'+
+    '<div style="margin-top:12px;font-size:14px;color:var(--hero-fg);opacity:.9"><span id="total-budget-line">💰 총 예산: '+formatCurrency(calculateTotalBudget())+'</span>'+
+    (getPrepItems().length>0?'<span style="margin-left:12px">📋 집에서 미리 손질: '+getPrepItems().length+'개</span>':'')+'</div></section>';
 
     h+=wxStrip();
     if(ui.cookMode){
@@ -1905,8 +2002,12 @@ details li{margin-bottom:8px}
         var side='';
         if(x.amount)side+='<span class="amt">'+esc(x.amount)+'</span>';
         if(x.tag&&TAGS[x.tag])side+='<span class="tag '+x.tag+'">'+TAGS[x.tag]+'</span>';
+        var priceInput = '';
+        if(x.group==='재료') {
+          priceInput = '<input type="text" class="price-input" data-id="'+esc(x.id)+'" placeholder="가격" value="'+esc(x.price||'')+'" style="width:80px;text-align:right;padding:4px;border:1px solid var(--line);border-radius:8px;font-size:12px" data-a="updateprice">';
+        }
         return '<li class="item'+(x.checked?' done':'')+'"><label><input type="checkbox" data-a="toggle" data-id="'+esc(x.id)+'"'+(x.checked?' checked':'')+'>'+
-        '<span class="txt"><b>'+esc(x.text)+'</b>'+(x.alt?'<small>없으면 '+esc(x.alt)+'</small>':'')+'</span><span class="side">'+side+'</span></label></li>';
+        '<span class="txt"><b>'+esc(x.text)+'</b>'+(x.alt?'<small>없으면 '+esc(x.alt)+'</small>':'')+'</span><span class="side">'+side+priceInput+'</span></label></li>';
       }).join('')+'</ul></section>';
     });
 
@@ -2169,6 +2270,25 @@ details li{margin-bottom:8px}
     clearTimeout(placeTimer);
     if(q.length>=2)placeTimer=setTimeout(function(){loadPlaces(q)},380);
     updateSuggest();
+  });
+
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.classList && e.target.classList.contains('price-input')) {
+      var id = e.target.getAttribute('data-id');
+      var value = e.target.value;
+      if(list) {
+        list.items.forEach(function(item) {
+          if(item.id === id) {
+            item.price = value;
+          }
+        });
+        store.set('cc.list', list);
+        var budgetEl = document.getElementById('total-budget-line');
+        if(budgetEl) {
+          budgetEl.textContent = '💰 총 예산: ' + formatCurrency(calculateTotalBudget());
+        }
+      }
+    }
   });
 
   document.addEventListener('focusin',function(e){

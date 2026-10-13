@@ -600,9 +600,6 @@ details li{margin-bottom:8px}
   }
 
   async function generateRecipeImage(dishName) {
-    if(!process.env.GEMINI_API_KEY) {
-      return null;
-    }
     try {
       var response = await fetch('/api/generate-image', {
         method: 'POST',
@@ -1956,7 +1953,7 @@ details li{margin-bottom:8px}
     h+='<section class="hero dish">'+SCENE+'<p class="brand">'+list.people+'명 기준 · '+dishes.length+'가지 메뉴</p><h2>'+esc(list.dish)+'</h2><p class="sum">'+esc(list.summary||list.reason)+'</p>'+
     (dishes.length>1?'<div class="dish-pills">'+dishes.map(function(d){return '<span class="dish-pill">⛺ '+esc(d)+'</span>'}).join('')+'</div>':'')+
     '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div>'+
-    '<div style="margin-top:12px;font-size:14px;color:var(--hero-fg);opacity:.9"><span>💰 총 예산: '+formatCurrency(calculateTotalBudget())+'</span>'+
+    '<div style="margin-top:12px;font-size:14px;color:var(--hero-fg);opacity:.9"><span id="total-budget-line">💰 총 예산: '+formatCurrency(calculateTotalBudget())+'</span>'+
     (getPrepItems().length>0?'<span style="margin-left:12px">📋 집에서 미리 손질: '+getPrepItems().length+'개</span>':'')+'</div></section>';
 
     h+=wxStrip();
@@ -2286,7 +2283,10 @@ details li{margin-bottom:8px}
           }
         });
         store.set('cc.list', list);
-        render();
+        var budgetEl = document.getElementById('total-budget-line');
+        if(budgetEl) {
+          budgetEl.textContent = '💰 총 예산: ' + formatCurrency(calculateTotalBudget());
+        }
       }
     }
   });
