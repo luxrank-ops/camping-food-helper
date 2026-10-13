@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
+import { generateImageUrl } from './lib/generate-image.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,37 +15,18 @@ app.use(express.json());
 app.post('/api/generate-image', async (req, res) => {
   const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
   if (!prompt) {
-    return res.status(400).json({ error: 'Missing prompt' });
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(503).json({ error: 'GEMINI_API_KEY is not configured' });
+    return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
   }
 
   try {
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'camping-food-helper',
-        },
-      },
-    });
-
-    const response = await ai.models.generateContent({
-      model: 'imagen-3.0-generate-003',
-      contents: prompt,
-    });
-
-    const imageUrl = response.candidates?.[0]?.image?.uri;
-    if (!imageUrl) {
-      return res.status(502).json({ error: 'Image generation failed' });
-    }
-
+    const imageUrl = await generateImageUrl(prompt);
     return res.json({ imageUrl });
   } catch (err) {
+    if (err.code === 'capability_disabled') {
+      return res.status(503).json({ code: err.code, error: err.message });
+    }
     console.error('[Image Generation] /api/generate-image error:', err);
-    return res.status(502).json({ error: 'Image generation failed' });
+    return res.status(502).json({ code: 'upstream_error', error: 'Image generation failed' });
   }
 });
 
