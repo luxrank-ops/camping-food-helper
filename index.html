@@ -284,6 +284,7 @@ details li{margin-bottom:8px}
     tab:'rec',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
     recs:[],seen:[],busy:null,busyName:'',err:'',confirmClear:false,aiOk:null,dishText:'',
     filter:'all',cookMode:false,cookStep:0,timerSec:180,timerRunning:false,wakeLockOn:false,
+    ttsSpeaking:false,ttsAuto:store.get('cc.ttsAuto',false),
     modText:'',logStars:5,logNote:'',
     wxQ:'',wxSug:[],wxPick:[],wxOpen:false,wxIdx:-1,wxBusy:false,wx:null,wxKey:'',wxLoc:null,
     wxErr:'',wxStale:false,myLoc:null,locBusy:false,osmCamps:[],osmBusy:false,osmErr:false,places:[],placesQ:'',notice:''
@@ -878,6 +879,36 @@ details li{margin-bottom:8px}
     }catch(e){
       ui.wakeLockOn=false;
     }
+  }
+
+  function speakStep(text){
+    if(!('speechSynthesis' in window)){
+      showNotice('이 브라우저는 음성 변환(TTS)을 지원하지 않아요.');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    if(!text){
+      ui.ttsSpeaking=false;
+      render();
+      return;
+    }
+    var clean=String(text).replace(/\[.*?\]/g,'').replace(/^[0-9]+\.\s*/,'').trim();
+    var u=new SpeechSynthesisUtterance(clean);
+    u.lang='ko-KR';
+    u.rate=0.95;
+    u.pitch=1.0;
+    ui.ttsSpeaking=true;
+    u.onend=function(){ui.ttsSpeaking=false;render();};
+    u.onerror=function(){ui.ttsSpeaking=false;render();};
+    window.speechSynthesis.speak(u);
+    render();
+  }
+
+  function stopTTS(){
+    if('speechSynthesis' in window){
+      window.speechSynthesis.cancel();
+    }
+    ui.ttsSpeaking=false;
   }
 
   function chips(act,arr,cur){
@@ -1779,7 +1810,11 @@ details li{margin-bottom:8px}
     return '<section class="cook-box" aria-live="polite">'+
       '<div class="cook-top">'+
         '<span class="cook-badge">현장 조리 모드 · 단계 '+(idx+1)+' / '+steps.length+'</span>'+
-        '<button class="chip sm" type="button" data-a="cookmode" style="min-height:32px;background:rgba(255,255,255,.15);color:#fff">'+(ui.wakeLockOn?'화면켜짐 유지중 · ':'')+'닫기 ✕</button>'+
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">'+
+          '<button class="chip sm" type="button" data-a="cook-tts" style="min-height:32px;background:'+(ui.ttsSpeaking?'var(--ember)':'rgba(255,255,255,.2)')+';color:#fff;font-weight:700">'+(ui.ttsSpeaking?'⏹ 음성 중지':'🔊 단계 읽기')+'</button>'+
+          '<button class="chip sm" type="button" data-a="cook-tts-auto" style="min-height:32px;background:'+(ui.ttsAuto?'var(--pop)':'rgba(255,255,255,.15)')+';color:'+(ui.ttsAuto?'var(--pop-fg)':'#fff')+'">'+(ui.ttsAuto?'자동읽기 ON':'자동읽기 OFF')+'</button>'+
+          '<button class="chip sm" type="button" data-a="cookmode" style="min-height:32px;background:rgba(255,255,255,.15);color:#fff">'+(ui.wakeLockOn?'화면켜짐 유지중 · ':'')+'닫기 ✕</button>'+
+        '</div>'+
       '</div>'+
       '<p class="cook-step-txt">'+esc(curStep)+'</p>'+
       '<div class="timer-bar">'+
@@ -2003,10 +2038,29 @@ details li{margin-bottom:8px}
         var firstStep=(list&&list.steps&&list.steps[0])||'';
         ui.timerSec=detectStepSeconds(firstStep);
         toggleWakeLock(true);
+        if(ui.ttsAuto)speakStep(firstStep);
       }else{
         if(ui.timerRunning)toggleTimer();
+        stopTTS();
         toggleWakeLock(false);
       }
+      render();
+      return;
+    }
+    if(a==='cook-tts'){
+      if(ui.ttsSpeaking){
+        stopTTS();
+        render();
+      }else{
+        var steps=(list&&list.steps&&list.steps.length)?list.steps:[];
+        speakStep(steps[ui.cookStep]||'');
+      }
+      return;
+    }
+    if(a==='cook-tts-auto'){
+      ui.ttsAuto=!ui.ttsAuto;
+      store.set('cc.ttsAuto',ui.ttsAuto);
+      showNotice(ui.ttsAuto?'단계 변경 시 음성으로 자동 안내해요!':'음성 자동 안내를 껐어요.');
       render();
       return;
     }
@@ -2014,6 +2068,7 @@ details li{margin-bottom:8px}
       if(ui.cookStep>0){
         ui.cookStep--;
         ui.timerSec=detectStepSeconds(list&&list.steps&&list.steps[ui.cookStep]);
+        if(ui.ttsAuto)speakStep(list&&list.steps&&list.steps[ui.cookStep]);
       }
       render();
       return;
@@ -2023,8 +2078,10 @@ details li{margin-bottom:8px}
       if(ui.cookStep<maxS){
         ui.cookStep++;
         ui.timerSec=detectStepSeconds(list&&list.steps&&list.steps[ui.cookStep]);
+        if(ui.ttsAuto)speakStep(list&&list.steps&&list.steps[ui.cookStep]);
       }else{
         ui.cookMode=false;
+        stopTTS();
         toggleWakeLock(false);
         showNotice('맛있는 캠핑 요리가 완성되었어요! 아래에서 별점 일지를 남겨보세요.');
       }
