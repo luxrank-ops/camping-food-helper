@@ -2,9 +2,13 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
+import { generateImageUrl } from './lib/generate-image.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// 로컬 개발용 .env 로딩 (Vercel 등 배포 환경에서는 대시보드 환경변수가 주입되므로 파일이 없어도 됨)
+try { process.loadEnvFile(path.join(__dirname, '.env')); } catch {}
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -14,40 +18,18 @@ app.use(express.json());
 app.post('/api/generate-image', async (req, res) => {
   const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
   if (!prompt) {
-    return res.status(400).json({ error: 'Missing prompt' });
-  }
-
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(503).json({ error: 'GEMINI_API_KEY is not configured' });
+    return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
   }
 
   try {
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'camping-food-helper',
-        },
-      },
-    });
-
-    const response = await ai.models.generateImages({
-      model: 'imagen-3.0-generate-002',
-      prompt: prompt,
-      config: {
-        numberOfImages: 1,
-        outputMimeType: 'image/jpeg',
-      },
-    });
-
-    const b64 = response.generatedImages?.[0]?.image?.imageBytes;
-    if (b64) {
-      return res.json({ imageUrl: `data:image/jpeg;base64,${b64}` });
-    }
-    return res.status(502).json({ error: 'Image generation failed' });
+    const imageUrl = await generateImageUrl(prompt);
+    return res.json({ imageUrl });
   } catch (err) {
+    if (err.code === 'capability_disabled') {
+      return res.status(503).json({ code: err.code, error: err.message });
+    }
     console.error('[Image Generation] /api/generate-image error:', err);
-    return res.status(502).json({ error: 'Image generation failed' });
+    return res.status(502).json({ code: 'upstream_error', error: 'Image generation failed' });
   }
 });
 

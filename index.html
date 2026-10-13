@@ -600,16 +600,20 @@ details li{margin-bottom:8px}
   }
 
   async function generateRecipeImage(dishName) {
+    // 주의: 브라우저에는 process.env가 없다. 키 유무는 서버가 판단해서
+    // 503으로 알려주므로, 여기서는 그냥 요청하고 상태만 확인한다.
     try {
       var response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: 'High-quality photo of Korean camping food: ' + dishName + ', delicious, appetizing, professional food photography, outdoor camping setting, natural lighting, 4K' })
       });
-      if(response.ok) {
-        var data = await response.json();
-        return data.imageUrl;
+      if(!response.ok) {
+        console.warn('Image generation unavailable:', response.status);
+        return null;
       }
+      var data = await response.json();
+      return (data && data.imageUrl) || null;
     } catch(e) {
       console.error('Image generation failed:', e);
     }
@@ -1749,7 +1753,7 @@ details li{margin-bottom:8px}
     if(r.imageUrl) {
       imageHtml = '<img src="'+esc(r.imageUrl)+'" alt="'+esc(r.name)+'" style="width:100%;border-radius:14px;margin-bottom:12px;object-fit:cover;aspect-ratio:16/9;">';
     } else {
-      imageHtml = '<div style="width:100%;height:140px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--brand-fg);font-family:var(--font-display);font-size:24px;">🍳 '+esc(r.name)+'</div>';
+      imageHtml = '<div style="width:100%;height:140px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--brand-fg);font-family:var(--font-display);font-size:24px;">🍳 '+esc(r.name)+(ui.imageLoading&&!r.imageFailed?'<span style="font-size:13px;margin-left:8px">📷 사진 만드는 중…</span>':'')+'</div>';
     }
     return '<article class="card rec">'+
       imageHtml+
@@ -1774,17 +1778,21 @@ details li{margin-bottom:8px}
     h+=locCard();
     h+=wxCard();
     
-    if(ui.recs.length && !ui.imageLoading && ui.recs.some(function(r){return !r.imageUrl})) {
+    if(ui.recs.length && !ui.imageLoading && ui.recs.some(function(r){return !r.imageUrl && !r.imageFailed})) {
       ui.imageLoading = true;
       setTimeout(async function() {
         for(var i = 0; i < ui.recs.length; i++) {
-          if(!ui.recs[i].imageUrl) {
+          if(!ui.recs[i].imageUrl && !ui.recs[i].imageFailed) {
             try {
               var url = await getRecipeImageUrl(ui.recs[i].name);
               if(url) {
                 ui.recs[i].imageUrl = url;
+              } else {
+                // 실패를 표시해 두지 않으면 render() 때마다 무한 재시도한다.
+                ui.recs[i].imageFailed = true;
               }
             } catch(e) {
+              ui.recs[i].imageFailed = true;
               console.error('Failed to load image for recipe:', e);
             }
           }
