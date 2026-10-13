@@ -46,8 +46,11 @@ app.post('/api/generate-image', async (req, res) => {
     if (err.code === 'capability_disabled') {
       return res.status(503).json({ code: err.code, error: err.message });
     }
+    if (err.code === 'quota_exceeded') {
+      return res.status(429).json({ code: err.code, error: err.message });
+    }
     console.error('[Image Generation] /api/generate-image error:', err);
-    return res.status(502).json({ code: 'upstream_error', error: 'Image generation failed' });
+    return res.status(502).json({ code: 'upstream_error', error: err.message || 'Image generation failed' });
   }
 });
 
