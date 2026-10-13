@@ -48,7 +48,7 @@ app.post('/api/sample', async (req, res) => {
       apiKey: process.env.GEMINI_API_KEY,
       httpOptions: {
         headers: {
-          'User-Agent': 'aistudio-build',
+          'User-Agent': 'camping-food-helper',
         },
       },
     });
@@ -69,7 +69,7 @@ app.post('/api/sample', async (req, res) => {
     const parsed = JSON.parse(text.trim());
     return res.json(parsed);
   } catch (err) {
-    console.error('[AI Studio] /api/sample error:', err);
+    console.error('[Express API] /api/sample error:', err);
     return res.status(502).json({ code: 'upstream_error' });
   }
 });
