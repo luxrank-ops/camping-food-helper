@@ -1,0 +1,33 @@
+# 10분마다 앱과 외부 API를 점검하고, 장애면 텔레그램으로 알린다. (상세: scripts/uptime-check.mjs)
+# 주의: GitHub 스케줄 실행은 부하가 많을 때 몇 분 늦어질 수 있다. 저장소가 60일 동안
+#       활동이 없으면 GitHub가 스케줄을 자동 중지하므로 가끔 Actions 탭에서 상태를 확인한다.
+name: Uptime check
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 이전 점검이 아직 돌고 있으면 겹쳐서 실행하지 않는다
+concurrency:
+  group: uptime-check
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: 프론트엔드 · 서버리스 · 외부 API 점검
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 헬스체크 실행
+        run: node scripts/uptime-check.mjs
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

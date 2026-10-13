@@ -1,0 +1,40 @@
+# 의존성 자동 점검: 매주 월요일 오전 9시(한국 시간)에 새 버전을 확인해 PR을 만든다.
+# - npm: @google/genai, express 등 운영 의존성의 마이너·패치 업데이트는 한 PR로 묶는다.
+#   메이저 업데이트는 호환성 깨짐 위험이 있어 자동 PR에서 제외한다 (보안 경고 PR은 별도로 올라온다).
+# - github-actions: ci.yml에서 쓰는 actions/checkout 등의 버전도 함께 올린다.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "ci(deps)"
