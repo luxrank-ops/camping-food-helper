@@ -11,6 +11,43 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
+app.post('/api/generate-image', async (req, res) => {
+  const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
+  if (!prompt) {
+    return res.status(400).json({ error: 'Missing prompt' });
+  }
+
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(503).json({ error: 'GEMINI_API_KEY is not configured' });
+  }
+
+  try {
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'camping-food-helper',
+        },
+      },
+    });
+
+    const response = await ai.models.generateContent({
+      model: 'imagen-3.0-generate-003',
+      contents: prompt,
+    });
+
+    const imageUrl = response.candidates?.[0]?.image?.uri;
+    if (!imageUrl) {
+      return res.status(502).json({ error: 'Image generation failed' });
+    }
+
+    return res.json({ imageUrl });
+  } catch (err) {
+    console.error('[Image Generation] /api/generate-image error:', err);
+    return res.status(502).json({ error: 'Image generation failed' });
+  }
+});
+
 app.post('/api/sample', async (req, res) => {
   const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
   if (!prompt) {
