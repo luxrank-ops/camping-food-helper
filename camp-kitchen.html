@@ -750,7 +750,9 @@ details li{margin-bottom:8px}
     gardenUnlockedIds:store.get('cc.gardenUnlocked',[]),
     lightbox:null,
     coolerSelected:[],
-    safetyGuideOpen:false
+    safetyGuideOpen:false,
+    locCardOpen:true,
+    coolerCardOpen:true
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
   var gardenMapInstance=null, gardenMapMarkers=[];
@@ -2480,11 +2482,19 @@ details li{margin-bottom:8px}
     '</div>';
   }
   function locCard(){
-    var h='<section class="card loc-card" id="loc-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+    var picked=profile.camp||ui.wxLoc;
+    var h='<section class="card loc-card" id="loc-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(ui.locCardOpen?'8':'0')+'px">'+
       '<h2 style="margin:0">캠핑지 찾기</h2>'+
-      '<button class="link" type="button" data-a="tab" data-v="camp" style="font-size:13px">전국 4,000+ 탐색 →</button>'+
-      '</div>'+
-      '<p class="hint" style="margin:0 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
+      '<span style="display:flex;gap:10px;align-items:center">'+
+        '<button class="link" type="button" data-a="tab" data-v="camp" style="font-size:13px">전국 4,000+ 탐색 →</button>'+
+        '<button class="chip sm" type="button" data-a="loc-card-toggle" style="font-size:11px">'+(ui.locCardOpen?'접기 ▲':'열기 ▼')+'</button>'+
+      '</span>'+
+      '</div>';
+    if(!ui.locCardOpen){
+      h+='<p class="hint" style="margin:8px 0 0">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</p>';
+      return h+'</section>';
+    }
+    h+='<p class="hint" style="margin:0 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
       '<div class="ac-wrap">'+
         '<div class="loc-row">'+
           '<input id="camp-search" class="loc-input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="camp-ac" autocomplete="off" spellcheck="false" placeholder="예: 자라섬, 가평, 제주 서귀포" aria-label="캠핑장 또는 지역 검색" value="'+esc(ui.wxQ)+'">'+
@@ -4408,11 +4418,17 @@ details li{margin-bottom:8px}
     }
 
     h+='<section class="card" style="border:1.5px solid #207254;background:linear-gradient(180deg, var(--surface) 0%, rgba(32,114,84,0.06) 100%)">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(ui.coolerCardOpen?'8':'0')+'px">'+
         '<h2 style="margin:0;font-size:16px;display:flex;align-items:center;gap:6px">🧊 쿨러백 털기 · 남은 재료 요리 찾기</h2>'+
-        (coolerSelectedCount ? '<button class="chip sm" type="button" data-a="cooler-clear" style="font-size:11px">선택 초기화 ↺</button>' : '')+
-      '</div>'+
-      '<p class="hint" style="margin:0 0 10px">캠핑장에 남아있는 재료를 탭하세요. 즉시 만들 수 있는 캠핑 요리를 찾아드려요!</p>'+
+        '<span style="display:flex;gap:6px;align-items:center">'+
+          (coolerSelectedCount ? '<button class="chip sm" type="button" data-a="cooler-clear" style="font-size:11px">선택 초기화 ↺</button>' : '')+
+          '<button class="chip sm" type="button" data-a="cooler-card-toggle" style="font-size:11px">'+(ui.coolerCardOpen?'접기 ▲':'열기 ▼')+'</button>'+
+        '</span>'+
+      '</div>';
+    if(!ui.coolerCardOpen){
+      h+='<p class="hint" style="margin:8px 0 0">'+(coolerSelectedCount?'선택한 재료: <b>'+esc(ui.coolerSelected.join(', '))+'</b> ('+coolerSelectedCount+'개)':'남은 재료 고르기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</p>';
+    }else{
+      h+='<p class="hint" style="margin:0 0 10px">캠핑장에 남아있는 재료를 탭하세요. 즉시 만들 수 있는 캠핑 요리를 찾아드려요!</p>'+
       '<div class="chips" style="gap:6px;margin-bottom:12px;flex-wrap:wrap">'+
         coolerItems.map(function(item){
           var sel = (ui.coolerSelected || []).indexOf(item) >= 0;
@@ -4437,8 +4453,9 @@ details li{margin-bottom:8px}
           '<button class="btn pop sm wide" type="button" data-a="cooler-ai-rec" style="margin-top:10px;font-weight:900;justify-content:center">'+
             '✨ 이 재료들('+ui.coolerSelected.join(', ')+')로 AI 맞춤 요리 추천받기'+
           '</button>'+
-        '</div>' : '')+
-    '</section>';
+        '</div>' : '');
+    }
+    h+='</section>';
 
     h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
     peopleAndGearFields(false)+
@@ -5327,6 +5344,16 @@ details li{margin-bottom:8px}
     }
     if(a==='toggle-safety-guide'){
       ui.safetyGuideOpen = !ui.safetyGuideOpen;
+      render();
+      return;
+    }
+    if(a==='loc-card-toggle'){
+      ui.locCardOpen = !ui.locCardOpen;
+      render();
+      return;
+    }
+    if(a==='cooler-card-toggle'){
+      ui.coolerCardOpen = !ui.coolerCardOpen;
       render();
       return;
     }
