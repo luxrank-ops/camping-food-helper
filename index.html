@@ -751,8 +751,9 @@ details li{margin-bottom:8px}
     lightbox:null,
     coolerSelected:[],
     safetyGuideOpen:false,
-    locCardOpen:true,
-    coolerCardOpen:true
+    // 첫 화면(추천 탭)은 접힌 상태로 시작한다. 펼치기는 각 카드의 [열기 ▼] 버튼으로.
+    locCardOpen:false,
+    coolerCardOpen:false
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
   var gardenMapInstance=null, gardenMapMarkers=[];
@@ -1864,6 +1865,8 @@ details li{margin-bottom:8px}
   }
   function chooseCamp(c){
     ui.wxOpen=false;ui.wxQ='';ui.wxIdx=-1;ui.places=[];
+    // 캠핑지를 직접 고른 순간에는 첫 화면이 접혀 있어도 결과가 바로 보이게 펼친다.
+    ui.locCardOpen=true;
     var loc={name:c.name,region:c.region||'',kindText:c.kindText||'',lat:c.lat,lon:c.lon,src:c.src||'data',at:Date.now()};
     ui.wxLoc=loc;
     profile.camp={name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon,src:loc.src};
@@ -2492,6 +2495,8 @@ details li{margin-bottom:8px}
       '</div>';
     if(!ui.locCardOpen){
       h+='<p class="hint" style="margin:8px 0 0">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</p>';
+      // 접혀 있어도 '지금 날씨를 직접 고르기'는 바로 쓸 수 있게 남겨 둔다(네트워크 없이도 동작).
+      if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
       return h+'</section>';
     }
     h+='<p class="hint" style="margin:0 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
