@@ -51,20 +51,31 @@ jobs:
       - name: Firebase Hosting 배포용 번들(dist/) 빌드
         run: npm run build
 
+      - name: Firebase 서비스 계정 시크릿 확인
+        id: check_secret
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -n "$SERVICE_ACCOUNT" ]; then
+            echo "has_secret=true" >> "$GITHUB_OUTPUT"
+            echo "FIREBASE_SERVICE_ACCOUNT 시크릿이 확인되었습니다."
+          else
+            echo "has_secret=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::FIREBASE_SERVICE_ACCOUNT 시크릿이 아직 설정되지 않았습니다. GitHub 저장소의 Settings -> Secrets and variables -> Actions에 FIREBASE_SERVICE_ACCOUNT를 등록하면 자동 배포가 완료됩니다."
+          fi
+
       - name: Firebase Hosting 프로덕션 배포 (main 브랜치 푸시 시)
-        if: github.event_name != 'pull_request'
+        if: steps.check_secret.outputs.has_secret == 'true' && github.event_name != 'pull_request'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ secrets.FIREBASE_PROJECT_ID || 'camping-food-helper' }}
           channelId: live
 
       - name: Firebase Hosting PR 프리뷰 배포 (Pull Request 시)
-        if: github.event_name == 'pull_request' && secrets.FIREBASE_SERVICE_ACCOUNT != ''
+        if: steps.check_secret.outputs.has_secret == 'true' && github.event_name == 'pull_request'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ secrets.FIREBASE_PROJECT_ID || 'camping-food-helper' }}
           expires: 7d
