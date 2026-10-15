@@ -1,0 +1,70 @@
+# main 브랜치 푸시 시 코드 품질 검증 후 Firebase Hosting에 자동 배포하는 CI/CD 파이프라인.
+# PR 생성/업데이트 시에는 프리뷰 채널 URL을 생성할 수 있도록 구성되어 있다.
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: firebase-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_deploy:
+    name: 품질 검증 및 Firebase Hosting 자동 배포
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 22 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 백엔드 및 스크립트 문법 검사
+        run: |
+          set -e
+          node --check server.js
+          for f in api/*.js lib/*.js scripts/*.mjs; do
+            echo "checking $f"
+            node --check "$f"
+          done
+
+      - name: 클라이언트 정적 보안 스캔 (process.env 등 서버 전용 참조 검출)
+        run: npm run check:client
+
+      - name: HTML 유효성 검사
+        run: npx --yes html-validate@8.29.0 index.html camp-kitchen.html
+
+      - name: Firebase Hosting 배포용 번들(dist/) 빌드
+        run: npm run build
+
+      - name: Firebase Hosting 프로덕션 배포 (main 브랜치 푸시 시)
+        if: github.event_name != 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID || 'camping-food-helper' }}
+          channelId: live
+
+      - name: Firebase Hosting PR 프리뷰 배포 (Pull Request 시)
+        if: github.event_name == 'pull_request' && secrets.FIREBASE_SERVICE_ACCOUNT != ''
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID || 'camping-food-helper' }}
+          expires: 7d

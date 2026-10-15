@@ -47,10 +47,29 @@
 - 매주 월요일 오전 9시(KST)에 npm 패키지와 GitHub Actions 버전을 점검해 PR을 만듭니다.
 - 마이너·패치 업데이트는 한 PR로 묶고, 메이저 업데이트는 자동 PR에서 제외합니다(예: express 5.x). 보안 경고는 별도로 올라옵니다.
 
-### 배포 (Vercel GitOps)
+### 배포 (Firebase Hosting GitHub Actions CI/CD & Vercel)
 
-- `main`에 머지되면 Vercel이 프로덕션에 자동 배포합니다. 브랜치 푸시는 프리뷰 배포가 됩니다.
-- 별도의 토큰이나 CLI 배포 단계는 필요 없습니다.
+- **Firebase Hosting 자동 배포 (`.github/workflows/firebase-deploy.yml`)**:
+  - `main` 브랜치에 푸시(또는 PR 머지)되면 **백엔드·스크립트 문법 검사 → 클라이언트 보안 스캔 → HTML 유효성 검사 → 정적 번들(`dist/`) 빌드**를 거친 뒤 **Firebase Hosting(`live` 채널)**에 자동으로 배포됩니다.
+  - Pull Request 생성 시에는 임시 프리뷰 채널(7일 유지)에 배포하고 PR 코멘트로 미리보기 URL을 남깁니다.
+  - 빌드 단계(`npm run build:hosting`)에서 `dist/` 폴더에 클라이언트 필수 자산(`index.html`, `camp-kitchen.html`, `data/campgrounds.js`, 비밀번호·비공개 상세주소가 마스킹된 `data/secret_gardens.json`)만 추출하여 서버 전용 코드나 민감 정보가 정적 호스팅에 노출되지 않도록 보호합니다.
+
+**Firebase Hosting 자동 배포 초기 설정 (GitHub Secrets 1회 등록)**
+
+1. **Firebase 프로젝트 준비**: [Firebase 콘솔](https://console.firebase.google.com/)에서 프로젝트를 생성하거나 기존 프로젝트 ID를 확인합니다 (`.firebaserc`의 기본값은 `camping-food-helper`이며, GitHub Secret으로 덮어쓸 수 있습니다).
+2. **서비스 계정 키 발급 (권장 방법 A - CLI 자동 설정)**:
+   로컬 터미널에서 프로젝트 루트 폴더로 이동한 뒤 아래 명령어를 실행하면 GitHub 인증과 서비스 계정 생성·시크릿 등록이 한 번에 완료됩니다.
+   ```bash
+   npx firebase-tools login
+   npx firebase-tools init hosting:github
+   ```
+3. **서비스 계정 키 수동 등록 (방법 B - 콘솔에서 직접 등록)**:
+   - Firebase 콘솔 → **프로젝트 설정(⚙️) → 서비스 계정 → 새 비공개 키 생성**으로 JSON 파일을 다운로드합니다(또는 Google Cloud IAM에서 `Firebase Hosting Admin` 권한이 부여된 서비스 계정 JSON 키 발급).
+   - GitHub 저장소 **Settings → Secrets and variables → Actions → New repository secret**에서 아래 시크릿을 추가합니다:
+     - `FIREBASE_SERVICE_ACCOUNT`: 다운로드한 서비스 계정 JSON 파일의 전체 내용 붙여넣기 (필수)
+     - `FIREBASE_PROJECT_ID`: 배포할 Firebase 프로젝트 ID (선택, 미설정 시 `.firebaserc`의 `camping-food-helper` 사용)
+
+- **Vercel 병행 배포**: `main`에 머지되면 Vercel GitOps 연동 환경에서도 함께 자동 배포됩니다.
 
 ### 헬스체크 (`.github/workflows/uptime-check.yml`)
 

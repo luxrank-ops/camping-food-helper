@@ -24,23 +24,38 @@ export default async function handler(req, res) {
       },
     });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    const models = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+    let lastErr = null;
+    let parsed = null;
 
-    const text = response.text;
-    if (!text) {
-      return res.status(502).json({ code: 'empty_completion' });
+    for (const model of models) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+          },
+        });
+        const text = response.text;
+        if (text) {
+          parsed = JSON.parse(text.trim());
+          break;
+        }
+      } catch (e) {
+        lastErr = e;
+        console.warn(`[Vercel API] Model ${model} failed, trying fallback:`, e?.message || e);
+      }
     }
 
-    const parsed = JSON.parse(text.trim());
+    if (!parsed) {
+      console.error('[Vercel API] All models failed:', lastErr);
+      return res.status(502).json({ code: 'upstream_error', error: lastErr?.message });
+    }
+
     return res.status(200).json(parsed);
   } catch (err) {
     console.error('[Vercel API] /api/sample error:', err);
-    return res.status(502).json({ code: 'upstream_error' });
+    return res.status(502).json({ code: 'upstream_error', error: err?.message });
   }
 }

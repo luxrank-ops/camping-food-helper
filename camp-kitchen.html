@@ -255,24 +255,382 @@ details li{margin-bottom:8px}
 .camp-modal-content{background:var(--surface);color:var(--fg);width:100%;max-width:540px;max-height:86vh;overflow-y:auto;border-radius:26px 26px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow-up);animation:slideUp .2s ease-out}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 
-/* 하단 알약 탭바 */
-.tabs{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none;z-index:50}
-.pill{pointer-events:auto;max-width:540px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px;box-shadow:var(--shadow-up)}
-.tabs button{appearance:none;border:0;background:none;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:4px;font:700 12.5px/1 var(--font-body);min-height:48px;border-radius:999px;cursor:pointer;padding:0 2px}
+/* 장박 주간 식단표 스타일 */
+.plan-hero{background:linear-gradient(135deg,#0c3629 0%,#185b46 100%);color:var(--hero-fg);border-radius:24px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.plan-hero h2{font-family:var(--font-display);font-size:22px;margin:0 0 6px;color:#fff}
+.plan-hero p{font-size:13px;color:rgba(255,255,255,.88);margin:0 0 12px;line-height:1.4}
+.plan-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:8px}
+
+.plan-gen-btn{width:100%;border:0;border-radius:16px;background:var(--ember);color:#fff;font-family:var(--font-display);font-size:17px;font-weight:900;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(224,93,56,.35);transition:all .15s ease}
+.plan-gen-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.plan-gen-btn:active{transform:scale(.98)}
+
+.plan-day-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.plan-day-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:6px}
+.plan-day-title{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:18px;font-weight:900;color:var(--fg);margin:0}
+.plan-day-tip{font-size:11.5px;color:var(--brand);background:var(--chip);padding:3px 9px;border-radius:999px;font-weight:700}
+.plan-storage-hint{background:var(--soft);border-left:3.5px solid var(--ember);padding:8px 12px;border-radius:8px;font-size:12px;color:var(--fg);margin-bottom:12px;line-height:1.45}
+
+.plan-meal-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.plan-meal-card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:7px;transition:border-color .15s}
+.plan-meal-card:hover{border-color:var(--brand)}
+.plan-meal-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.plan-meal-badge{font-size:11.5px;font-weight:900;padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px}
+.plan-meal-badge.breakfast{background:#fff3d4;color:#925100}
+.plan-meal-badge.lunch{background:#e1f5fe;color:#0277bd}
+.plan-meal-badge.dinner{background:#ede7f6;color:#512da8}
+.plan-meal-badge.snack{background:#fbe9e7;color:#d84315}
+.plan-meal-name{font-size:15px;font-weight:900;color:var(--fg);margin:2px 0;line-height:1.3}
+.plan-meal-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.plan-meal-ings{font-size:12px;color:var(--fg);line-height:1.4;background:var(--surface);padding:6px 10px;border-radius:8px;border:1px solid var(--line)}
+.plan-meal-actions{display:flex;gap:6px;margin-top:2px;flex-wrap:wrap}
+.plan-mini-btn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:700;color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:all .12s}
+.plan-mini-btn:hover{background:var(--chip);color:var(--brand);border-color:var(--brand)}
+
+.plan-agg-card{background:var(--surface);border:2px solid var(--brand);border-radius:20px;padding:18px;margin-top:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.plan-agg-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.plan-agg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.plan-stat-box{background:var(--chip);border-radius:12px;padding:10px 8px;text-align:center}
+.plan-stat-num{font-size:18px;font-weight:900;color:var(--brand);line-height:1.1}
+.plan-stat-lab{font-size:11px;color:var(--muted);margin-top:2px}
+
+.plan-ing-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px}
+.plan-ing-table th{background:var(--chip);color:var(--muted);font-weight:700;text-align:left;padding:8px 8px;border-radius:4px;font-size:11.5px}
+.plan-ing-table td{padding:8px 8px;border-bottom:1px solid var(--line);color:var(--fg)}
+.plan-tag-badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap}
+.plan-tag-badge.prep{background:#e8f5e9;color:#2e7d32}
+.plan-tag-badge.pack{background:#e3f2fd;color:#1565c0}
+.plan-tag-badge.buy{background:#fff8e1;color:#f57f17}
+
+.plan-gear-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:8px;font-size:12px;font-weight:700;margin:3px}
+.plan-gear-badge.owned{background:var(--chip);color:var(--brand)}
+.plan-gear-badge.missing{background:#ffebee;color:#c62828;border:1px dashed #ef9a9a}
+
+/* === 나만의 비밀의 정원 (노지&캠장) 스타일 === */
+.garden-hero-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.garden-admin-banner{background:linear-gradient(135deg,#3c2303 0%,#78350f 100%);color:#fef08a;border:1px solid #ca8a04;border-radius:18px;padding:12px 16px;margin-bottom:14px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.garden-admin-badge{background:#fef08a;color:#78350f;font-weight:900;font-size:11.5px;padding:3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+.garden-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow);transition:transform .15s ease,box-shadow .15s ease}
+.garden-card:hover{box-shadow:var(--shadow-up)}
+.garden-img-wrap{position:relative;width:100%;height:190px;background:#1e293b;overflow:hidden}
+.garden-img{width:100%;height:100%;object-fit:cover;display:block}
+.garden-badges-overlay{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.garden-badge{pointer-events:auto;font-size:11.5px;font-weight:900;padding:4px 9px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.garden-badge.cat{background:rgba(18,73,58,.92);color:#fff;backdrop-filter:blur(4px)}
+.garden-badge.private{background:rgba(179,64,26,.95);color:#fff}
+.garden-badge.public{background:rgba(30,138,85,.95);color:#fff}
+.garden-badge.fee{background:rgba(0,0,0,.65);color:#fff}
+.garden-body{padding:16px}
+.garden-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.garden-title{font-size:18px;font-weight:900;color:var(--fg);margin:0;line-height:1.3}
+.garden-loc{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px;margin-bottom:10px}
+.garden-lock-box{background:var(--chip);border:1.5px dashed var(--line);border-radius:14px;padding:12px 14px;margin:8px 0 12px;text-align:center}
+.garden-fac-list{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0}
+.garden-fac-chip{background:var(--chip);color:var(--fg);font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:3px}
+.garden-meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;background:var(--chip);padding:10px 12px;border-radius:12px;font-size:12px;margin:10px 0}
+.garden-meta-item{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.garden-meta-item b{color:var(--fg);font-weight:700}
+.garden-author-bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding-top:10px;border-top:1px solid var(--line);margin-top:10px}
+.garden-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.garden-btn-mini{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .12s}
+.garden-btn-mini:hover{background:var(--chip);border-color:var(--brand);color:var(--brand)}
+.garden-btn-mini.primary{background:var(--brand);color:var(--brand-fg);border-color:var(--brand)}
+.garden-admin-hint{background:#fef9c3;color:#713f12;border:1px solid #fde047;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;margin-top:8px}
+
+/* 시설물 다중 선택 그리드 (등록 모달용) */
+.garden-fac-group{margin-bottom:14px}
+.garden-fac-group h4{font-size:13px;font-weight:900;color:var(--fg);margin:0 0 6px}
+.garden-fac-selector{display:flex;flex-wrap:wrap;gap:6px}
+.garden-fac-btn{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .12s}
+.garden-fac-btn.active{background:var(--brand);color:var(--brand-fg);border-color:var(--brand);box-shadow:0 2px 6px rgba(18,73,58,.25)}
+.garden-fac-btn:hover{filter:brightness(.95)}
+
+/* 프리셋 사진 선택기 */
+.garden-presets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.garden-preset-item{border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;background:#000}
+.garden-preset-item.active{border-color:var(--pop);box-shadow:0 0 0 2px var(--pop)}
+.garden-preset-item img{width:100%;height:64px;object-fit:cover;display:block;opacity:.85}
+.garden-preset-item.active img{opacity:1}
+.garden-preset-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 카메라 & 사진 업로드 스타일 */
+.garden-upload-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.garden-upload-card{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--brand);background:rgba(18,73,58,.04);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s ease}
+.garden-upload-card:hover{background:rgba(18,73,58,.1);border-color:var(--brand);transform:translateY(-1px)}
+.garden-upload-card-icon{font-size:26px;margin-bottom:4px}
+.garden-upload-card-title{font-size:13px;font-weight:900;color:var(--brand)}
+.garden-upload-card-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.garden-upload-preview{position:relative;margin-bottom:14px;border-radius:16px;overflow:hidden;border:2px solid var(--brand);box-shadow:var(--shadow)}
+.garden-upload-preview img{width:100%;height:210px;object-fit:cover;display:block}
+.garden-upload-tag{position:absolute;top:10px;left:10px;background:rgba(18,73,58,.94);color:#fff;font-size:11px;font-weight:900;padding:4px 10px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.garden-upload-overlay-actions{position:absolute;bottom:10px;right:10px;display:flex;gap:6px}
+.garden-upload-rm-btn{background:rgba(0,0,0,.78);color:#fff;border:0;padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer}
+
+/* 비밀의 정원 인터랙티브 지도 스타일 */
+.garden-map-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;margin-top:20px;margin-bottom:24px;box-shadow:var(--shadow)}
+.garden-map-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.garden-map-container{width:100%;height:380px;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:inset 0 1px 4px rgba(0,0,0,.08);position:relative;z-index:5}
+.garden-map-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted);align-items:center}
+.garden-marker-pin{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#ffffff;border:2.5px solid var(--brand);box-shadow:0 3px 10px rgba(0,0,0,.35);font-size:16px;position:relative;cursor:pointer;transition:transform .12s ease}
+.garden-marker-pin:hover{transform:scale(1.15)}
+.garden-marker-pin.private{border-color:var(--ember);background:#fff5f2}
+.garden-marker-pin .mini-lock{position:absolute;top:-4px;right:-4px;font-size:10px;background:var(--ember);color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);line-height:1}
+
+/* Leaflet 커스텀 스타일 (감성적이고 세련된 마커 상세 정보창) */
+.leaflet-popup-content-wrapper{
+  border-radius:18px !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  box-shadow:0 18px 40px -8px rgba(15,31,25,.35), 0 6px 16px -2px rgba(0,0,0,.15) !important;
+  font-family:var(--font-body) !important;
+  border:1px solid rgba(18,73,58,.16) !important;
+  background:#ffffff !important;
+}
+.leaflet-popup-content{
+  margin:0 !important;
+  line-height:1.4 !important;
+  font-size:13px !important;
+  width:295px !important;
+  max-width:88vw !important;
+}
+.leaflet-popup-content img{
+  object-fit:cover !important;
+  object-position:center !important;
+}
+.leaflet-popup-tip{
+  background:#ffffff !important;
+  box-shadow:0 4px 12px rgba(0,0,0,.18) !important;
+}
+.leaflet-container a.leaflet-popup-close-button{
+  top:9px !important;
+  right:9px !important;
+  width:28px !important;
+  height:28px !important;
+  padding:0 !important;
+  border-radius:50% !important;
+  background:rgba(0,0,0,.55) !important;
+  color:#ffffff !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:16px !important;
+  font-weight:700 !important;
+  text-decoration:none !important;
+  backdrop-filter:blur(4px) !important;
+  -webkit-backdrop-filter:blur(4px) !important;
+  box-shadow:0 2px 6px rgba(0,0,0,.3) !important;
+  z-index:20 !important;
+  transition:background .15s ease, transform .15s ease !important;
+}
+.leaflet-container a.leaflet-popup-close-button:hover{
+  background:rgba(0,0,0,.8) !important;
+  color:#ffffff !important;
+  transform:scale(1.08) !important;
+}
+.garden-map-popup-hero{
+  position:relative;
+  width:100%;
+  height:180px;
+  background:#14221b;
+  overflow:hidden;
+}
+@media (max-width:480px){
+  .leaflet-popup-content{
+    width:calc(100vw - 44px) !important;
+    max-width:320px !important;
+  }
+  .garden-map-popup-hero{
+    height:192px !important;
+    max-height:54vw;
+    min-height:165px;
+  }
+}
+.garden-map-popup-img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+  object-position:center !important;
+  display:block !important;
+  transition:transform .4s ease;
+}
+.garden-map-popup-hero:hover .garden-map-popup-img{
+  transform:scale(1.05);
+}
+.garden-map-popup-grad{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,.38) 0%, rgba(0,0,0,0) 42%, rgba(0,0,0,.75) 100%);
+  pointer-events:none;
+}
+.garden-map-popup-badges{
+  position:absolute;
+  top:10px;
+  left:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  z-index:5;
+}
+.garden-map-popup-badge{
+  font-size:11px;
+  font-weight:800;
+  padding:4px 9px;
+  border-radius:999px;
+  line-height:1.2;
+  box-shadow:0 3px 10px rgba(0,0,0,.22);
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+/* 상단 반투명 카테고리 태그 */
+.garden-map-popup-badge.cat{
+  background:rgba(255,255,255,.78) !important;
+  backdrop-filter:blur(8px) saturate(160%) !important;
+  -webkit-backdrop-filter:blur(8px) saturate(160%) !important;
+  color:#0e3c2e !important;
+  border:1px solid rgba(255,255,255,.55) !important;
+  text-shadow:none !important;
+  letter-spacing:-0.2px;
+}
+.garden-map-popup-badge.priv{
+  background:rgba(186,44,18,.85);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.25);
+}
+.garden-map-popup-badge.pub{
+  background:rgba(18,73,58,.85);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.25);
+}
+.garden-map-popup-badge.fee{
+  position:absolute;
+  bottom:8px;
+  right:10px;
+  background:rgba(0,0,0,.65);
+  color:#ffdc7a;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:6px;
+  font-size:10.5px;
+  padding:3px 7px;
+}
+.garden-map-popup-body{
+  padding:12px 14px 14px;
+}
+.garden-map-popup-title{
+  font-size:16px;
+  font-weight:900;
+  color:#0f1f19;
+  margin:0 0 4px;
+  line-height:1.3;
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  letter-spacing:-0.3px;
+}
+.garden-map-popup-meta{
+  font-size:12px;
+  color:#435c51;
+  font-weight:600;
+  margin-bottom:8px;
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  line-height:1.3;
+}
+.garden-map-popup-tags{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.garden-map-popup-tag{
+  background:#ebf2ee;
+  color:#12493a;
+  font-size:10.5px;
+  font-weight:700;
+  padding:2.5px 6.5px;
+  border-radius:5px;
+  white-space:nowrap;
+}
+.garden-map-popup-actions{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  margin-top:4px;
+}
+.garden-map-popup-btn{
+  flex:1.1;
+  height:35px;
+  border-radius:9px;
+  background:var(--brand);
+  color:#ffffff;
+  border:0;
+  font-size:12.5px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  cursor:pointer;
+  box-shadow:0 3px 8px rgba(18,73,58,.25);
+  transition:background .15s ease, transform .1s ease, border-color .15s ease;
+}
+.garden-map-popup-btn:active{
+  transform:scale(0.97);
+}
+.garden-map-popup-btn.fav{
+  flex:1;
+  background:#fff5f2;
+  color:#c53b1b;
+  border:1px solid rgba(197,59,27,.24);
+  box-shadow:none;
+}
+.garden-map-popup-btn.fav:hover{
+  background:#ffe9e3;
+}
+.garden-map-popup-btn.fav.active{
+  background:#e54823;
+  color:#ffffff;
+  border:1px solid #d03d1a;
+  box-shadow:0 3px 9px rgba(229,72,35,.32);
+}
+.garden-map-popup-btn.sub{
+  background:var(--chip);
+  color:var(--brand);
+  box-shadow:none;
+  border:1px solid rgba(18,73,58,.18);
+}
+
+/* 하단 알약 탭바 (6탭) */
+.tabs{position:fixed;left:0;right:0;bottom:0;padding:0 8px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none;z-index:50}
+.pill{pointer-events:auto;max-width:550px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow-up)}
+.tabs button{appearance:none;border:0;background:none;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:2px;font:700 10.5px/1 var(--font-body);min-height:46px;border-radius:999px;cursor:pointer;padding:0 1px;letter-spacing:-0.4px}
 .tabs button[aria-current="page"]{background:var(--brand);color:var(--brand-fg)}
-.tabs svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tabs svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 </head>
 <body>
 <div class="app" id="app"></div>
 <nav class="tabs" id="tabs" aria-label="화면 이동"><div class="pill">
   <button type="button" data-a="tab" data-v="rec"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10z"/></svg>추천</button>
+  <button type="button" data-a="tab" data-v="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><path d="M7 13h4M7 17h6"/></svg>식단표</button>
   <button type="button" data-a="tab" data-v="camp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 20L12 4 5 20h14z"/><path d="M12 4v16"/><path d="M12 13l4 7"/><path d="M12 13l-4 7"/></svg>캠핑장</button>
+  <button type="button" data-a="tab" data-v="garden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/><path d="M12 14v4"/></svg>비밀정원</button>
   <button type="button" data-a="tab" data-v="list"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg>준비물</button>
   <button type="button" data-a="tab" data-v="me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20L12 4l9 16H3z"/><path d="M12 20v-7"/></svg>내 정보</button>
 </div></nav>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/campgrounds.js"></script>
 <script>
 (function(){
@@ -293,11 +651,74 @@ details li{margin-bottom:8px}
   var FLAME='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4.5 5.5 6.5 5.5 12a5.5 5.5 0 0 1-11 0c0-2.2 1-3.4 2.2-4.6 0 2 1 3.2 2.2 3.2C10.5 8 10.5 5.5 12 2z"/></svg>';
   var SCENE='<svg class="scene" viewBox="0 0 200 110" aria-hidden="true"><path d="M0 110L52 36l40 74z" fill="rgba(255,255,255,.08)"/><path d="M60 110L128 14l72 96z" fill="rgba(255,255,255,.13)"/><path d="M112 110l30-52 30 52z" fill="#FFC531"/><path d="M142 82l-12 28h24z" fill="rgba(18,73,58,.9)"/><path d="M40 110c-9-11-6-19 0-28 2 7 8 10 8 18 0 5-3 8-8 10z" fill="#FF7A45"/></svg>';
 
+  // === 나만의 비밀의 정원 (노지 & 캠장) 상수 정의 ===
+  var GARDEN_CATEGORIES={
+    noji:{label:'노지/오지',icon:'🏞️',desc:'자연 그대로의 무료 야영지'},
+    car:{label:'차박/스텔스',icon:'🚗',desc:'차 안에서 즐기는 스텔스 차박지'},
+    backpack:{label:'백패킹/비박',icon:'🎒',desc:'배낭 메고 걷는 숲속·산 정상 비박지'},
+    camp:{label:'숨은 캠핑장',icon:'🏕️',desc:'알려지지 않은 아늑한 사설/자연휴양림'},
+    water:{label:'계곡/해변',icon:'🌊',desc:'물놀이와 낚시가 가능한 수변 스팟'}
+  };
+
+  var GARDEN_FACILITIES=[
+    {
+      cat:'🚻 필수 편의시설',
+      items:[
+        '화장실(수세식)','화장실(간이/이동식)','화장실 없음','개수대/음수대',
+        '온수 샤워실','일반 샤워실','전기 사용 가능 (600W)','무료 Wi-Fi','쓰레기 분리수거장'
+      ]
+    },
+    {
+      cat:'🚗 주차 & 사이트 환경',
+      items:[
+        '사이트 옆 주차(오토)','차박 가능(스텔스)','도킹 텐트 가능','카라반/트레일러 진입',
+        '파쇄석 바닥','잔디 사이트','나무 데크','노지 자갈/모래','흙/솔잎 바닥'
+      ]
+    },
+    {
+      cat:'🔥 힐링 & 야외 활동',
+      items:[
+        '불멍/장작 가능','숯/화로대 사용','계곡/물놀이','바다/오션뷰',
+        '호수/리버뷰','낚시 포인트','울창한 그늘/솔숲','밤하늘 은하수/별 관측','일출/일몰 명소'
+      ]
+    },
+    {
+      cat:'🐕 편의 & 안전 & 수칙',
+      items:[
+        '반려동물 동반 가능','매점/편의점 인근','배달음식 가능','장작 현장 판매',
+        '차고 높은 4WD 권장','가로등 없음(랜턴필수)','통신/LTE 원활','클린캠핑 필수(쓰레기회수)'
+      ]
+    }
+  ];
+
+  var GARDEN_PHOTO_PRESETS=[
+    {label:'계곡 자갈 노지',url:'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80'},
+    {label:'울창한 솔숲 힐링',url:'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80'},
+    {label:'호수 & 리버 뷰',url:'https://images.unsplash.com/photo-1537905569824-f89f14cceb68?auto=format&fit=crop&w=800&q=80'},
+    {label:'잔디 캠핑장 사이트',url:'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=800&q=80'},
+    {label:'바다 오션뷰 차박',url:'https://images.unsplash.com/photo-1496080174650-637e3f22fa03?auto=format&fit=crop&w=800&q=80'},
+    {label:'밤하늘 별멍 캠핑',url:'https://images.unsplash.com/photo-1506535772317-9fca71c959c6?auto=format&fit=crop&w=800&q=80'}
+  ];
+
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
   var str=function(v){return typeof v==='string'?v.trim():(v==null?'':String(v))};
+  var memoryStore={};
   var store={
-    get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
-    set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+    get:function(k,d){
+      try{
+        var v=localStorage.getItem(k);
+        return v?JSON.parse(v):d;
+      }catch(e){
+        return memoryStore[k]!==undefined?memoryStore[k]:d;
+      }
+    },
+    set:function(k,v){
+      try{
+        localStorage.setItem(k,JSON.stringify(v));
+      }catch(e){
+        memoryStore[k]=v;
+      }
+    }
   };
 
   var month=new Date().getMonth()+1;
@@ -318,9 +739,21 @@ details li{margin-bottom:8px}
     modText:'',logStars:5,logNote:'',
     wxQ:'',wxSug:[],wxPick:[],wxOpen:false,wxIdx:-1,wxBusy:false,wx:null,wxKey:'',wxLoc:null,
     wxErr:'',wxStale:false,myLoc:null,locBusy:false,osmCamps:[],osmBusy:false,osmErr:false,places:[],placesQ:'',notice:'',
-    favCamps:store.get('cc.favCamps',[]),campSearch:'',campSido:'전체',campSg:'전체',campKind:'전체',campTheme:'전체',campSort:'dist',campOnlyFav:false,campPage:1,campDetail:null,campDetailWx:null,campDetailWxBusy:false
+    favCamps:store.get('cc.favCamps',[]),campSearch:'',campSido:'전체',campSg:'전체',campKind:'전체',campTheme:'전체',campSort:'dist',campOnlyFav:false,campPage:1,campDetail:null,campDetailWx:null,campDetailWxBusy:false,
+    planDays:store.get('cc.planDays',3),planPeople:profile.people||2,planTheme:store.get('cc.planTheme','all'),planSnack:store.get('cc.planSnack',true),planFilter:'all',mealPlan:store.get('cc.mealPlan',null),planSwapTarget:null,planBusy:false,
+    gardenList:[],gardenLoaded:false,gardenBusy:false,gardenErr:'',gardenFilter:'all',gardenSearch:'',gardenFacFilter:'',gardenSort:'newest',
+    gardenMasterKey:store.get('cc.gardenMasterKey',''),gardenIsMaster:!!store.get('cc.gardenMasterKey',''),
+    gardenRegModal:false,gardenDetailModal:null,gardenEditModal:null,gardenAuthModal:null,
+    gardenCategory:'noji',gardenSelectedFacilities:['화장실(간이/이동식)','차박 가능(스텔스)','불멍/장작 가능'],
+    gardenSelectedPhoto:GARDEN_PHOTO_PRESETS[0].url,gardenCustomPhoto:'',gardenUploadedPhoto:'',
+    gardenMapFocusId:null,gardenHidePrivateOnMap:false,
+    gardenUnlockedIds:store.get('cc.gardenUnlocked',[]),
+    lightbox:null,
+    coolerSelected:[],
+    safetyGuideOpen:false
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
+  var gardenMapInstance=null, gardenMapMarkers=[];
 
   function saveProfile(){profile.sample=false;store.set('cc.profile',profile)}
 
@@ -358,7 +791,19 @@ details li{margin-bottom:8px}
     {name:'코펠 김치찌개 & 라면 사리',minutes:20,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','든든하게'],meals:['아침','점심','저녁'],base:[{n:'신김치',q:150,u:'g'},{n:'돼지고기 앞다리',q:150,u:'g'},{n:'라면 사리·두부',q:1,u:'개'}],pairing:'소주 또는 따뜻한 보리차 · 강불에서 끓이다가 라면 사리는 마지막 3분에 넣으세요.',reason:'비 오거나 추운 날 한 냄비로 뜨끈하게 먹기 좋은 국물 요리예요.'},
     {name:'코펠 순두부찌개 & 계란말이',minutes:20,level:'쉬움',equipment:['버너','코펠','프라이팬'],moods:['국물 요리','가볍게'],meals:['아침','저녁'],base:[{n:'순두부',q:1,u:'팩'},{n:'다진 돼지고기',q:100,u:'g'},{n:'달걀',q:3,u:'개'}],pairing:'막걸리 또는 따뜻한 차 · 계란말이는 약불에서 천천히 말아 주세요.',reason:'부드럽게 넘어가서 아침이나 쌀쌀한 저녁에 부담 없이 좋아요.'},
     {name:'핫초코 마시멜로 & 스모어',minutes:10,level:'쉬움',equipment:['버너','코펠'],moods:['가볍게','술안주'],meals:['불멍 안주','아침'],base:[{n:'핫초코 파우더',q:40,u:'g'},{n:'우유·물',q:400,u:'ml'},{n:'마시멜로·크래커',q:100,u:'g'}],pairing:'불멍용 디저트 · 우유는 타지 않게 약불에서 데우고, 마시멜로는 꼬치에 꿰어 살짝만 구우세요.',reason:'손 시릴 때 10분이면 만들 수 있는 따뜻한 불멍 간식이에요.'},
-    {name:'코펠 비빔국수 & 열무김치',minutes:15,level:'쉬움',equipment:['버너','코펠'],moods:['가볍게','술안주'],meals:['점심','저녁'],base:[{n:'소면',q:100,u:'g'},{n:'비빔양념장',q:3,u:'큰술'},{n:'열무김치·오이',q:100,u:'g'}],pairing:'시원한 탄산수 또는 생맥주 · 면은 찬물에 두어 번 헹궈 물기를 완전히 빼세요.',reason:'더운 날 불 앞에 오래 서 있지 않고 15분에 끝나는 시원한 한 그릇이에요.'}
+    {name:'코펠 비빔국수 & 열무김치',minutes:15,level:'쉬움',equipment:['버너','코펠'],moods:['가볍게','술안주'],meals:['점심','저녁'],base:[{n:'소면',q:100,u:'g'},{n:'비빔양념장',q:3,u:'큰술'},{n:'열무김치·오이',q:100,u:'g'}],pairing:'시원한 탄산수 또는 생맥주 · 면은 찬물에 두어 번 헹궈 물기를 완전히 빼세요.',reason:'더운 날 불 앞에 오래 서 있지 않고 15분에 끝나는 시원한 한 그릇이에요.'},
+    {name:'코펠 구수한 누룽지 & 팽이버섯 계란국',minutes:12,level:'쉬움',equipment:['버너','코펠'],moods:['가볍게','국물 요리'],meals:['아침'],base:[{n:'누룽지',q:80,u:'g'},{n:'달걀',q:1.5,u:'개'},{n:'팽이버섯·대파',q:40,u:'g'}],pairing:'따뜻한 둥굴레차 또는 숭늉 · 아침에 속 편하게 10분 만에 끓여 철수 전 설거지도 가장 쉬워요.',reason:'장박 캠핑 아침이나 철수 날 속 편하게 부담 없이 끓여 먹는 해장 누룽지예요.'},
+    {name:'프라이팬 프렌치토스트 & 크리스피 베이컨',minutes:15,level:'쉬움',equipment:['버너','프라이팬','스킬렛'],moods:['가볍게','든든하게'],meals:['아침'],base:[{n:'식빵',q:2,u:'장'},{n:'달걀·우유',q:1,u:'세트'},{n:'베이컨·버터',q:50,u:'g'}],pairing:'드립 커피 또는 따뜻한 홍차 · 약불에서 버터 향을 입히며 노릇하게 구워내세요.',reason:'향긋한 모닝 커피와 함께 숲속 감성을 만끽하는 인기 캠핑 브런치예요.'},
+    {name:'코펠 순두부 열라면 & 대파송송',minutes:15,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','얼큰하게'],meals:['아침','점심'],base:[{n:'매운 라면',q:1,u:'봉지'},{n:'순두부',q:0.5,u:'팩'},{n:'대파·청양고추',q:30,u:'g'},{n:'달걀',q:1,u:'개'}],pairing:'시원한 물 또는 탄산수 · 면을 넣기 전 순두부를 큼직하게 썰어 국물 맛을 배게 하세요.',reason:'칼칼하고 시원한 국물로 전날 불멍의 피로를 단번에 날려 주는 캠핑 필수 해장식이에요.'},
+    {name:'그리들 국물 떡볶이 & 바삭 모둠 튀김',minutes:20,level:'쉬움',equipment:['버너','그리들','코펠'],moods:['가볍게','술안주'],meals:['점심'],base:[{n:'밀떡',q:150,u:'g'},{n:'사각어묵·대파',q:80,u:'g'},{n:'야끼만두·김말이',q:100,u:'g'},{n:'떡볶이 양념장',q:2,u:'큰술'}],pairing:'시원한 쿨피스 또는 탄산음료 · 떡이 말랑해질 때 튀김을 그리들 가장자리에 얹어 바삭하게 데우세요.',reason:'아이부터 어른까지 다 같이 그리들에 둘러앉아 점심에 즐기기 최고인 국민 간식이에요.'},
+    {name:'그리들 대패삼겹 콩나물불고기 (콩불)',minutes:20,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['든든하게','술안주'],meals:['점심','저녁'],base:[{n:'대패삼겹살',q:180,u:'g'},{n:'콩나물',q:150,u:'g'},{n:'깻잎·대파',q:40,u:'g'},{n:'매콤양념장',q:2,u:'큰술'}],pairing:'소주 또는 시원한 맥주 · 콩나물 숨이 죽으면 센 불로 올려 국물을 졸여가며 볶으세요.',reason:'푸짐한 콩나물과 얇은 삼겹살이 양념과 어우러져 밥반찬과 술안주 둘 다 잡는 메뉴예요.'},
+    {name:'코펠 밀푀유나베 & 칠리소스',minutes:25,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','든든하게'],meals:['저녁'],base:[{n:'소고기 불고기감',q:150,u:'g'},{n:'알배기배추·깻잎',q:120,u:'g'},{n:'표고·팽이버섯',q:60,u:'g'},{n:'쯔유 멸치육수',q:1,u:'팩'}],pairing:'청주 또는 화이트 와인 · 냄비에 촘촘히 꽂은 뒤 육수를 자작하게 부어 끓여 드세요.',reason:'집에서 겹쳐 썰어 밀폐용기에 담아 오면 현장에서는 육수만 부어 끓이는 비주얼 1위 전골이에요.'},
+    {name:'숯불 소고기 토마호크 스테이크',minutes:35,level:'보통',equipment:['숯·화로대','그릴망','토치'],moods:['든든하게','술안주'],meals:['저녁'],base:[{n:'소고기 스테이크용',q:250,u:'g'},{n:'새송이버섯·통마늘',q:80,u:'g'},{n:'버터·로즈마리',q:20,u:'g'}],pairing:'풀바디 레드 와인 또는 위스키 하이볼 · 숯불 직화로 겉면을 시어링한 뒤 10분간 레스팅하세요.',reason:'캠핑의 하이라이트! 숯불 훈연 향이 배어 육즙이 풍부한 프리미엄 저녁 바비큐예요.'},
+    {name:'코펠 시원한 바지락 술찜 & 파스타 사리',minutes:15,level:'쉬움',equipment:['버너','코펠','스킬렛'],moods:['국물 요리','술안주'],meals:['저녁','불멍 안주'],base:[{n:'해감 바지락',q:200,u:'g'},{n:'버터·마늘·청양고추',q:40,u:'g'},{n:'소주(또는 화이트와인)',q:50,u:'ml'},{n:'파스타면(사리)',q:50,u:'g'}],pairing:'화이트 와인 또는 깔끔한 청하 · 조개가 입을 벌리면 면을 넣고 버터 국물을 듬뿍 머금게 하세요.',reason:'조개에서 우러나온 시원한 바다 맛과 버터의 고소함이 어우러지는 감성 불멍 안주예요.'},
+    {name:'스킬렛 콘치즈 & 나초',minutes:10,level:'쉬움',equipment:['버너','스킬렛','프라이팬'],moods:['가볍게','술안주'],meals:['불멍 안주'],base:[{n:'스위트콘 캔',q:150,u:'g'},{n:'모짜렐라 치즈',q:80,u:'g'},{n:'마요네즈·버터',q:25,u:'g'}],pairing:'시원한 에일 맥주 · 약불에서 치즈가 녹을 때까지 뚜껑을 덮어 두세요.',reason:'단짠의 정석! 10분 만에 뚝딱 완성되어 아이들도 좋아하고 불멍 안주로도 끝내줘요.'},
+    {name:'코펠 닭한마리 칼국수',minutes:30,level:'쉬움',equipment:['버너','코펠'],moods:['국물 요리','든든하게'],meals:['점심','저녁'],base:[{n:'토막 닭고기',q:250,u:'g'},{n:'감자·대파·통마늘',q:100,u:'g'},{n:'칼국수 생면',q:1,u:'인분'}],pairing:'소주 또는 막걸리 · 맑은 닭육수에 고기를 건져 먹고 남은 진국에 칼국수 면을 끓여 드세요.',reason:'푸짐하고 든든하게 먹고 진한 국물에 칼국수 사리까지 이어지는 완벽한 캠핑 한 끼예요.'},
+    {name:'숯불 소시지 플래터 & 통새송이 구이',minutes:15,level:'쉬움',equipment:['숯·화로대','버너','그리들'],moods:['가볍게','술안주'],meals:['점심','불멍 안주'],base:[{n:'수제 모둠 소시지',q:180,u:'g'},{n:'통새송이버섯',q:100,u:'g'},{n:'머스터드·케첩',q:2,u:'큰술'}],pairing:'필스너 맥주 또는 사이다 · 새송이버섯은 자르지 않고 통째로 구워야 채즙이 가득해요.',reason:'불멍하면서 숯불이나 그리들에 노릇노릇 굴려가며 집어 먹는 재미가 쏠쏠해요.'},
+    {name:'그리들 훈제오리 부추볶음 & 쌈무',minutes:15,level:'쉬움',equipment:['버너','그리들','프라이팬'],moods:['든든하게','가볍게'],meals:['점심','저녁'],base:[{n:'훈제오리슬라이스',q:200,u:'g'},{n:'부추·양파',q:80,u:'g'},{n:'쌈무·머스터드',q:50,u:'g'}],pairing:'복분자주 또는 맥주 · 훈제오리 기름에 부추와 양파를 살짝만 볶아 아삭함을 살리세요.',reason:'보관성 좋고 팬에 볶기만 하면 15분에 근사한 요리가 되는 간편 보양식이에요.'}
   ];
 
   function wxActiveTags(){
@@ -936,6 +1381,27 @@ details li{margin-bottom:8px}
     return (m<10?'0'+m:m)+':'+(r<10?'0'+r:r);
   }
 
+  function playTimerAlarm(){
+    try{
+      var AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if(!AudioCtx) return;
+      var ctx = new AudioCtx();
+      var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 하모니
+      notes.forEach(function(freq, i){
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.36);
+      });
+    }catch(e){}
+  }
+
   function toggleTimer(){
     if(ui.timerRunning){
       clearInterval(timerId);
@@ -955,8 +1421,10 @@ details li{margin-bottom:8px}
           clearInterval(timerId);
           timerId=null;
           ui.timerRunning=false;
-          if(navigator.vibrate)navigator.vibrate([250,120,250]);
-          showNotice('⏰ 타이머가 끝났어요! 불 세기와 익힘 정도를 확인하세요.');
+          playTimerAlarm();
+          if(navigator.vibrate)navigator.vibrate([300,150,300,150,400]);
+          showNotice('🔔⏰ 조리 타이머가 종료되었습니다! 불 세기와 음식 익힘을 확인하세요.');
+          render();
         }
       }
     },1000);
@@ -1590,6 +2058,15 @@ details li{margin-bottom:8px}
       '</div>'+
     '</section>';
 
+    h+='<div class="card" style="background:linear-gradient(135deg,#0c2e1f 0%,#195237 100%);color:#fff;border-radius:18px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+      '<div>'+
+        '<div style="font-size:11px;font-weight:900;background:var(--pop);color:var(--pop-fg);display:inline-block;padding:2px 8px;border-radius:999px;margin-bottom:4px">NEW 🌿</div>'+
+        '<h3 style="font-size:16px;font-weight:900;margin:0 0 2px">나만의 비밀의 정원 (노지&amp;캠장) 등록</h3>'+
+        '<p style="font-size:12px;opacity:.9;margin:0">나만 아는 숨은 노지, 차박지, 비밀 스팟을 시설별로 등록하고 관리하세요.</p>'+
+      '</div>'+
+      '<button class="btn pop sm" type="button" data-a="tab" data-v="garden" style="white-space:nowrap;font-weight:900">비밀정원 가기 →</button>'+
+    '</div>';
+
     h+='<section class="camp-ctrls">'+
       '<div class="camp-search-bar">'+
         '<input id="camp-browse-search" class="camp-search-input" type="text" placeholder="캠핑장 이름, 시군구 검색 (예: 자라섬, 가평, ㅈㄹㅅ)" value="'+esc(ui.campSearch||'')+'" aria-label="전국 캠핑장 검색">'+
@@ -1722,6 +2199,16 @@ details li{margin-bottom:8px}
             dishesForWeather=['그리들 삼겹살 & 볶음밥','양념 닭갈비','감바스 알 아히요'];
           }
 
+          var safetyAlertHtml = '';
+          if(cur && cur.wind_speed_10m >= 8){
+            safetyAlertHtml += '<div style="background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:8px 12px;border-radius:10px;font-size:12px;font-weight:700;margin-top:10px;line-height:1.4">⚠️ <b>강풍 주의 ('+cur.wind_speed_10m+'m/s):</b> 타프 스트링 팩다운을 단단히 하고 화로대 불씨 날림에 주의하세요!</div>';
+          }
+          if(cur && tempNum <= 0){
+            safetyAlertHtml += '<div style="background:#e8f4fd;border:1px solid #b8daff;color:#004085;padding:8px 12px;border-radius:10px;font-size:12px;font-weight:700;margin-top:10px;line-height:1.4">❄️ <b>한파/결빙 주의 ('+tempNum+'°C):</b> 식수 결빙에 유의하시고 난로 사용 시 상부 환기구와 일산화탄소 경보기를 꼭 확인하세요!</div>';
+          }
+
+          h+=safetyAlertHtml;
+
           h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">'+
             '<div style="font-size:13px;font-weight:900;color:var(--fg);margin-bottom:8px">🍳 이 캠핑지 날씨 맞춤 추천 요리</div>'+
             '<div style="display:grid;gap:6px">'+
@@ -1743,19 +2230,27 @@ details li{margin-bottom:8px}
           '<button class="btn primary big wide" type="button" data-a="camp-pick-go" data-name="'+esc(c.name)+'">'+
             '⛺ '+esc(c.name)+' 선택 & 날씨 맞춤 메뉴 보기'+
           '</button>'+
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-            '<a class="btn" href="https://map.kakao.com/link/to/'+encodeURIComponent(c.name)+','+c.lat+','+c.lon+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center">'+
-              '🧭 카카오맵 길찾기'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">'+
+            '<a class="btn sm" href="https://map.kakao.com/link/to/'+encodeURIComponent(c.name)+','+c.lat+','+c.lon+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center;font-size:12px;padding:0 4px">'+
+              '🧭 카카오맵'+
             '</a>'+
-            '<a class="btn" href="https://map.naver.com/v5/search/'+encodeURIComponent(c.name)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center">'+
-              '🗺️ 네이버 지도'+
+            '<a class="btn sm" href="https://map.naver.com/v5/search/'+encodeURIComponent(c.name)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center;font-size:12px;padding:0 4px">'+
+              '🗺️ 네이버'+
+            '</a>'+
+            '<a class="btn sm" href="https://apis.openapi.sk.com/tmap/app/routes?appKey=&name='+encodeURIComponent(c.name)+'&lat='+c.lat+'&lon='+c.lon+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center;font-size:12px;padding:0 4px">'+
+              '🚙 티맵 TMAP'+
             '</a>'+
           '</div>'+
-          '<a class="btn pop" href="https://m.search.naver.com/search.naver?query='+encodeURIComponent(c.name+' 캠핑장 예약 후기')+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center">'+
-            '🔎 실시간 예약 & 방문 후기 검색'+
-          '</a>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+
+            '<button class="btn sm" type="button" data-a="camp-cooklog-go" data-name="'+esc(c.name)+'" style="font-weight:700;justify-content:center;font-size:12px">'+
+              '📝 여기서 요리했어요'+
+            '</button>'+
+            '<a class="btn pop sm" href="https://m.search.naver.com/search.naver?query='+encodeURIComponent(c.name+' 캠핑장 예약 후기')+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;justify-content:center;font-size:12px">'+
+              '🔎 예약·후기 검색'+
+            '</a>'+
+          '</div>'+
         '</div>'+
-      '</div>'+
+      '</div>';+
     '</div>';
 
     return h;
@@ -2107,12 +2602,1709 @@ details li{margin-bottom:8px}
       '</div>';
   }
 
+  /* ---------- 장박 주간 식단 플래너 & 식재료·장비 취합 ---------- */
+  var PLAN_PERIODS=[
+    {nights:1,days:2,label:'1박 2일',tag:'주말 1박 (5끼)'},
+    {nights:2,days:3,label:'2박 3일',tag:'대표 장박 (8끼)',popular:true},
+    {nights:3,days:4,label:'3박 4일',tag:'힐링 장박 (11끼)'},
+    {nights:4,days:5,label:'4박 5일',tag:'장기 캠핑 (14끼)'},
+    {nights:6,days:7,label:'일주일 (7일)',tag:'주간 완전정복 (20끼)'}
+  ];
+
+  var PLAN_THEMES=[
+    {id:'all',label:'셰프 균형식 🌟',desc:'고기·국물·면·브런치가 골고루 어우러진 베스트 조합'},
+    {id:'meat',label:'고기·바비큐파 🥩',desc:'삼겹살·돈마호크·스테이크·차돌박이 중심'},
+    {id:'easy',label:'초간단·원팬 ⚡',desc:'15분 이내 조리, 설거지와 쓰레기 최소화'},
+    {id:'soup',label:'얼큰국물·안주 🍲',desc:'부대찌개·전골·어묵탕·감바스 등 시원한 국물과 안주'},
+    {id:'family',label:'가족·아이동반 👨‍👩‍👧',desc:'맵지 않고 달콤고소한 온 가족 맞춤형 식단'}
+  ];
+
+  function getPlanPeriod(days){
+    for(var i=0;i<PLAN_PERIODS.length;i++){
+      if(PLAN_PERIODS[i].days===days)return PLAN_PERIODS[i];
+    }
+    return PLAN_PERIODS[1];
+  }
+
+  function getEligibleRecipesForMeal(mealName,theme,avoidArr,userGear){
+    return CAMP_RECIPES.filter(function(r){
+      if(r.meals.indexOf(mealName)<0)return false;
+      var fullText=r.name+' '+(r.base||[]).map(function(b){return b.n}).join(' ');
+      for(var i=0;i<avoidArr.length;i++){
+        if(avoidArr[i]&&fullText.indexOf(avoidArr[i])>=0)return false;
+      }
+      return true;
+    }).sort(function(a,b){
+      var scoreA=0,scoreB=0;
+      if(theme==='meat'){
+        if(/삼겹|돈마호크|스테이크|차돌|우대갈비|소시지|닭/.test(a.name))scoreA+=20;
+        if(/삼겹|돈마호크|스테이크|차돌|우대갈비|소시지|닭/.test(b.name))scoreB+=20;
+      }else if(theme==='easy'){
+        if(a.minutes<=15)scoreA+=20;
+        if(b.minutes<=15)scoreB+=20;
+      }else if(theme==='soup'){
+        if(a.moods.indexOf('국물 요리')>=0)scoreA+=20;
+        if(b.moods.indexOf('국물 요리')>=0)scoreB+=20;
+      }else if(theme==='family'){
+        if(/스모어|콘치즈|떡볶이|누룽지|토스트|소시지|닭한마리|어묵탕/.test(a.name))scoreA+=20;
+        if(/스모어|콘치즈|떡볶이|누룽지|토스트|소시지|닭한마리|어묵탕/.test(b.name))scoreB+=20;
+      }
+      return scoreB-scoreA;
+    });
+  }
+
+  function buildMultiDayPlan(days,people,theme,snackEnabled,avoidArr,userGear){
+    var period=getPlanPeriod(days);
+    var usedNames={};
+    var dayPlans=[];
+
+    for(var d=1;d<=days;d++){
+      var dayMeals=[];
+      var isFirstDay=(d===1);
+      var isLastDay=(d===days);
+
+      var slots=[];
+      if(isFirstDay){
+        slots.push({key:'lunch',label:'점심 ☀️',mealName:'점심',note:'도착 후 빠른 세팅 점심'});
+        slots.push({key:'dinner',label:'저녁 🌙',mealName:'저녁',note:'캠핑 첫날 메인 바비큐 & 구이'});
+        if(snackEnabled)slots.push({key:'snack',label:'불멍 야식 🔥',mealName:'불멍 안주',note:'첫날 밤 타오르는 불멍 간식'});
+      }else if(isLastDay){
+        slots.push({key:'breakfast',label:'아침 🌅',mealName:'아침',note:'철수 날 10분 속 편한 간편식 (설거지 최소화)'});
+        slots.push({key:'lunch',label:'점심 ☀️',mealName:'점심',note:'텐트 정리 후 가벼운 마무리 식사'});
+      }else{
+        slots.push({key:'breakfast',label:'아침 🌅',mealName:'아침',note:'상쾌한 숲속 힐링 아침'});
+        slots.push({key:'lunch',label:'점심 ☀️',mealName:'점심',note:'오후 활동 전 든든한 점심'});
+        slots.push({key:'dinner',label:'저녁 🌙',mealName:'저녁',note:'따끈한 전골 & 찌개 파티'});
+        if(snackEnabled)slots.push({key:'snack',label:'불멍 야식 🔥',mealName:'불멍 안주',note:'낭만적인 밤 감성 안주'});
+      }
+
+      slots.forEach(function(slot){
+        var pool=getEligibleRecipesForMeal(slot.mealName,theme,avoidArr,userGear);
+        var chosen=null;
+        for(var i=0;i<pool.length;i++){
+          if(!usedNames[pool[i].name]){chosen=pool[i];break}
+        }
+        if(!chosen&&pool.length){
+          chosen=pool[Math.floor(Math.random()*pool.length)];
+        }
+        if(chosen){
+          usedNames[chosen.name]=true;
+          dayMeals.push({
+            slotKey:slot.key,
+            mealLabel:slot.label,
+            mealNote:slot.note,
+            dish:chosen.name,
+            minutes:chosen.minutes,
+            level:chosen.level,
+            equipment:chosen.equipment||[],
+            base:chosen.base||[],
+            pairing:chosen.pairing||'',
+            reason:chosen.reason||''
+          });
+        }
+      });
+
+      var dayThemeTitle='';
+      var dayHint='';
+      if(isFirstDay){
+        dayThemeTitle='신선육 바비큐 & 감성 나잇';
+        dayHint='🧊 쿨러 냉기가 가장 강한 첫날! 신선한 생고기와 생채소를 우선 소비하세요.';
+      }else if(isLastDay){
+        dayThemeTitle='철수 날 원팬 간편식 & 클린업';
+        dayHint='⛺ 짐정리와 철수가 있으므로 코펠/원팬으로 10분 내 해결하고 설거지를 최소화하세요.';
+      }else{
+        dayThemeTitle=(d===2?'든든한 전골 & 힐링 캠프식':'다채로운 캠핑 별미의 날');
+        dayHint='🥫 진공 소분된 육류, 냉동 밀키트, 따끈한 전골과 면 요리로 여유롭게 즐기세요.';
+      }
+
+      dayPlans.push({
+        dayNum:d,
+        themeTitle:dayThemeTitle,
+        hint:dayHint,
+        meals:dayMeals
+      });
+    }
+
+    return {
+      days:dayPlans,
+      people:people,
+      periodDays:days,
+      label:period.label,
+      tag:period.tag,
+      theme:theme,
+      snack:snackEnabled,
+      createdAt:Date.now()
+    };
+  }
+
+  function getIngredientTag(name){
+    if(/생|고기|삼겹|돈마호크|스테이크|차돌|닭|바지락|새우|순두부|대파|양파|마늘|청양고추|감자|버섯|숙주|부추|깻잎|알배기배추|토마토/.test(name)){
+      return 'prep';
+    }
+    if(/생수|얼음|장작|숯|맥주|소주|와인|하이볼|쌈채소|부탄가스|이소가스/.test(name)){
+      return 'buy';
+    }
+    return 'pack';
+  }
+
+  function aggregatePlan(plan){
+    if(!plan||!plan.days)return {ingredients:[],equipment:[],supplies:[],totalMeals:0,totalDays:0};
+    var ingMap={};
+    var eqMap={};
+    var totalMeals=0;
+    var userGear=profile.gear||[];
+
+    plan.days.forEach(function(day){
+      day.meals.forEach(function(m){
+        totalMeals++;
+        var dayMealTag=day.dayNum+'일차 '+m.mealLabel.replace(/[^가-힣]/g,'');
+
+        (m.base||[]).forEach(function(b){
+          var scaledQ=Math.round(b.q*plan.people*10)/10;
+          var key=b.n;
+          if(!ingMap[key]){
+            ingMap[key]={
+              name:key,
+              amount:scaledQ+b.u,
+              qNum:scaledQ,
+              unit:b.u,
+              tag:getIngredientTag(key),
+              meals:[dayMealTag]
+            };
+          }else{
+            ingMap[key].amount=sumAmounts(ingMap[key].amount,scaledQ+b.u);
+            if(ingMap[key].meals.indexOf(dayMealTag)<0){
+              ingMap[key].meals.push(dayMealTag);
+            }
+          }
+        });
+
+        (m.equipment||[]).forEach(function(eq){
+          if(!eqMap[eq]){
+            eqMap[eq]={
+              name:eq,
+              owned:userGear.indexOf(eq)>=0,
+              count:1
+            };
+          }else{
+            eqMap[eq].count++;
+          }
+        });
+      });
+    });
+
+    var ingredients=Object.keys(ingMap).map(function(k){return ingMap[k]});
+    ingredients.sort(function(a,b){
+      var order={prep:0,pack:1,buy:2};
+      return (order[a.tag]||0)-(order[b.tag]||0);
+    });
+
+    var equipment=Object.keys(eqMap).map(function(k){return eqMap[k]});
+    equipment.sort(function(a,b){
+      if(a.owned!==b.owned)return a.owned?1:-1;
+      return b.count-a.count;
+    });
+
+    var supplies=[
+      {name:'부탄가스 / 이소가스',amount:Math.max(2,Math.ceil(totalMeals/2.5))+'캔',tag:'buy'},
+      {name:'종이호일 & 지퍼백',amount:'각 1롤/1세트 (소분 및 팬 요리 설거지 방지)',tag:'pack'},
+      {name:'키친타월 & 물티슈',amount:Math.ceil((plan.periodDays||3)/2)+'팩',tag:'pack'},
+      {name:'캠핑용 식기·수저 세트',amount:(plan.people||2)+'인 세트',tag:'pack'},
+      {name:'보냉 아이스팩 & 각얼음',amount:'쿨러 보냉용 2~3팩',tag:'buy'},
+      {name:'쓰레기봉투 & 분리수거백',amount:(plan.periodDays||3)+'장',tag:'pack'},
+      {name:'양념 소분 키트 (소금·오일·쌈장)',amount:'작은 공병 소분',tag:'prep'}
+    ];
+
+    return {
+      ingredients:ingredients,
+      equipment:equipment,
+      supplies:supplies,
+      totalMeals:totalMeals,
+      totalDays:plan.days.length
+    };
+  }
+
+  function swapMealQuick(dayIdx,mealIdx){
+    if(!ui.mealPlan||!ui.mealPlan.days[dayIdx])return;
+    var day=ui.mealPlan.days[dayIdx];
+    var m=day.meals[mealIdx];
+    if(!m)return;
+
+    var curMealName='저녁';
+    if(m.slotKey==='breakfast')curMealName='아침';
+    else if(m.slotKey==='lunch')curMealName='점심';
+    else if(m.slotKey==='snack')curMealName='불멍 안주';
+
+    var pool=getEligibleRecipesForMeal(curMealName,ui.planTheme,profile.avoid,profile.gear);
+    var candidates=pool.filter(function(r){
+      return r.name!==m.dish;
+    });
+    if(!candidates.length)candidates=pool;
+    if(candidates.length){
+      var nextRecipe=candidates[Math.floor(Math.random()*candidates.length)];
+      m.dish=nextRecipe.name;
+      m.minutes=nextRecipe.minutes;
+      m.level=nextRecipe.level;
+      m.equipment=nextRecipe.equipment||[];
+      m.base=nextRecipe.base||[];
+      m.pairing=nextRecipe.pairing||'';
+      m.reason=nextRecipe.reason||'';
+      store.set('cc.mealPlan',ui.mealPlan);
+      showNotice('🔄 「'+m.dish+'」으로 식단을 변경하고 식재료·장비를 다시 합산했어요!');
+      render();
+    }
+  }
+
+  function selectSwapDish(dishName){
+    if(!ui.planSwapTarget||!ui.mealPlan)return;
+    var dayIdx=ui.planSwapTarget.dayIdx;
+    var mealIdx=ui.planSwapTarget.mealIdx;
+    var day=ui.mealPlan.days[dayIdx];
+    if(!day)return;
+    var m=day.meals[mealIdx];
+    if(!m)return;
+
+    var foundRecipe=CAMP_RECIPES.find(function(r){return r.name===dishName});
+    if(foundRecipe){
+      m.dish=foundRecipe.name;
+      m.minutes=foundRecipe.minutes;
+      m.level=foundRecipe.level;
+      m.equipment=foundRecipe.equipment||[];
+      m.base=foundRecipe.base||[];
+      m.pairing=foundRecipe.pairing||'';
+      m.reason=foundRecipe.reason||'';
+    }else{
+      m.dish=dishName;
+      m.minutes=20;
+      m.level='보통';
+      m.equipment=profile.gear.slice(0,2);
+      m.base=[{n:dishName+' 주재료',q:150,u:'g'},{n:'양파·채소',q:60,u:'g'}];
+      m.pairing='시원한 음료와 함께 즐기세요.';
+      m.reason='직접 선택하신 캠핑 요리예요.';
+    }
+    ui.planSwapTarget=null;
+    store.set('cc.mealPlan',ui.mealPlan);
+    showNotice('🍱 「'+m.dish+'」으로 식단을 변경했어요!');
+    render();
+  }
+
+  function exportPlanToList(plan,agg){
+    var items=[];
+    var n=0;
+    agg.ingredients.forEach(function(ing){
+      items.push({
+        id:'i'+(n++),
+        group:'재료',
+        text:ing.name,
+        amount:ing.amount,
+        price:'',
+        alt:(ing.meals?ing.meals.join(', '):''),
+        tag:ing.tag||'pack',
+        checked:false
+      });
+    });
+    agg.equipment.forEach(function(eq){
+      items.push({
+        id:'i'+(n++),
+        group:'장비',
+        text:eq.name,
+        amount:eq.owned?'보유 중':'챙기기 필요',
+        price:'',
+        alt:'',
+        tag:'',
+        checked:false
+      });
+    });
+    agg.supplies.forEach(function(sup){
+      items.push({
+        id:'i'+(n++),
+        group:'소모품',
+        text:sup.name,
+        amount:sup.amount,
+        price:'',
+        alt:'',
+        tag:sup.tag||'buy',
+        checked:false
+      });
+    });
+
+    var dishesList=[];
+    plan.days.forEach(function(d){
+      d.meals.forEach(function(m){
+        if(m.dish&&dishesList.indexOf(m.dish)<0)dishesList.push(m.dish);
+      });
+    });
+
+    list={
+      dish:plan.label+' 장박 식단표 ('+plan.days.length+'일 '+agg.totalMeals+'끼)',
+      dishes:dishesList,
+      reason:plan.label+' 장박 주간 식단 취합 체크리스트 ('+plan.people+'명 기준)',
+      people:plan.people,
+      summary:plan.label+' 장박 식단 '+agg.totalMeals+'끼 전체 식재료·장비 통합 목록',
+      pairing:'일정별 신선도 관리 & 원팬 간편 설거지 추천 코스',
+      items:items,
+      prepTips:[
+        'Day 1 생고기와 채소는 첫날 저녁에 가장 먼저 소비하고, 남은 채소는 밀폐용기에 보관하세요.',
+        '양념류(쌈장, 소금, 오일, 고춧가루 등)는 작은 공병에 미리 소분해 오면 짐 부피를 70% 줄일 수 있어요.',
+        '철수 날 아침 요리는 누룽지나 라면처럼 코펠 하나로 10분 만에 끝나고 설거지가 쉬운 메뉴가 최적이에요.'
+      ],
+      steps:[
+        '1일차: 아이스박스 냉기가 가장 좋을 때 신선육 바비큐와 쌈채소를 맛있게 즐기세요.',
+        '2일차: 진공포장육, 찌개류, 전골 등 밀폐된 재료 중심으로 든든하게 요리하세요.',
+        '마지막 날: 철수 짐정리 전 가벼운 한 그릇 요리로 부담 없이 식사하고 코펠을 바로 정리하세요.'
+      ],
+      tips:[
+        '장박 캠핑 시 얼음과 생수는 현장 캠핑장 매점에서 추가 구매하면 쿨러 무게를 크게 덜 수 있어요.'
+      ]
+    };
+
+    store.set('cc.list',list);
+    ui.tab='list';
+    ui.confirmClear=false;
+    ui.dishText='';
+    ui.cookStep=0;
+    window.scrollTo(0,0);
+    showNotice('🎉 '+plan.label+' 식단 전체 식재료('+agg.ingredients.length+'종)와 장비('+agg.equipment.length+'종)를 준비물 체크리스트로 등록했어요!');
+    render();
+  }
+
+  function fallbackCopyText(text){
+    var ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.position='fixed';
+    ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try{
+      document.execCommand('copy');
+      showNotice('📋 식단표 & 장보기 목록을 복사했어요! 카카오톡에 붙여넣어 공유하세요.');
+    }catch(e){
+      showNotice('복사에 실패했어요. 화면의 내용을 직접 복사해 주세요.');
+    }
+    document.body.removeChild(ta);
+  }
+
+  function copyPlanText(plan,agg){
+    var lines=[];
+    lines.push('🏕️ ['+plan.label+' 캠핑 주간 식단표 & 장보기 목록 ('+plan.people+'명)]');
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    plan.days.forEach(function(day){
+      lines.push('\n📅 '+day.dayNum+'일차 ('+day.themeTitle+')');
+      day.meals.forEach(function(m){
+        lines.push(' · '+m.mealLabel+': '+m.dish+' ('+m.minutes+'분, '+(m.equipment||[]).join('/')+')');
+      });
+    });
+    lines.push('\n━━━━━━━━━━━━━━━━━━━━');
+    lines.push('🛒 [전체 식재료 장보기 합산 목록 ('+agg.ingredients.length+'종)]');
+    agg.ingredients.forEach(function(ing){
+      var tagStr=ing.tag==='prep'?'[집에서 손질]':(ing.tag==='buy'?'[현장 구매]':'[챙겨갈 것]');
+      lines.push(' · '+ing.name+' '+ing.amount+' '+tagStr);
+    });
+    lines.push('\n🍳 [필요 조리 장비 & 소모품]');
+    var eqList=agg.equipment.map(function(e){return e.name+(e.owned?'(보유)':'(챙기기)')}).join(', ');
+    lines.push(' · 장비: '+eqList);
+    var supList=agg.supplies.map(function(s){return s.name+' '+s.amount}).join(', ');
+    lines.push(' · 소모품: '+supList);
+    lines.push('\n- 캠핑음식 도우미 주간 식단 플래너에서 생성됨');
+
+    var fullText=lines.join('\n');
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(fullText).then(function(){
+        showNotice('📋 식단표 & 장보기 목록을 복사했어요! 카카오톡에 붙여넣어 공유하세요.');
+      }).catch(function(){
+        fallbackCopyText(fullText);
+      });
+    }else{
+      fallbackCopyText(fullText);
+    }
+  }
+
+  function planSwapModalHtml(){
+    if(!ui.planSwapTarget||!ui.mealPlan)return '';
+    var dayIdx=ui.planSwapTarget.dayIdx;
+    var mealIdx=ui.planSwapTarget.mealIdx;
+    var day=ui.mealPlan.days[dayIdx];
+    if(!day)return '';
+    var m=day.meals[mealIdx];
+    if(!m)return '';
+
+    var curMealName='저녁';
+    if(m.slotKey==='breakfast')curMealName='아침';
+    else if(m.slotKey==='lunch')curMealName='점심';
+    else if(m.slotKey==='snack')curMealName='불멍 안주';
+
+    var pool=getEligibleRecipesForMeal(curMealName,ui.planTheme,profile.avoid,profile.gear);
+
+    var h='<div class="camp-modal-backdrop" role="dialog" aria-modal="true" aria-label="메뉴 변경">'+
+      '<div class="camp-modal-content">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)">'+
+          '<div>'+
+            '<h3 style="font-family:var(--font-display);font-size:19px;margin:0">🍱 '+day.dayNum+'일차 '+m.mealLabel+' 메뉴 변경</h3>'+
+            '<small style="color:var(--muted);font-size:12px">현재 선택: <b>'+esc(m.dish)+'</b></small>'+
+          '</div>'+
+          '<button class="btn sm" type="button" data-a="plan-swap-close" style="min-height:32px;padding:0 12px;border-radius:999px">닫기 ✕</button>'+
+        '</div>'+
+        '<form data-form="plan-custom" style="display:flex;gap:6px;margin-bottom:16px">'+
+          '<input id="plan-custom-input" type="text" placeholder="원하는 메뉴 직접 입력 (예: 해물 샤브샤브)" maxlength="30" style="flex:1;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13px" required>'+
+          '<button class="btn primary" type="submit" style="min-height:38px;padding:0 14px;white-space:nowrap">직접 등록</button>'+
+        '</form>'+
+        '<div style="font-size:13px;font-weight:900;color:var(--fg);margin-bottom:8px">추천 캠핑 요리 목록에서 선택</div>'+
+        '<div style="display:grid;gap:8px;max-height:55vh;overflow-y:auto;padding-right:2px">';
+
+    pool.forEach(function(r){
+      var isCurrent=(r.name===m.dish);
+      h+='<div style="background:'+(isCurrent?'var(--soft)':'var(--surface)')+';border:1px solid '+(isCurrent?'var(--brand)':'var(--line)')+';border-radius:14px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-weight:900;font-size:14px;color:var(--fg)">'+esc(r.name)+'</div>'+
+          '<div style="font-size:11.5px;color:var(--muted);margin-top:2px">⏱️ '+r.minutes+'분 · '+r.level+' · 🍳 '+(r.equipment||[]).join(', ')+'</div>'+
+          '<div style="font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">재료: '+formatScaledIngredients(r.base,ui.mealPlan.people)+'</div>'+
+        '</div>'+
+        '<button class="btn '+(isCurrent?'':'primary')+' sm" type="button" data-a="plan-swap-select" data-dish="'+esc(r.name)+'" style="min-height:34px;padding:0 12px;white-space:nowrap;flex:none">'+
+          (isCurrent?'현재 선택됨':'선택')+
+        '</button>'+
+      '</div>';
+    });
+
+    h+='</div></div></div>';
+    return h;
+  }
+
+  function planView(){
+    if(!ui.mealPlan){
+      ui.mealPlan=buildMultiDayPlan(ui.planDays||3,ui.planPeople||2,ui.planTheme||'all',ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.mealPlan',ui.mealPlan);
+    }
+
+    var plan=ui.mealPlan;
+    var agg=aggregatePlan(plan);
+
+    var h='<div class="plan-hero">'+
+      '<div class="plan-hero-badge">📅 장박 & 주간 캠핑 전용</div>'+
+      '<h2>2박 3일+ 주간 식단 플래너</h2>'+
+      '<p>일정에 맞춘 끼니별 식단표와 함께 필요한 전체 식재료와 조리 장비를 한 번에 자동 취합해 드려요.</p>'+
+      '<button class="plan-gen-btn" type="button" data-a="plan-generate">'+
+        '✨ '+plan.label+' 맞춤 식단 자동 생성하기'+
+      '</button>'+
+    '</div>';
+
+    // 1. 기간 & 인원 설정 컨트롤 카드
+    h+='<section class="card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<h2 style="margin:0">1. 캠핑 기간 & 인원 설정</h2>'+
+        '<span style="font-size:12px;color:var(--brand);font-weight:900">'+plan.label+' · 총 '+agg.totalMeals+'끼</span>'+
+      '</div>'+
+      '<div class="field"><span class="lab">캠핑 기간 선택</span>'+
+        '<div class="chips" style="gap:6px">'+
+          PLAN_PERIODS.map(function(p){
+            var isSel=(ui.planDays===p.days);
+            return '<button class="chip" type="button" data-a="plan-period" data-v="'+p.days+'" aria-pressed="'+isSel+'">'+
+              p.label+(p.popular?' 🔥':'')+
+            '</button>';
+          }).join('')+
+        '</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+esc(getPlanPeriod(ui.planDays).tag)+'</div>'+
+      '</div>'+
+      '<div class="field"><span class="lab">식사 인원수</span>'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+          '<div class="step">'+
+            '<button type="button" data-a="plan-people-dec" aria-label="인원 줄이기">−</button>'+
+            '<output>'+ui.planPeople+'명</output>'+
+            '<button type="button" data-a="plan-people-inc" aria-label="인원 늘리기">+</button>'+
+          '</div>'+
+          '<div class="chips">'+
+            PEOPLE_PRESETS.map(function(n){
+              return '<button class="chip" type="button" data-a="plan-people-set" data-v="'+n+'" aria-pressed="'+(ui.planPeople===n)+'">'+
+                (n===6?'6명+':n+'명')+
+              '</button>';
+            }).join('')+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="field"><span class="lab">식단 선호 테마</span>'+
+        '<div class="chips" style="gap:6px">'+
+          PLAN_THEMES.map(function(t){
+            return '<button class="chip" type="button" data-a="plan-theme" data-v="'+t.id+'" aria-pressed="'+(ui.planTheme===t.id)+'">'+
+              t.label+
+            '</button>';
+          }).join('')+
+        '</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+
+          esc((PLAN_THEMES.find(function(t){return t.id===ui.planTheme})||PLAN_THEMES[0]).desc)+
+        '</div>'+
+      '</div>'+
+      '<div class="field" style="margin-bottom:0">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<span class="lab" style="margin:0">저녁 불멍 야식 & 간식 포함</span>'+
+          '<button class="chip" type="button" data-a="plan-snack-toggle" aria-pressed="'+(ui.planSnack!==false)+'">'+
+            (ui.planSnack!==false?'🔥 불멍 야식 켜짐':'✕ 야식 제외')+
+          '</button>'+
+        '</div>'+
+      '</div>'+
+    '</section>';
+
+    // 2. 일차별 식단 타임라인 카드
+    h+='<section class="card" style="padding-bottom:10px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">'+
+        '<h2 style="margin:0">2. 일차별 식단표 ('+plan.days.length+'일 '+agg.totalMeals+'끼)</h2>'+
+        '<button class="link" type="button" data-a="plan-generate">🔄 전체 다른 조합으로 짜기</button>'+
+      '</div>'+
+      '<p class="hint" style="margin:0 0 14px">각 끼니의 <b>[🔄 다른 메뉴]</b>를 누르면 즉시 다른 요리로 바뀌며, 아래의 식재료와 장비도 자동 재취합돼요.</p>';
+
+    plan.days.forEach(function(day,dayIdx){
+      h+='<div class="plan-day-card">'+
+        '<div class="plan-day-header">'+
+          '<h3 class="plan-day-title">📅 '+day.dayNum+'일차 · '+esc(day.themeTitle)+'</h3>'+
+          '<span class="plan-day-tip">'+day.meals.length+'끼 식사</span>'+
+        '</div>'+
+        '<div class="plan-storage-hint">'+esc(day.hint)+'</div>'+
+        '<div class="plan-meal-grid">';
+
+      day.meals.forEach(function(m,mealIdx){
+        var badgeCls='dinner';
+        if(m.slotKey==='breakfast')badgeCls='breakfast';
+        else if(m.slotKey==='lunch')badgeCls='lunch';
+        else if(m.slotKey==='snack')badgeCls='snack';
+
+        var ingsPreview=formatScaledIngredients(m.base,plan.people);
+
+        h+='<div class="plan-meal-card">'+
+          '<div class="plan-meal-top">'+
+            '<div>'+
+              '<span class="plan-meal-badge '+badgeCls+'">'+esc(m.mealLabel)+'</span>'+
+              '<h4 class="plan-meal-name">'+esc(m.dish)+'</h4>'+
+            '</div>'+
+            '<div class="plan-meal-meta">'+
+              '<span>⏱️ '+m.minutes+'분</span>'+
+              '<span>· '+esc(m.level)+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div style="font-size:12px;color:var(--muted);line-height:1.35">'+esc(m.mealNote)+'</div>'+
+          (ingsPreview?'<div class="plan-meal-ings"><b>재료 분량 ('+plan.people+'명):</b> '+esc(ingsPreview)+'</div>':'')+
+          '<div style="font-size:11.5px;color:var(--muted)">🍳 필요 장비: '+esc((m.equipment||[]).join(', '))+'</div>'+
+          '<div class="plan-meal-actions">'+
+            '<button class="plan-mini-btn" type="button" data-a="plan-swap-quick" data-day="'+dayIdx+'" data-meal="'+mealIdx+'">🔄 다른 메뉴</button>'+
+            '<button class="plan-mini-btn" type="button" data-a="plan-swap-open" data-day="'+dayIdx+'" data-meal="'+mealIdx+'">✏️ 메뉴 직접 선택</button>'+
+          '</div>'+
+        '</div>';
+      });
+
+      h+='</div></div>';
+    });
+
+    h+='</section>';
+
+    // 3. 전체 식재료 & 장비 통합 취합 결과 카드
+    var prepItems=agg.ingredients.filter(function(x){return x.tag==='prep'});
+    var packItems=agg.ingredients.filter(function(x){return x.tag==='pack'});
+    var buyItems=agg.ingredients.filter(function(x){return x.tag==='buy'});
+
+    var filteredIngredients=agg.ingredients;
+    if(ui.planFilter==='prep')filteredIngredients=prepItems;
+    else if(ui.planFilter==='pack')filteredIngredients=packItems;
+    else if(ui.planFilter==='buy')filteredIngredients=buyItems;
+
+    h+='<section class="plan-agg-card">'+
+      '<div class="plan-agg-header">'+
+        '<div>'+
+          '<h2 style="margin:0;font-size:20px;color:var(--brand)">🛒 전체 식재료 & 장비 통합 취합 결과</h2>'+
+          '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">'+plan.label+' ('+plan.people+'명 기준) 식단에 필요한 모든 물품을 중복 합산했어요.</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="plan-agg-stats">'+
+        '<div class="plan-stat-box"><div class="plan-stat-num">'+agg.totalMeals+'끼</div><div class="plan-stat-lab">전체 식사</div></div>'+
+        '<div class="plan-stat-box"><div class="plan-stat-num">'+agg.ingredients.length+'종</div><div class="plan-stat-lab">합산 식재료</div></div>'+
+        '<div class="plan-stat-box"><div class="plan-stat-num">'+agg.equipment.length+'종</div><div class="plan-stat-lab">필요 조리 장비</div></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">'+
+        '<button class="btn primary" type="button" data-a="plan-export" style="font-weight:900;justify-content:center">'+
+          '📋 준비물 탭으로 내보내기'+
+        '</button>'+
+        '<button class="btn pop" type="button" data-a="plan-copy" style="font-weight:900;justify-content:center">'+
+          '📤 카톡 공유 텍스트 복사'+
+        '</button>'+
+      '</div>'+
+      '<div style="margin-bottom:12px">'+
+        '<div style="font-weight:900;font-size:14px;margin-bottom:8px">🥗 식재료 장보기 목록 ('+filteredIngredients.length+'개)</div>'+
+        '<div class="chips" style="gap:5px;margin-bottom:10px">'+
+          '<button class="chip sm" type="button" data-a="plan-filter" data-v="all" aria-pressed="'+(ui.planFilter==='all')+'">전체 ('+agg.ingredients.length+')</button>'+
+          '<button class="chip sm" type="button" data-a="plan-filter" data-v="prep" aria-pressed="'+(ui.planFilter==='prep')+'">집에서 손질 ('+prepItems.length+')</button>'+
+          '<button class="chip sm" type="button" data-a="plan-filter" data-v="pack" aria-pressed="'+(ui.planFilter==='pack')+'">그대로 챙김 ('+packItems.length+')</button>'+
+          '<button class="chip sm" type="button" data-a="plan-filter" data-v="buy" aria-pressed="'+(ui.planFilter==='buy')+'">현장 구입 ('+buyItems.length+')</button>'+
+        '</div>'+
+        '<div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden">'+
+          '<table class="plan-ing-table">'+
+            '<thead><tr><th>식재료명</th><th>총 분량</th><th>용도 (끼니)</th><th>구분</th></tr></thead>'+
+            '<tbody>'+
+              (filteredIngredients.length?filteredIngredients.map(function(ing){
+                var tagLabel=ing.tag==='prep'?'집에서 손질':(ing.tag==='buy'?'현장 구매':'그대로 챙김');
+                return '<tr>'+
+                  '<td style="font-weight:700">'+esc(ing.name)+'</td>'+
+                  '<td style="font-weight:900;color:var(--brand)">'+esc(ing.amount)+'</td>'+
+                  '<td style="font-size:11.5px;color:var(--muted)">'+esc(ing.meals.join(', '))+'</td>'+
+                  '<td><span class="plan-tag-badge '+ing.tag+'">'+tagLabel+'</span></td>'+
+                '</tr>';
+              }).join(''):'<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">해당 분류의 식재료가 없습니다.</td></tr>')+
+            '</tbody>'+
+          '</table>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-bottom:14px">'+
+        '<div style="font-weight:900;font-size:14px;margin-bottom:6px">🍳 필요 조리 장비 목록 ('+agg.equipment.length+'종)</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:4px">'+
+          agg.equipment.map(function(eq){
+            return '<span class="plan-gear-badge '+(eq.owned?'owned':'missing')+'">'+
+              (eq.owned?'✅ ':'⚠️ ')+esc(eq.name)+' '+(eq.owned?'(내 장비)':'(챙기기 필요)')+
+            '</span>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+      '<div>'+
+        '<div style="font-weight:900;font-size:14px;margin-bottom:6px">📦 필수 캠핑 소모품 목록</div>'+
+        '<div style="display:grid;grid-template-columns:1fr;gap:6px">'+
+          agg.supplies.map(function(sup){
+            return '<div style="background:var(--chip);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px">'+
+              '<span style="font-weight:700">📌 '+esc(sup.name)+'</span>'+
+              '<span style="color:var(--brand);font-weight:900">'+esc(sup.amount)+'</span>'+
+            '</div>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+      '<button class="btn primary wide" type="button" data-a="plan-export" style="margin-top:16px;font-weight:900;justify-content:center">'+
+        '📋 이 식단으로 준비물 체크리스트 시작하기 →'+
+      '</button>'+
+    '</section>';
+
+    return h;
+  }
+
+  // === 나만의 비밀의 정원 (노지 & 캠장) 클라이언트 로직 ===
+  function loadSecretGardens(force){
+    if(ui.gardenLoaded && !force) return;
+    ui.gardenBusy = true;
+    if(!ui.gardenMasterKey){
+      ui.gardenMasterKey = store.get('cc.gardenMasterKey', '') || '';
+    }
+    var masterParam = ui.gardenMasterKey ? ('?master_key=' + encodeURIComponent(ui.gardenMasterKey)) : '';
+    fetch('/api/secret-gardens' + masterParam)
+      .then(function(r){
+        if(!r.ok) throw new Error('API not available');
+        return r.json();
+      })
+      .then(function(data){
+        ui.gardenBusy = false;
+        ui.gardenLoaded = true;
+        ui.gardenIsMaster = !!(data.authorized || data.isMaster);
+        ui.gardenList = data.gardens || [];
+        render();
+      })
+      .catch(function(){
+        fetch('data/secret_gardens.json')
+          .then(function(r){ return r.ok ? r.json() : []; })
+          .then(function(list){
+            ui.gardenBusy = false;
+            ui.gardenLoaded = true;
+            var localList = store.get('cc.localGardens', []) || [];
+            ui.gardenList = localList.concat(Array.isArray(list) ? list : []);
+            render();
+          })
+          .catch(function(e){
+            ui.gardenBusy = false;
+            ui.gardenLoaded = true;
+            ui.gardenList = store.get('cc.localGardens', []) || [];
+            console.error('Failed to load gardens:', e);
+            render();
+          });
+      });
+  }
+
+  function getFilteredGardens(){
+    var pool = (ui.gardenList || []).slice();
+    if(ui.gardenFilter && ui.gardenFilter !== 'all'){
+      if(ui.gardenFilter === 'private'){
+        pool = pool.filter(function(g){ return g.isPrivate; });
+      } else {
+        pool = pool.filter(function(g){ return g.category === ui.gardenFilter; });
+      }
+    }
+    if(ui.gardenFacFilter){
+      pool = pool.filter(function(g){
+        if(!g.facilities || !Array.isArray(g.facilities)) return false;
+        return g.facilities.some(function(f){ return f.indexOf(ui.gardenFacFilter) >= 0; });
+      });
+    }
+    if(ui.gardenSearch){
+      var q = ui.gardenSearch.toLowerCase().trim();
+      pool = pool.filter(function(g){
+        var name = (g.name || '').toLowerCase();
+        var addr = (g.address || g.addressMasked || '').toLowerCase();
+        var detail = (g.addressDetail || '').toLowerCase();
+        var tips = (g.tips || '').toLowerCase();
+        var facs = (g.facilities || []).join(' ').toLowerCase();
+        var author = (g.author || '').toLowerCase();
+        return name.indexOf(q)>=0 || addr.indexOf(q)>=0 || detail.indexOf(q)>=0 || tips.indexOf(q)>=0 || facs.indexOf(q)>=0 || author.indexOf(q)>=0;
+      });
+    }
+    // 정렬 (최신순 / 찜순 / 이름순 / 조회순)
+    var sort = ui.gardenSort || 'newest';
+    if(sort === 'likes'){
+      pool.sort(function(a,b){ return (b.likes||0) - (a.likes||0); });
+    } else if(sort === 'name'){
+      pool.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+    } else if(sort === 'views'){
+      pool.sort(function(a,b){ return (b.views||0) - (a.views||0); });
+    } else {
+      pool.sort(function(a,b){ return new Date(b.createdAt||0) - new Date(a.createdAt||0); });
+    }
+    return pool;
+  }
+
+  function isSpotUnlocked(spot){
+    if(!spot.isPrivate) return true;
+    if(ui.gardenIsMaster) return true;
+    if(ui.gardenUnlockedIds && ui.gardenUnlockedIds.indexOf(spot.id) >= 0) return true;
+    return false;
+  }
+
+  var REGION_COORDS = {
+    '홍천': [37.6972, 127.8887], '영월': [37.1838, 128.4619], '충주': [36.9912, 127.9261],
+    '가평': [37.8315, 127.5095], '포천': [37.8949, 127.2003], '양평': [37.4917, 127.4875],
+    '춘천': [37.8813, 127.7298], '원주': [37.3422, 127.9202], '강릉': [37.7519, 128.8761],
+    '태안': [36.7456, 126.2977], '평창': [37.3708, 128.3902], '인제': [38.0697, 128.1706],
+    '단양': [36.9845, 128.3653], '제천': [37.1326, 128.1910], '정선': [37.3806, 128.6608],
+    '괴산': [36.8153, 127.7867], '서산': [36.7845, 126.4503], '보령': [36.3333, 126.6128],
+    '남해': [34.8377, 127.8924], '거제': [34.8806, 128.6211], '경주': [35.8562, 129.2247],
+    '울진': [36.9931, 129.4003], '삼척': [37.4499, 129.1652], '동해': [37.5247, 129.1143],
+    '속초': [38.2070, 128.5918], '고성': [38.3806, 128.4678], '양양': [38.0754, 128.6189],
+    '여수': [34.7604, 127.6622], '순천': [34.9506, 127.4872], '담양': [35.3211, 126.9882],
+    '완주': [35.9048, 127.1624], '무주': [36.0068, 127.6608], '진안': [35.7915, 127.4248],
+    '연천': [38.0964, 127.0748], '파주': [37.7600, 126.7799], '강화': [37.7466, 126.4880],
+    '제주': [33.4996, 126.5312], '서귀포': [33.2541, 126.5601]
+  };
+
+  function getSpotCoords(spot){
+    if(spot.lat && spot.lng && !isNaN(spot.lat) && !isNaN(spot.lng)){
+      return [Number(spot.lat), Number(spot.lng)];
+    }
+    var fullStr = (spot.address || '') + ' ' + (spot.name || '');
+    for(var reg in REGION_COORDS){
+      if(fullStr.indexOf(reg) >= 0){
+        var base = REGION_COORDS[reg];
+        var seed = (spot.id ? spot.id.charCodeAt(spot.id.length-1) : 1) % 10;
+        return [base[0] + (seed - 5) * 0.007, base[1] + (seed - 5) * 0.007];
+      }
+    }
+    var s1 = (spot.id ? spot.id.charCodeAt(3)||1 : 1)%10;
+    var s2 = (spot.id ? spot.id.charCodeAt(4)||1 : 1)%10;
+    return [37.3 + (s1 - 5) * 0.06, 127.8 + (s2 - 5) * 0.06];
+  }
+
+  function handleGardenPhotoUpload(file, isEdit){
+    if(!file) return;
+    if(!file.type || !file.type.startsWith('image/')){
+      showNotice('이미지 파일만 선택할 수 있습니다.');
+      return;
+    }
+    showNotice('📷 사진을 압축 및 최적화하는 중입니다…');
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var maxDim = 1200;
+          var w = img.width, h = img.height;
+          if(w > maxDim || h > maxDim){
+            if(w > h){
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          var compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+          // 즉시 UI 프리뷰 반영
+          if(isEdit){
+            ui.gardenEditUploadedPhoto = compressedBase64;
+          } else {
+            ui.gardenUploadedPhoto = compressedBase64;
+          }
+          render();
+
+          // 서버 저장소(/api/upload-image)로 전송하여 파일 URL 획득
+          fetch('/api/upload-image', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ imageBase64: compressedBase64 })
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            if(d.success && d.url){
+              if(isEdit){
+                ui.gardenEditUploadedPhoto = d.url;
+              } else {
+                ui.gardenUploadedPhoto = d.url;
+              }
+              showNotice('📸 사진이 성공적으로 업로드되었습니다!');
+            }
+          })
+          .catch(function(){
+            showNotice('📸 사진이 정상적으로 선택되었습니다.');
+          });
+        } catch(err){
+          console.error('Image compression error:', err);
+          if(isEdit){
+            ui.gardenEditUploadedPhoto = ev.target.result;
+          } else {
+            ui.gardenUploadedPhoto = ev.target.result;
+          }
+          render();
+          showNotice('📸 사진이 선택되었습니다.');
+        }
+      };
+      img.onerror = function(){
+        showNotice('이미지 파일을 읽을 수 없습니다.');
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function initOrUpdateGardenMap(){
+    if(ui.tab !== 'garden'){
+      if(gardenMapInstance){
+        try{ gardenMapInstance.remove(); }catch(e){}
+        gardenMapInstance = null;
+        gardenMapMarkers = [];
+      }
+      return;
+    }
+    var mapEl = document.getElementById('garden-interactive-map');
+    if(!mapEl || !window.L) return;
+
+    var needsNew = !gardenMapInstance || !mapEl._leaflet_id;
+    if(needsNew){
+      if(gardenMapInstance){
+        try { gardenMapInstance.remove(); } catch(e){}
+        gardenMapInstance = null;
+      }
+      try {
+        gardenMapInstance = L.map(mapEl, {
+          scrollWheelZoom: false,
+          zoomControl: true
+        }).setView([36.8, 127.8], 7);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(gardenMapInstance);
+      } catch(err){
+        console.error('Map init error:', err);
+        return;
+      }
+    }
+
+    if(gardenMapMarkers && gardenMapMarkers.length){
+      try {
+        gardenMapMarkers.forEach(function(m){ m.remove(); });
+      } catch(e){}
+    }
+    gardenMapMarkers = [];
+
+    var spots = ui.gardenList || [];
+    if(!spots.length){
+      setTimeout(function(){
+        if(gardenMapInstance) gardenMapInstance.invalidateSize();
+      }, 100);
+      return;
+    }
+
+    var markerObjects = [];
+
+    spots.forEach(function(spot){
+      var coords = getSpotCoords(spot);
+      if(!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
+
+      var unlocked = isSpotUnlocked(spot);
+      var catInfo = GARDEN_CATEGORIES[spot.category] || { label:'노지', icon:'🏞️' };
+      var isPriv = !!spot.isPrivate;
+
+      var iconHtml = '<div class="garden-marker-pin '+(isPriv?'private':'')+'">'+
+        catInfo.icon + (isPriv ? '<span class="mini-lock">🔒</span>' : '') +
+      '</div>';
+
+      var customIcon = L.divIcon({
+        className: 'garden-leaflet-marker',
+        html: iconHtml,
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+        popupAnchor: [0, -34]
+      });
+
+      var marker = L.marker(coords, { icon: customIcon });
+
+      var photoUrl = spot.photoUrl || (typeof GARDEN_PHOTO_PRESETS !== 'undefined' ? GARDEN_PHOTO_PRESETS[0].url : '');
+      var thumbHtml = 
+        '<div class="garden-map-popup-hero">'+
+          '<img class="garden-map-popup-img" src="'+esc(photoUrl)+'" alt="'+esc(spot.name)+'" loading="lazy" onerror="this.src=\'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80\'">'+
+          '<div class="garden-map-popup-grad"></div>'+
+          '<div class="garden-map-popup-badges">'+
+            '<span class="garden-map-popup-badge cat">'+catInfo.icon+' '+catInfo.label+'</span>'+
+            (isPriv ? 
+              '<span class="garden-map-popup-badge priv">🔒 비밀</span>' : 
+              '<span class="garden-map-popup-badge pub">🌐 공개</span>')+
+          '</div>'+
+          '<span class="garden-map-popup-badge fee">💰 '+(spot.fee==='무료'?'무료':esc(spot.fee||'무료'))+'</span>'+
+        '</div>';
+
+      var facChips = '';
+      if(spot.facilities && spot.facilities.length){
+        facChips = '<div class="garden-map-popup-tags">'+
+          spot.facilities.slice(0, 3).map(function(f){
+            return '<span class="garden-map-popup-tag">✓ '+esc(f)+'</span>';
+          }).join('') +
+          (spot.facilities.length > 3 ? '<span class="garden-map-popup-tag" style="background:none;color:#5c6f66">+'+(spot.facilities.length - 3)+'</span>' : '') +
+        '</div>';
+      }
+
+      var metaLine = (spot.groundType ? '🌾 ' + esc(spot.groundType) : '') + 
+        (spot.toiletStatus ? ' · 🚻 ' + esc(spot.toiletStatus) : '');
+      var isFav = (ui.favCamps || []).indexOf(spot.name) >= 0;
+
+      var popupHtml = '<div style="width:100%">'+
+        thumbHtml +
+        '<div class="garden-map-popup-body">'+
+          '<h4 class="garden-map-popup-title">'+esc(spot.name)+'</h4>'+
+          '<div class="garden-map-popup-meta">'+
+            (unlocked ? '📍 <b>' + esc(spot.address || '상세 주소 없음') + '</b>' : '📍 ' + esc(spot.addressMasked || '비공개 스팟 (잠금)'))+
+          '</div>'+
+          (metaLine ? '<div style="font-size:11px;color:#5a7367;font-weight:700;margin-bottom:6px">'+metaLine+'</div>' : '')+
+          facChips +
+          '<div class="garden-map-popup-actions">'+
+            '<button class="garden-map-popup-btn" type="button" data-a="garden-detail-open" data-id="'+esc(spot.id)+'">'+
+              '🔍 상세 보기'+
+            '</button>'+
+            '<button class="garden-map-popup-btn fav '+(isFav?'active':'')+'" type="button" data-a="camp-fav" data-name="'+esc(spot.name)+'" data-spot-id="'+esc(spot.id)+'" title="'+(isFav?'즐겨찾기 찜 해제':'캠핑장 즐겨찾기 찜하기')+'">'+
+              (isFav ? '❤️ 찜됨' : '🤍 찜하기')+
+            '</button>'+
+            (unlocked ? 
+              '<button class="garden-map-popup-btn sub" type="button" data-a="garden-copy-addr" data-v="'+esc(spot.address)+'" title="주소 복사" style="flex:0 0 38px;padding:0">'+
+                '📋'+
+              '</button>' : 
+              '<button class="garden-map-popup-btn sub" type="button" data-a="garden-unlock-open" data-id="'+esc(spot.id)+'" title="비밀번호 열람" style="flex:0 0 50px;font-size:11.5px;padding:0">'+
+                '🔓 열람'+
+              '</button>')+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+      marker.bindPopup(popupHtml);
+      marker.spotId = spot.id;
+      marker.addTo(gardenMapInstance);
+      gardenMapMarkers.push(marker);
+      markerObjects.push(marker);
+    });
+
+    if(ui.gardenMapFocusId){
+      var targetM = gardenMapMarkers.find(function(m){ return m.spotId === ui.gardenMapFocusId; });
+      if(targetM){
+        setTimeout(function(){
+          if(gardenMapInstance){
+            gardenMapInstance.flyTo(targetM.getLatLng(), 13, { duration: 0.8 });
+            targetM.openPopup();
+          }
+          ui.gardenMapFocusId = null;
+        }, 120);
+        return;
+      }
+    }
+
+    if(markerObjects.length > 0){
+      try {
+        var group = L.featureGroup(markerObjects);
+        gardenMapInstance.fitBounds(group.getBounds().pad(0.12));
+      } catch(e){}
+    }
+
+    setTimeout(function(){
+      if(gardenMapInstance) gardenMapInstance.invalidateSize();
+    }, 150);
+  }
+
+
+  function gardenView(){
+    if(!ui.gardenLoaded && !ui.gardenBusy){
+      loadSecretGardens(false);
+    }
+
+    var allSpots = ui.gardenList || [];
+    var filtered = getFilteredGardens();
+    var privateCount = allSpots.filter(function(g){ return g.isPrivate; }).length;
+
+    var h = '';
+
+    // 상단 액션 바 (등록 버튼 + 새로고침)
+    h += '<div class="garden-hero-bar">'+
+      '<button class="btn primary" type="button" data-a="garden-reg-open" style="font-size:14px;font-weight:900;padding:10px 18px;border-radius:14px;flex:1">'+
+        '➕ 나만의 비밀의 정원 등록하기'+
+      '</button>'+
+      '<button class="chip sm" type="button" data-a="garden-refresh" title="새로고침" style="padding:10px 12px;border-radius:14px">'+
+        '🔄'+
+      '</button>'+
+    '</div>';
+
+    // 3. 검색창
+    h += '<div class="camp-search-bar" style="margin-bottom:12px">'+
+      '<span class="camp-search-icon" aria-hidden="true">🔍</span>'+
+      '<input id="garden-search-input" type="search" placeholder="지역(홍천, 영월 등), 스팟명, 편의시설(차박, 계곡, 화장실) 검색…" value="'+esc(ui.gardenSearch)+'" aria-label="비밀의 정원 검색">'+
+      (ui.gardenSearch?'<button class="camp-search-clear" type="button" data-a="garden-search-clear" aria-label="검색어 지우기">✕</button>':'')+
+    '</div>';
+
+    // 4. 카테고리 필터 칩스
+    var catKeys = [
+      {k:'all', label:'전체 ('+allSpots.length+')'},
+      {k:'noji', label:'🏞️ 노지/오지'},
+      {k:'car', label:'🚗 차박/스텔스'},
+      {k:'backpack', label:'🎒 백패킹/비박'},
+      {k:'camp', label:'🏕️ 숨은 캠장'},
+      {k:'water', label:'🌊 계곡/해변'},
+      {k:'private', label:'🔒 비밀글 ('+privateCount+')'}
+    ];
+    h += '<div class="chips" style="gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px">';
+    catKeys.forEach(function(ck){
+      var active = (ui.gardenFilter === ck.k);
+      h += '<button class="chip sm" type="button" data-a="garden-filter" data-v="'+ck.k+'" aria-pressed="'+active+'">'+ck.label+'</button>';
+    });
+    h += '</div>';
+
+    // 5. 주요 편의시설 원클릭 퀵 필터
+    var quickFacs = [
+      {k:'', label:'전체 시설'},
+      {k:'화장실', label:'🚻 화장실 有'},
+      {k:'차박', label:'🚙 차박 가능'},
+      {k:'불멍', label:'🔥 불멍/장작'},
+      {k:'계곡', label:'🏊 계곡/물놀이'},
+      {k:'반려동물', label:'🐕 반려동물'},
+      {k:'전기', label:'⚡ 전기 사용'},
+      {k:'무료', label:'💰 무료만'}
+    ];
+    h += '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'+
+      '<span style="font-size:12px;font-weight:700;color:var(--muted)">인기 시설:</span>'+
+      quickFacs.map(function(qf){
+        var act = (ui.gardenFacFilter === qf.k);
+        return '<button class="plan-mini-btn '+(act?'owned':'')+'" type="button" data-a="garden-fac-filter" data-v="'+qf.k+'" style="'+(act?'background:var(--brand);color:#fff;border-color:var(--brand)':'')+'">'+qf.label+'</button>';
+      }).join('')+
+    '</div>';
+
+    // 6. 결과 요약 바 & 정렬 탭
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)">'+
+      '<div>'+
+        '<span>등록된 비밀 스팟 <b>'+filtered.length+'</b>곳'+(ui.gardenFilter!=='all'||ui.gardenSearch||ui.gardenFacFilter?' (필터 적용 중)':'')+'</span>'+
+        (ui.gardenFilter!=='all'||ui.gardenSearch||ui.gardenFacFilter ?
+          '<button class="link" type="button" data-a="garden-filter-reset" style="font-size:12px;margin-left:8px">조건 초기화 ↺</button>' : '')+
+      '</div>'+
+      '<div style="display:flex;gap:4px;align-items:center">'+
+        '<span style="font-size:12px">정렬:</span>'+
+        '<button class="chip sm '+(ui.gardenSort==='newest'?'active':'')+'" type="button" data-a="garden-sort" data-v="newest" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='newest'?';background:var(--brand);color:#fff':'')+'">최신순</button>'+
+        '<button class="chip sm '+(ui.gardenSort==='likes'?'active':'')+'" type="button" data-a="garden-sort" data-v="likes" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='likes'?';background:var(--brand);color:#fff':'')+'">❤️ 찜순</button>'+
+        '<button class="chip sm '+(ui.gardenSort==='name'?'active':'')+'" type="button" data-a="garden-sort" data-v="name" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='name'?';background:var(--brand);color:#fff':'')+'">이름순</button>'+
+      '</div>'+
+    '</div>';
+
+    // 7. 스팟 카드 목록
+    if(ui.gardenBusy && !allSpots.length){
+      return h + loadingCard('비밀의 정원 데이터를 불러오고 있어요…');
+    }
+
+    if(!filtered.length){
+      h += '<div class="card" style="text-align:center;padding:36px 20px">'+
+        '<p style="font-size:38px;margin:0 0 10px">⛺</p>'+
+        '<h3 style="font-size:18px;margin:0 0 6px">검색 결과가 없습니다</h3>'+
+        '<p class="hint" style="margin:0 0 16px">조건을 변경하시거나, 새로운 비밀 노지&amp;캠핑장을 직접 등록해 보세요!</p>'+
+        '<button class="btn primary" type="button" data-a="garden-reg-open">🌿 나만의 비밀 정원 첫 등록하기</button>'+
+      '</div>';
+    } else {
+      filtered.forEach(function(g){
+        var unlocked = isSpotUnlocked(g);
+        var catInfo = GARDEN_CATEGORIES[g.category] || {label:'노지', icon:'🏞️'};
+        var dateStr = g.createdAt ? g.createdAt.slice(0,10) : '';
+
+        h += '<article class="garden-card" id="spot-'+esc(g.id)+'">'+
+          '<div class="garden-img-wrap" data-a="open-lightbox" data-img="'+esc(g.photoUrl || GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(g.name)+'" style="cursor:zoom-in" title="사진 크게 보기">'+
+            '<img class="garden-img" src="'+esc(g.photoUrl || GARDEN_PHOTO_PRESETS[0].url)+'" alt="'+esc(g.name)+'" loading="lazy" onerror="this.src=\''+GARDEN_PHOTO_PRESETS[0].url+'\'">'+
+            '<div class="garden-badges-overlay">'+
+              '<div style="display:flex;gap:5px">'+
+                '<span class="garden-badge cat">'+catInfo.icon+' '+catInfo.label+'</span>'+
+                (g.isPrivate ? 
+                  '<span class="garden-badge private">🔒 비밀의 정원</span>' : 
+                  '<span class="garden-badge public">🌐 공개 스팟</span>')+
+              '</div>'+
+              '<span class="garden-badge fee">'+(g.fee==='무료'?'💰 무료':esc(g.fee||'무료'))+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div class="garden-body">'+
+            '<div class="garden-title-row">'+
+              '<h3 class="garden-title">'+esc(g.name)+'</h3>'+
+            '</div>';
+
+        // 위치 정보 (잠금 상태에 따른 마스킹 처리)
+        if(unlocked){
+          h += '<div class="garden-loc">📍 <b>'+esc(g.address || '상세 주소 없음')+'</b></div>'+
+            (g.addressDetail ? '<p style="font-size:12.5px;color:var(--brand);background:var(--chip);padding:6px 10px;border-radius:8px;margin:0 0 10px;line-height:1.4">🚗 <b>진입 꿀팁:</b> '+esc(g.addressDetail)+'</p>' : '');
+        } else {
+          h += '<div class="garden-loc">📍 '+esc(g.addressMasked || '비공개 노지')+'</div>'+
+            '<div class="garden-lock-box">'+
+              '<div style="font-size:14px;font-weight:900;color:var(--ember);margin-bottom:4px">🔒 작성자 비공개 스팟</div>'+
+              '<p style="font-size:12px;color:var(--muted);margin:0 0 8px">비밀번호를 입력하면 상세 위치와 진입로가 공개됩니다.</p>'+
+              '<button class="btn sm pop" type="button" data-a="garden-unlock-open" data-id="'+esc(g.id)+'" style="font-weight:900">비밀번호 입력하여 열람 🔓</button>'+
+            '</div>';
+        }
+
+        // 시설물 태그 칩 (선택된 편의시설 목록)
+        if(g.facilities && g.facilities.length){
+          h += '<div class="garden-fac-list">';
+          var facSlice = g.facilities.slice(0, 6);
+          facSlice.forEach(function(f){
+            h += '<span class="garden-fac-chip">✓ '+esc(f)+'</span>';
+          });
+          if(g.facilities.length > 6){
+            h += '<span class="garden-fac-chip" style="background:none;color:var(--muted)">+'+(g.facilities.length - 6)+'개 더</span>';
+          }
+          h += '</div>';
+        }
+
+        // 바닥, 화장실, 진입 도로 메타 정보
+        h += '<div class="garden-meta-grid">'+
+          '<div class="garden-meta-item"><span>🌾 바닥:</span><b>'+esc(g.groundType||'자갈/흙')+'</b></div>'+
+          '<div class="garden-meta-item"><span>🚻 화장실:</span><b>'+esc(g.toiletStatus||'정보 없음')+'</b></div>'+
+          '<div class="garden-meta-item"><span>🚙 진입로:</span><b>'+esc(g.entryRoad||'일반 승용차')+'</b></div>'+
+          '<div class="garden-meta-item"><span>💰 이용료:</span><b>'+esc(g.fee||'무료')+'</b></div>'+
+        '</div>';
+
+        // 꿀팁 미리보기 (잠금 해제 시)
+        if(unlocked && g.tips){
+          h += '<p style="font-size:12.5px;color:var(--fg);margin:8px 0;line-height:1.4;background:var(--soft);padding:8px 10px;border-radius:8px">💡 <b>캠퍼 팁:</b> '+esc(g.tips)+'</p>';
+        }
+
+        // 작성자 및 등록일 바
+        h += '<div class="garden-author-bar">'+
+          '<span>👤 작성자: <b>'+esc(g.author)+'</b> · '+esc(dateStr)+'</span>'+
+          '<span style="display:flex;align-items:center;gap:8px">👁️ '+(g.views||0)+' · ❤️ '+(g.likes||0)+'</span>'+
+        '</div>';
+
+        // 하단 액션 버튼 (편집 및 삭제 포함)
+        h += '<div class="garden-actions">'+
+          '<button class="garden-btn-mini primary" type="button" data-a="garden-detail-open" data-id="'+esc(g.id)+'">🔍 상세 보기</button>'+
+          '<button class="garden-btn-mini" type="button" data-a="garden-like" data-id="'+esc(g.id)+'">❤️ 추천 '+(g.likes||0)+'</button>'+
+          '<button class="garden-btn-mini" type="button" data-a="garden-map-focus" data-id="'+esc(g.id)+'">🗺️ 지도</button>'+
+          (unlocked ? 
+            '<button class="garden-btn-mini" type="button" data-a="garden-copy-addr" data-v="'+esc(g.address)+'">📋 주소 복사</button>' : '')+
+          '<button class="garden-btn-mini" type="button" data-a="garden-edit-open" data-id="'+esc(g.id)+'" style="margin-left:auto;color:var(--brand);font-weight:700">✏️ 편집</button>'+
+          '<button class="garden-btn-mini" type="button" data-a="garden-delete-open" data-id="'+esc(g.id)+'" style="color:var(--ember)">🗑️ 삭제</button>'+
+        '</div>';
+
+        h += '</div></article>';
+      });
+    }
+
+    // 8. 하단 인터랙티브 지도 카드 (한눈에 보는 노지&캠장 지도)
+    h += '<section class="garden-map-card" id="garden-map-card">'+
+      '<div class="garden-map-header">'+
+        '<div>'+
+          '<div style="font-size:11px;font-weight:900;background:var(--pop);color:var(--pop-fg);display:inline-block;padding:2px 8px;border-radius:999px;margin-bottom:4px">INTERACTIVE MAP 🗺️</div>'+
+          '<h3 style="font-size:18px;font-weight:900;margin:0 0 2px">비밀의 정원 전국 지도</h3>'+
+          '<p style="font-size:12px;color:var(--muted);margin:0">등록된 모든 노지·차박지·비밀 캠핑장의 좌표를 한눈에 확인하고 마커를 클릭하여 탐색하세요.</p>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<button class="btn sm" type="button" data-a="garden-map-fit" style="font-size:12px;font-weight:700">전체 스팟 맞춤 📍</button>'+
+          '<button class="btn sm" type="button" data-a="garden-map-loc" style="font-size:12px;font-weight:700">내 위치 📍</button>'+
+        '</div>'+
+      '</div>'+
+      '<div id="garden-interactive-map" class="garden-map-container"></div>'+
+      '<div class="garden-map-legend">'+
+        '<span style="font-weight:900;color:var(--fg)">마커 범례:</span>'+
+        '<span>🏞️ 노지/오지</span>'+
+        '<span>🚗 차박/스텔스</span>'+
+        '<span>🎒 백패킹</span>'+
+        '<span>🏕️ 숨은 캠장</span>'+
+        '<span>🌊 계곡/해변</span>'+
+        '<span style="color:var(--ember);font-weight:700;display:inline-flex;align-items:center;gap:3px">🔒 비공개 스팟 (자물쇠)</span>'+
+      '</div>'+
+    '</section>';
+
+    return h;
+  }
+
+  function gardenModalsHtml(){
+    var h = '';
+
+    // 1. 스팟 등록 모달 (새로운 비밀의 정원 등록)
+    if(ui.gardenRegModal){
+      h += '<div class="camp-modal-backdrop" data-a="garden-reg-close">'+
+        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:540px;max-height:88vh;overflow-y:auto">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
+            '<div>'+
+              '<h3 style="font-family:var(--font-display);font-size:22px;margin:0">🌿 나만의 비밀의 정원 등록</h3>'+
+              '<small style="color:var(--muted)">숨은 노지, 차박지, 비밀 캠핑장을 시설별로 디테일하게 기록하세요.</small>'+
+            '</div>'+
+            '<button class="chip sm" type="button" data-a="garden-reg-close" style="font-size:16px;padding:4px 10px">✕</button>'+
+          '</div>'+
+          '<form data-form="garden-register">'+
+            // 장소 유형
+            '<div style="margin-bottom:14px">'+
+              '<label style="display:block;font-size:13px;font-weight:900;margin-bottom:6px">장소 유형 선택</label>'+
+              '<div class="chips" style="gap:5px">'+
+                Object.keys(GARDEN_CATEGORIES).map(function(k){
+                  var cat = GARDEN_CATEGORIES[k];
+                  var sel = (ui.gardenCategory === k);
+                  return '<button class="chip sm '+(sel?'active':'')+'" type="button" data-a="garden-set-cat" data-v="'+k+'" aria-pressed="'+sel+'">'+cat.icon+' '+cat.label+'</button>';
+                }).join('')+
+              '</div>'+
+            '</div>'+
+
+            // 스팟 이름
+            '<div style="margin-bottom:14px">'+
+              '<label for="g-in-name" style="display:block;font-size:13px;font-weight:900;margin-bottom:4px">스팟 이름 (명칭) <span style="color:var(--ember)">*</span></label>'+
+              '<input id="g-in-name" type="text" placeholder="예: 홍천강 모곡밤벌 인근 비밀 자갈밭 노지" maxlength="40" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px" required>'+
+            '</div>'+
+
+            // 주소 및 위치
+            '<div style="margin-bottom:14px">'+
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'+
+                '<label for="g-in-addr" style="font-size:13px;font-weight:900">주소 및 위치 <span style="color:var(--ember)">*</span></label>'+
+                '<button class="link" type="button" data-a="garden-gps-fill" style="font-size:12px;font-weight:700">📍 내 GPS 위치로 채우기</button>'+
+              '</div>'+
+              '<input id="g-in-addr" type="text" placeholder="도로명 또는 지번 주소 (예: 강원 홍천군 서면 모곡리 497-1)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:6px" required>'+
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'+
+                '<input id="g-in-lat" type="text" placeholder="위도 (선택)" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px">'+
+                '<input id="g-in-lng" type="text" placeholder="경도 (선택)" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px">'+
+              '</div>'+
+              '<textarea id="g-in-detail" rows="2" placeholder="🚗 상세 진입로 안내 (예: 다리 밑 비포장 제방길 200m 직진 후 붉은 컨테이너 앞 자갈밭)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12.5px"></textarea>'+
+            '</div>'+
+
+            // 네비 검색어
+            '<div style="margin-bottom:14px">'+
+              '<label for="g-in-nav" style="display:block;font-size:13px;font-weight:900;margin-bottom:4px">네비게이션 추천 검색어</label>'+
+              '<input id="g-in-nav" type="text" placeholder="카카오맵/티맵 검색 키워드 (예: 모곡밤벌유원지)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">'+
+            '</div>'+
+
+            // 시설물 다중 선택
+            '<div style="margin-bottom:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px">'+
+              '<div style="font-size:14px;font-weight:900;color:var(--brand);margin-bottom:4px">⛺ 캠핑장 &amp; 노지 시설물 선택 (다중 선택 가능)</div>'+
+              '<p style="font-size:11.5px;color:var(--muted);margin:0 0 10px">해당 스팟에 구비된 시설들을 클릭하여 선택해 주세요.</p>';
+
+            GARDEN_FACILITIES.forEach(function(catObj){
+              h += '<div class="garden-fac-group">'+
+                '<h4>'+catObj.cat+'</h4>'+
+                '<div class="garden-fac-selector">';
+              catObj.items.forEach(function(item){
+                var isChecked = (ui.gardenSelectedFacilities.indexOf(item) >= 0);
+                h += '<button class="garden-fac-btn '+(isChecked?'active':'')+'" type="button" data-a="garden-fac-toggle" data-v="'+esc(item)+'" aria-pressed="'+isChecked+'">'+
+                  (isChecked?'✓ ':'')+esc(item)+
+                '</button>';
+              });
+              h += '</div></div>';
+            });
+
+            h += '</div>'+
+
+            // 환경 & 이용 조건
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'+
+              '<div>'+
+                '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">바닥 환경</label>'+
+                '<select id="g-in-ground" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+                  '<option value="자갈/모래">자갈 / 모래</option>'+
+                  '<option value="흙/솔잎">흙 / 솔잎 바닥</option>'+
+                  '<option value="파쇄석">파쇄석 사이트</option>'+
+                  '<option value="잔디">잔디 사이트</option>'+
+                  '<option value="나무 데크">나무 데크</option>'+
+                '</select>'+
+              '</div>'+
+              '<div>'+
+                '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">이용 요금</label>'+
+                '<input id="g-in-fee" type="text" value="무료" placeholder="예: 무료 또는 1박 4만원" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+              '</div>'+
+            '</div>'+
+
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'+
+              '<div>'+
+                '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">화장실 상태</label>'+
+                '<input id="g-in-toilet" type="text" value="간이화장실 (도보 3분)" placeholder="예: 수세식 온수 / 간이화장실 / 화장실 없음" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+              '</div>'+
+              '<div>'+
+                '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">진입 도로 상태</label>'+
+                '<input id="g-in-road" type="text" value="일반 승용차 진입 가능" placeholder="예: 승용차 가능 / SUV 권장 / 4WD 필수" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+              '</div>'+
+            '</div>'+
+
+            // 사진 등록: 직접 촬영 / 파일 업로드 기능 및 감성 프리셋 선택
+            '<div style="margin-bottom:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px">'+
+              '<div style="font-size:14px;font-weight:900;color:var(--brand);margin-bottom:4px">📸 스팟 사진 등록 (카메라 촬영 / 파일 업로드)</div>'+
+              '<p style="font-size:11.5px;color:var(--muted);margin:0 0 10px">직접 촬영한 캠핑 사진을 올리거나, 아래 감성 프리셋 사진 중 선택해 주세요.</p>'+
+
+              (ui.gardenUploadedPhoto ? 
+                '<div class="garden-upload-preview">'+
+                  '<img src="'+ui.gardenUploadedPhoto+'" alt="직접 업로드한 사진">'+
+                  '<div class="garden-upload-tag">📷 내가 촬영/업로드한 사진 (적용됨)</div>'+
+                  '<div class="garden-upload-overlay-actions">'+
+                    '<label for="g-camera-upload" class="garden-upload-rm-btn" style="cursor:pointer;background:var(--brand)">📸 다시 촬영</label>'+
+                    '<button type="button" class="garden-upload-rm-btn" data-a="garden-remove-photo">✕ 사진 삭제</button>'+
+                  '</div>'+
+                '</div>' :
+                '<div class="garden-upload-cards">'+
+                  '<label class="garden-upload-card" for="g-camera-upload">'+
+                    '<div class="garden-upload-card-icon">📸</div>'+
+                    '<div class="garden-upload-card-title">카메라 즉석 촬영</div>'+
+                    '<div class="garden-upload-card-sub">스마트폰 카메라 즉석 촬영</div>'+
+                    '<input type="file" id="g-camera-upload" accept="image/*" capture="environment" style="display:none">'+
+                  '</label>'+
+                  '<label class="garden-upload-card" for="g-file-upload">'+
+                    '<div class="garden-upload-card-icon">📁</div>'+
+                    '<div class="garden-upload-card-title">내 앨범/파일 선택</div>'+
+                    '<div class="garden-upload-card-sub">갤러리 사진 불러오기</div>'+
+                    '<input type="file" id="g-file-upload" accept="image/*" style="display:none">'+
+                  '</label>'+
+                '</div>')+
+
+              '<div style="font-size:12.5px;font-weight:700;color:var(--fg);margin:10px 0 6px">또는 감성 캠핑 프리셋 사진 중 선택:</div>'+
+              '<div class="garden-presets-grid">';
+            GARDEN_PHOTO_PRESETS.forEach(function(p){
+              var act = (!ui.gardenUploadedPhoto && ui.gardenSelectedPhoto === p.url);
+              h += '<div class="garden-preset-item '+(act?'active':'')+'" data-a="garden-preset-pick" data-v="'+esc(p.url)+'">'+
+                '<img src="'+esc(p.url)+'" alt="'+esc(p.label)+'">'+
+                '<div class="garden-preset-label">'+esc(p.label)+'</div>'+
+              '</div>';
+            });
+            h += '</div>'+
+              '<input id="g-in-photo" type="url" placeholder="직접 이미지 웹 URL 입력 (선택)" value="'+esc(ui.gardenCustomPhoto)+'" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;margin-top:6px">'+
+            '</div>'+
+
+            // 나만의 꿀팁 & 주의사항
+            '<div style="margin-bottom:14px">'+
+              '<label for="g-in-tips" style="display:block;font-size:13px;font-weight:900;margin-bottom:4px">나만의 명당 꿀팁 &amp; 주의사항</label>'+
+              '<textarea id="g-in-tips" rows="3" placeholder="예: 해질녘 노을이 장관이며, 나무 그늘 아래가 가장 시원합니다. 쓰레기봉투 필수 지참하여 클린캠핑 해주세요!" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px"></textarea>'+
+            '</div>'+
+
+            // 작성자 닉네임 & 비밀번호 & 비밀글 여부 설정
+            '<div style="background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:18px">'+
+              '<div style="font-size:14px;font-weight:900;margin-bottom:8px">🔒 작성자 정보 및 보안 설정</div>'+
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
+                '<div>'+
+                  '<label for="g-in-author" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">작성자 닉네임 <span style="color:var(--ember)">*</span></label>'+
+                  '<input id="g-in-author" type="text" placeholder="예: 솔캠러" maxlength="15" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px" required>'+
+                '</div>'+
+                '<div>'+
+                  '<label for="g-in-pwd" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">비밀번호 (수정/삭제용) <span style="color:var(--ember)">*</span></label>'+
+                  '<input id="g-in-pwd" type="password" placeholder="비번 4자리 이상" maxlength="20" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px" required>'+
+                '</div>'+
+              '</div>'+
+              '<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--fg)">'+
+                '<input id="g-in-isprivate" type="checkbox" checked style="width:18px;height:18px;margin-top:2px">'+
+                '<span>🔒 <b>나만의 비밀의 정원으로 등록 (비공개)</b><br><small style="font-weight:400;color:var(--muted)">목록에서 상세 위치가 보호되며, 설정한 비밀번호로 상세 위치를 열람하고 관리할 수 있습니다.</small></span>'+
+              '</label>'+
+            '</div>'+
+
+            // 버튼
+            '<div style="display:flex;gap:8px">'+
+              '<button class="btn primary" type="submit" style="flex:2;font-size:15px;font-weight:900;padding:12px">🌿 비밀의 정원 등록하기</button>'+
+              '<button class="btn" type="button" data-a="garden-reg-close" style="flex:1">취소</button>'+
+            '</div>'+
+          '</form>'+
+        '</div>'+
+      '</div>';
+    }
+
+    // 2. 상세 모달 (스팟 상세 보기)
+    if(ui.gardenDetailModal){
+      var spot = ui.gardenDetailModal;
+      var unlocked = isSpotUnlocked(spot);
+      var catInfo = GARDEN_CATEGORIES[spot.category] || {label:'노지', icon:'🏞️'};
+      var dateStr = spot.createdAt ? spot.createdAt.slice(0,10) : '';
+
+      h += '<div class="camp-modal-backdrop" data-a="garden-detail-close">'+
+        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:540px;max-height:90vh;overflow-y:auto;padding:0">'+
+          // 사진 헤더
+          '<div style="position:relative;width:100%;height:220px;background:#000;cursor:zoom-in" data-a="open-lightbox" data-img="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(spot.name)+'" title="사진 크게 보기">'+
+            '<img src="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" alt="'+esc(spot.name)+'" style="width:100%;height:100%;object-fit:cover">'+
+            '<button class="chip sm" type="button" data-a="garden-detail-close" style="position:absolute;top:12px;right:12px;font-size:16px;padding:4px 10px;background:rgba(0,0,0,.6);color:#fff;border:0">✕</button>'+
+            '<div style="position:absolute;bottom:10px;left:12px;display:flex;gap:6px">'+
+              '<span class="garden-badge cat">'+catInfo.icon+' '+catInfo.label+'</span>'+
+              (spot.isPrivate ? 
+                '<span class="garden-badge private">🔒 비밀의 정원</span>' : 
+                '<span class="garden-badge public">🌐 전체 공개</span>')+
+              '<span class="garden-badge fee">'+(spot.fee==='무료'?'💰 무료':esc(spot.fee||'무료'))+'</span>'+
+            '</div>'+
+          '</div>'+
+
+          '<div style="padding:18px">'+
+            '<h2 style="font-size:22px;font-weight:900;margin:0 0 6px">'+esc(spot.name)+'</h2>'+
+            '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:14px">'+
+              '<span>👤 작성자: <b>'+esc(spot.author)+'</b> · '+esc(dateStr)+'</span>'+
+              '<span>👁️ '+(spot.views||0)+' · ❤️ '+(spot.likes||0)+'</span>'+
+            '</div>';
+
+          // 비공개 잠금 상태
+          if(!unlocked){
+            h += '<div class="garden-lock-box" style="padding:20px 16px;background:var(--soft);border-color:var(--ember)">'+
+              '<div style="font-size:32px;margin-bottom:8px">🔒</div>'+
+              '<h3 style="font-size:18px;font-weight:900;color:var(--ember);margin:0 0 6px">비밀의 정원 열람 잠금</h3>'+
+              '<p style="font-size:13px;color:var(--fg);margin:0 0 14px;line-height:1.5">'+
+                '이 장소는 작성자가 나만의 비밀 스팟으로 등록한 곳입니다.<br>'+
+                '등록 시 설정한 비밀번호를 입력하여 열람하세요.'+
+              '</p>'+
+              '<form data-form="garden-unlock" data-id="'+esc(spot.id)+'" style="display:flex;gap:6px;max-width:320px;margin:0 auto">'+
+                '<input id="g-unlock-pwd" type="password" placeholder="비밀번호 입력" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px" required>'+
+                '<button class="btn pop" type="submit" style="font-weight:900;white-space:nowrap">열람하기 🔓</button>'+
+              '</form>'+
+            '</div>';
+          } else {
+            // 잠금 해제된 상세 정보
+            h += '<div style="margin-bottom:16px">'+
+              '<div style="font-size:13px;font-weight:900;color:var(--brand);margin-bottom:4px">📍 상세 위치 &amp; 주소</div>'+
+              '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--chip);border-radius:10px;padding:10px 12px">'+
+                '<span style="font-size:14px;font-weight:700;color:var(--fg)">'+esc(spot.address||'주소 정보 없음')+'</span>'+
+                '<button class="btn sm" type="button" data-a="garden-copy-addr" data-v="'+esc(spot.address)+'" style="white-space:nowrap">주소 복사 📋</button>'+
+              '</div>'+
+              (spot.addressDetail ? 
+                '<div style="margin-top:8px;font-size:13px;line-height:1.5;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px">'+
+                  '🚗 <b>찾아가는 길 / 진입로 디테일:</b><br>'+esc(spot.addressDetail)+
+                '</div>' : '')+
+              '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">'+
+                '<a class="btn sm" href="https://map.kakao.com/link/search/'+encodeURIComponent(spot.navQuery||spot.name)+'" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:12px;padding:0 4px">🧭 카카오맵 ↗</a>'+
+                '<a class="btn sm" href="https://map.naver.com/v5/search/'+encodeURIComponent(spot.navQuery||spot.name)+'" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:12px;padding:0 4px">🗺️ 네이버 ↗</a>'+
+                '<a class="btn sm" href="https://apis.openapi.sk.com/tmap/app/routes?appKey=&name='+encodeURIComponent(spot.navQuery||spot.name)+(spot.lat?'&lat='+spot.lat+'&lon='+spot.lng:'')+'" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:12px;padding:0 4px">🚙 티맵 TMAP ↗</a>'+
+              '</div>'+
+            '</div>';
+
+            // 시설물
+            if(spot.facilities && spot.facilities.length){
+              h += '<div style="margin-bottom:16px">'+
+                '<div style="font-size:13px;font-weight:900;color:var(--brand);margin-bottom:6px">⛺ 구비된 시설물 목록 ('+spot.facilities.length+'개)</div>'+
+                '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+                  spot.facilities.map(function(f){
+                    return '<span class="camp-tag" style="background:var(--chip);color:var(--fg);font-size:12px;font-weight:700">✓ '+esc(f)+'</span>';
+                  }).join('')+
+                '</div>'+
+              '</div>';
+            }
+
+            // 환경 메타
+            h += '<div style="margin-bottom:16px">'+
+              '<div style="font-size:13px;font-weight:900;color:var(--brand);margin-bottom:6px">🌾 환경 &amp; 이용 조건</div>'+
+              '<div class="garden-meta-grid" style="grid-template-columns:repeat(2,1fr);padding:12px">'+
+                '<div class="garden-meta-item"><span>🌾 바닥 형태:</span><b>'+esc(spot.groundType||'자갈/흙')+'</b></div>'+
+                '<div class="garden-meta-item"><span>🚻 화장실 상태:</span><b>'+esc(spot.toiletStatus||'정보 없음')+'</b></div>'+
+                '<div class="garden-meta-item"><span>🚙 도로 진입:</span><b>'+esc(spot.entryRoad||'승용차 가능')+'</b></div>'+
+                '<div class="garden-meta-item"><span>💰 이용 요금:</span><b>'+esc(spot.fee||'무료')+'</b></div>'+
+              '</div>'+
+            '</div>';
+
+            // 팁 & 주의사항
+            if(spot.tips){
+              h += '<div style="margin-bottom:16px">'+
+                '<div style="font-size:13px;font-weight:900;color:var(--brand);margin-bottom:6px">💡 작성자 추천 꿀팁 &amp; 명당자리</div>'+
+                '<div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;line-height:1.5">'+
+                  esc(spot.tips)+
+                '</div>'+
+              '</div>';
+            }
+
+            // 액션 버튼 (편집 및 삭제, 일지 쓰기)
+            h += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)">'+
+              '<button class="btn pop" type="button" data-a="garden-like" data-id="'+esc(spot.id)+'" style="flex:1;font-weight:900">❤️ 추천 ('+(spot.likes||0)+')</button>'+
+              '<button class="btn" type="button" data-a="camp-cooklog-go" data-name="'+esc(spot.name)+'" style="flex:1;font-weight:900">📝 일지 쓰기</button>'+
+              '<button class="btn" type="button" data-a="garden-share" data-id="'+esc(spot.id)+'" style="flex:1;font-weight:900">📤 공유 복사</button>'+
+              '<button class="btn sm" type="button" data-a="garden-edit-open" data-id="'+esc(spot.id)+'" style="color:var(--brand);font-weight:700">✏️ 편집</button>'+
+              '<button class="btn sm" type="button" data-a="garden-delete-open" data-id="'+esc(spot.id)+'" style="color:var(--ember);font-weight:700">🗑️ 삭제</button>'+
+            '</div>';
+          }
+
+          h += '</div>'+
+        '</div>'+
+      '</div>';
+    }
+
+    // 3. 스팟 삭제/열람/편집 비밀번호 프롬프트 모달
+    if(ui.gardenAuthModal){
+      var authAction = ui.gardenAuthModal.action;
+      var actionTitle = authAction === 'delete' ? '스팟 삭제 인증' : (authAction === 'edit' ? '스팟 편집 인증' : '비밀글 열람 인증');
+      var actionDesc = authAction === 'delete' ? 
+        '이 스팟을 삭제하려면 등록 시 설정한 비밀번호를 입력하세요.' : 
+        (authAction === 'edit' ? 
+          '이 스팟을 편집(수정)하려면 등록 시 설정한 비밀번호를 입력하세요.' : 
+          '상세 위치를 열람하려면 등록 시 설정한 비밀번호를 입력하세요.');
+
+      h += '<div class="camp-modal-backdrop" data-a="garden-auth-close">'+
+        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:380px;text-align:center">'+
+          '<div style="font-size:32px;margin-bottom:8px">'+(authAction==='delete'?'🗑️':(authAction==='edit'?'✏️':'🔓'))+'</div>'+
+          '<h3 style="font-size:19px;font-weight:900;margin:0 0 6px">'+actionTitle+'</h3>'+
+          '<p style="font-size:12.5px;color:var(--muted);margin:0 0 16px;line-height:1.5">'+actionDesc+'</p>'+
+          '<form data-form="garden-auth-submit">'+
+            '<input id="g-auth-pwd-input" type="password" placeholder="비밀번호 입력" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;text-align:center;margin-bottom:12px" autofocus required>'+
+            '<div style="display:flex;gap:8px">'+
+              '<button class="btn pop" type="submit" style="flex:1;font-weight:900;padding:10px">'+(authAction==='delete'?'삭제 실행':(authAction==='edit'?'편집 열기':'열람 확인'))+'</button>'+
+              '<button class="btn" type="button" data-a="garden-auth-close" style="flex:1">취소</button>'+
+            '</div>'+
+          '</form>'+
+        '</div>'+
+      '</div>';
+    }
+
+    // 4. 스팟 편집(수정) 모달
+    if(ui.gardenEditModal){
+      var es = ui.gardenEditModal;
+      var currentPhoto = ui.gardenEditUploadedPhoto || es.photoUrl || GARDEN_PHOTO_PRESETS[0].url;
+      var curFacs = es.facilities || [];
+
+      h += '<div class="camp-modal-backdrop" data-a="garden-edit-close">'+
+        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:540px;max-height:92vh;overflow-y:auto">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
+            '<div>'+
+              '<h2 style="font-size:20px;font-weight:900;margin:0 0 2px">✏️ 스팟 정보 수정</h2>'+
+              '<p style="font-size:12px;color:var(--muted);margin:0">등록된 스팟의 위치, 진입로, 시설물, 사진을 편집합니다.</p>'+
+            '</div>'+
+            '<button class="chip sm" type="button" data-a="garden-edit-close" style="border:0;font-size:16px">✕</button>'+
+          '</div>'+
+          '<form data-form="garden-edit-save" data-id="'+esc(es.id)+'">'+
+            // 스팟명 & 카테고리
+            '<div style="margin-bottom:14px">'+
+              '<label for="ge-name" style="display:block;font-size:13px;font-weight:700;margin-bottom:4px">스팟 이름 <span style="color:var(--ember)">*</span></label>'+
+              '<input id="ge-name" type="text" value="'+esc(es.name)+'" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px" required>'+
+            '</div>'+
+
+            '<div style="margin-bottom:14px">'+
+              '<label for="ge-cat" style="display:block;font-size:13px;font-weight:700;margin-bottom:4px">스팟 유형</label>'+
+              '<select id="ge-cat" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px">'+
+                '<option value="noji" '+(es.category==='noji'?'selected':'')+'>🏞️ 노지/오지 캠핑</option>'+
+                '<option value="car" '+(es.category==='car'?'selected':'')+'>🚗 차박/스텔스</option>'+
+                '<option value="backpack" '+(es.category==='backpack'?'selected':'')+'>🎒 백패킹/비박</option>'+
+                '<option value="camp" '+(es.category==='camp'?'selected':'')+'>🏕️ 숨은 유·무료 캠핑장</option>'+
+                '<option value="water" '+(es.category==='water'?'selected':'')+'>🌊 계곡/해변 스팟</option>'+
+              '</select>'+
+            '</div>'+
+
+            // 사진 수정
+            '<div style="margin-bottom:14px">'+
+              '<label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">대표 사진</label>'+
+              '<div class="garden-upload-preview" style="margin-bottom:10px">'+
+                '<img src="'+esc(currentPhoto)+'" alt="현재 사진" style="width:100%;height:160px;object-fit:cover;border-radius:12px">'+
+              '</div>'+
+              '<div class="garden-upload-cards">'+
+                '<label class="garden-upload-card" style="cursor:pointer">'+
+                  '<input type="file" id="ge-camera-upload" accept="image/*" capture="environment" style="display:none">'+
+                  '<span class="garden-upload-card-icon">📸</span>'+
+                  '<span class="garden-upload-card-title">새 즉석 사진 촬영</span>'+
+                  '<span class="garden-upload-card-sub">현장에서 바로 찰칵</span>'+
+                '</label>'+
+                '<label class="garden-upload-card" style="cursor:pointer">'+
+                  '<input type="file" id="ge-file-upload" accept="image/*" style="display:none">'+
+                  '<span class="garden-upload-card-icon">📁</span>'+
+                  '<span class="garden-upload-card-title">새 갤러리 사진</span>'+
+                  '<span class="garden-upload-card-sub">저장된 사진 선택</span>'+
+                '</label>'+
+              '</div>'+
+            '</div>'+
+
+            // 상세 주소 및 진입로
+            '<div style="margin-bottom:14px">'+
+              '<label for="ge-addr" style="display:block;font-size:13px;font-weight:700;margin-bottom:4px">상세 주소 / 지번 / 내비 목적지</label>'+
+              '<input id="ge-addr" type="text" value="'+esc(es.address||'')+'" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px">'+
+            '</div>'+
+
+            '<div style="margin-bottom:14px">'+
+              '<label for="ge-detail" style="display:block;font-size:13px;font-weight:700;margin-bottom:4px">🚗 찾아가는 길 / 진입로 꿀팁</label>'+
+              '<textarea id="ge-detail" rows="2" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">'+esc(es.addressDetail||'')+'</textarea>'+
+            '</div>'+
+
+            // 구비 시설물 체크박스
+            '<div style="margin-bottom:14px">'+
+              '<label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">구비 시설물 선택</label>'+
+              '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:160px;overflow-y:auto;background:var(--soft);padding:10px;border-radius:10px;border:1px solid var(--line)">'+
+                GARDEN_FACILITY_OPTIONS.map(function(opt){
+                  var checked = curFacs.indexOf(opt.id) >= 0;
+                  return '<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer">'+
+                    '<input type="checkbox" name="ge-facilities" value="'+esc(opt.id)+'" '+(checked?'checked':'')+'>'+
+                    '<span>'+esc(opt.label)+'</span>'+
+                  '</label>';
+                }).join('')+
+              '</div>'+
+            '</div>'+
+
+            // 환경 메타 (바닥, 화장실, 도로, 요금)
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'+
+              '<div>'+
+                '<label for="ge-ground" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">바닥 형태</label>'+
+                '<select id="ge-ground" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px">'+
+                  ['자갈/파쇄석','노지 흙바닥','잔디','모래/백사장','데크','콘크리트/아스팔트'].map(function(gt){
+                    return '<option value="'+gt+'" '+(es.groundType===gt?'selected':'')+'>'+gt+'</option>';
+                  }).join('')+
+                '</select>'+
+              '</div>'+
+              '<div>'+
+                '<label for="ge-toilet" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">화장실</label>'+
+                '<select id="ge-toilet" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px">'+
+                  ['수세식 화장실','재래식/간이 화장실','공중 화장실(인근 도보)','화장실 없음(포타포티 필요)'].map(function(ts){
+                    return '<option value="'+ts+'" '+(es.toiletStatus===ts?'selected':'')+'>'+ts+'</option>';
+                  }).join('')+
+                '</select>'+
+              '</div>'+
+              '<div>'+
+                '<label for="ge-road" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">도로 진입</label>'+
+                '<select id="ge-road" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px">'+
+                  ['일반 승용차 수월','비포장/자갈길 (서행)','SUV/사륜 권장','도보 진입만(백패킹)'].map(function(er){
+                    return '<option value="'+er+'" '+(es.entryRoad===er?'selected':'')+'>'+er+'</option>';
+                  }).join('')+
+                '</select>'+
+              '</div>'+
+              '<div>'+
+                '<label for="ge-fee" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">이용 요금</label>'+
+                '<input id="ge-fee" type="text" value="'+esc(es.fee||'무료')+'" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px">'+
+              '</div>'+
+            '</div>'+
+
+            // 팁
+            '<div style="margin-bottom:14px">'+
+              '<label for="ge-tips" style="display:block;font-size:13px;font-weight:700;margin-bottom:4px">💡 캠퍼 추천 꿀팁 &amp; 명당자리</label>'+
+              '<textarea id="ge-tips" rows="2" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">'+esc(es.tips||'')+'</textarea>'+
+            '</div>'+
+
+            // 비공개 여부 & 새 비밀번호
+            '<div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:16px">'+
+              '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--fg);margin-bottom:8px">'+
+                '<input id="ge-isprivate" type="checkbox" '+(es.isPrivate?'checked':'')+' style="width:18px;height:18px">'+
+                '<span>🔒 <b>나만의 비밀의 정원으로 설정 (비공개)</b></span>'+
+              '</label>'+
+              '<div>'+
+                '<label for="ge-newpwd" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px;color:var(--muted)">새 비밀번호 변경 (변경을 원할 때만 입력)</label>'+
+                '<input id="ge-newpwd" type="password" placeholder="기존 비밀번호 유지 시 비워두세요" maxlength="20" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px">'+
+              '</div>'+
+            '</div>'+
+
+            '<div style="display:flex;gap:8px">'+
+              '<button class="btn primary" type="submit" style="flex:2;font-size:15px;font-weight:900;padding:12px">💾 수정 사항 저장하기</button>'+
+              '<button class="btn" type="button" data-a="garden-edit-close" style="flex:1">취소</button>'+
+            '</div>'+
+          '</form>'+
+        '</div>'+
+      '</div>';
+    }
+
+    return h;
+  }
+
   function head(){
     var s='<span class="season">'+month+'월 · '+season+'</span>';
     var wxi=(ui.wx&&profile.wxAware)?wxInfo(ui.wx):null;
     if(wxi)s='<span class="season" style="background:var(--chip);color:var(--muted)">'+wxi.icon+' '+deg(ui.wx.temp)+' '+wxi.label+'</span>'+s;
     if(ui.tab==='rec')return '<section class="hero home">'+SCENE+'<div class="hero-top"><span class="brand">캠핑음식 도우미</span>'+s+'</div><h1>오늘 캠핑,<br><em>뭐 해먹지?</em></h1><p class="sub">장비와 인원만 고르면 메뉴부터 준비물까지 정리해 줘요.</p></section>';
+    if(ui.tab==='plan')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(135deg,#0c3629 0%,#185b46 100%)">'+SCENE+'<div class="hero-top"><span class="brand">장박 주간 식단 플래너</span>'+s+'</div><h1>2박 3일+ 장박,<br><em>끼니 고민 끝!</em></h1><p class="sub">인원과 일정에 맞춘 끼니별 식단표와 전체 식재료·장비 자동 취합</p></section>';
     if(ui.tab==='camp')return '<section class="hero home" style="padding-bottom:18px">'+SCENE+'<div class="hero-top"><span class="brand">전국 캠핑장 찾기</span>'+s+'</div><h1>전국 4,000+<br><em>어디로 떠날까?</em></h1><p class="sub">전국 캠핑장 탐색부터 날씨 맞춤 요리까지 한 번에 연결돼요.</p></section>';
+    if(ui.tab==='garden')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(135deg,#0c2e1f 0%,#195237 100%)">'+SCENE+'<div class="hero-top"><span class="brand">나만의 비밀의 정원</span>'+s+'</div><h1>노지 · 차박 · 비밀 캠장<br><em>나만의 아지트 등록</em></h1><p class="sub">화장실, 개수대, 전기, 진입로까지 디테일하게 기록하고 관리하는 비밀 스팟</p></section>';
     return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+s+'</header>';
   }
   function banner(){
@@ -2159,6 +4351,10 @@ details li{margin-bottom:8px}
     var off=ui.busy?' disabled':'';
     var activeRecs=ui.recs.length?ui.recs:matchLocalRecs(ui.people,profile.gear,ui.meal,ui.mood,profile.avoid,[]);
     var h='';
+    h+='<section class="banner" style="background:linear-gradient(135deg,rgba(18,73,58,.1),rgba(224,93,56,.12));border:1px solid rgba(18,73,58,.25);display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;border-radius:14px;padding:12px 14px">'+
+      '<span>📅 <b>2박 3일+ 장박 주간 식단표</b> 자동 생성 & 장보기 취합</span>'+
+      '<button class="btn sm primary" type="button" data-a="tab" data-v="plan" style="min-height:34px;padding:0 12px;font-size:12px">식단표 짜기 →</button>'+
+    '</section>';
     if(list){
       h+='<section class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
         '<span>현재 식단: <b>'+esc(list.dish)+'</b> ('+list.people+'명)</span>'+
@@ -2192,6 +4388,58 @@ details li{margin-bottom:8px}
       }, 100);
     }
     
+    var coolerItems = ['삼겹살', '김치', '라면', '햇반', '소시지', '계란', '치즈', '참치캔', '마늘/양파', '대파', '감자', '두부'];
+    var coolerSelectedCount = (ui.coolerSelected || []).length;
+    var matchedCoolerDishes = [];
+    if(coolerSelectedCount > 0){
+      var COOLER_DISHES = [
+        { name: '삼겹살 김치 볶음밥', ings: ['삼겹살', '김치', '햇반'], time: '15분', desc: '남은 삼겹살 기름에 신김치와 밥을 볶아 김가루 솔솔' },
+        { name: '묵은지 삼겹 두루치기', ings: ['삼겹살', '김치', '마늘/양파', '대파'], time: '20분', desc: '자작한 국물에 삼겹살과 묵은지를 매콤하게 조린 밥도둑' },
+        { name: '순두부 열라면', ings: ['라면', '계란', '대파'], time: '10분', desc: '칼칼한 국물에 부드러운 순두부와 계란을 퐁당 넣은 캠핑 국룰' },
+        { name: '콘치즈 소시지 구이', ings: ['소시지', '치즈'], time: '12분', desc: '그리들에 칼집 낸 소시지와 고소한 치즈를 노릇하게 구운 불멍 안주' },
+        { name: '얼큰 참치 김치찌개', ings: ['참치캔', '김치', '두부', '대파'], time: '20분', desc: '참치캔 기름으로 김치를 볶아 진하게 끓인 얼큰 찌개' },
+        { name: '계란 스팸 볶음밥', ings: ['햇반', '계란', '소시지'], time: '12분', desc: '남은 햄과 계란으로 휘리릭 볶아내는 든든한 아침 한 끼' },
+        { name: '바삭 감자 치즈전', ings: ['감자', '치즈'], time: '15분', desc: '채 썬 감자에 치즈를 듬뿍 올려 바삭 쫀득하게 부친 별미' },
+        { name: '부대 소시지 라면', ings: ['라면', '소시지', '대파'], time: '10분', desc: '남은 고기와 소시지를 썰어 넣은 푸짐한 캠핑 라면' }
+      ];
+      matchedCoolerDishes = COOLER_DISHES.filter(function(cd){
+        return cd.ings.some(function(i){ return ui.coolerSelected.indexOf(i) >= 0; });
+      });
+    }
+
+    h+='<section class="card" style="border:1.5px solid #207254;background:linear-gradient(180deg, var(--surface) 0%, rgba(32,114,84,0.06) 100%)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<h2 style="margin:0;font-size:16px;display:flex;align-items:center;gap:6px">🧊 쿨러백 털기 · 남은 재료 요리 찾기</h2>'+
+        (coolerSelectedCount ? '<button class="chip sm" type="button" data-a="cooler-clear" style="font-size:11px">선택 초기화 ↺</button>' : '')+
+      '</div>'+
+      '<p class="hint" style="margin:0 0 10px">캠핑장에 남아있는 재료를 탭하세요. 즉시 만들 수 있는 캠핑 요리를 찾아드려요!</p>'+
+      '<div class="chips" style="gap:6px;margin-bottom:12px;flex-wrap:wrap">'+
+        coolerItems.map(function(item){
+          var sel = (ui.coolerSelected || []).indexOf(item) >= 0;
+          return '<button class="chip sm '+(sel?'active':'')+'" type="button" data-a="cooler-toggle" data-v="'+esc(item)+'" style="'+(sel?'background:var(--brand);color:#fff;border-color:var(--brand)':'')+'">'+(sel?'✓ ':'')+esc(item)+'</button>';
+        }).join('')+
+      '</div>'+
+      (coolerSelectedCount > 0 ? 
+        '<div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px">'+
+          '<div style="font-size:13px;font-weight:900;color:var(--brand);margin-bottom:8px">🍳 선택한 재료로 바로 만들 수 있는 요리 ('+matchedCoolerDishes.length+'개)</div>'+
+          (matchedCoolerDishes.length ? 
+            '<div style="display:grid;gap:6px">'+
+              matchedCoolerDishes.map(function(dish){
+                return '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--chip);border-radius:10px;padding:8px 12px">'+
+                  '<div>'+
+                    '<b style="font-size:13.5px">🥘 '+esc(dish.name)+'</b>'+
+                    '<small style="display:block;color:var(--muted);font-size:11px">'+esc(dish.desc)+' · ⏱️ '+dish.time+'</small>'+
+                  '</div>'+
+                  '<button class="btn primary sm" type="button" data-a="dish-pick-direct" data-dish="'+esc(dish.name)+'" style="font-size:12px;padding:4px 10px;white-space:nowrap">준비물 만들기</button>'+
+                '</div>';
+              }).join('')+
+            '</div>' : '<p style="font-size:12.5px;color:var(--muted);margin:0">선택한 재료 조합에 맞는 추천 요리가 준비되어 있습니다.</p>')+
+          '<button class="btn pop sm wide" type="button" data-a="cooler-ai-rec" style="margin-top:10px;font-weight:900;justify-content:center">'+
+            '✨ 이 재료들('+ui.coolerSelected.join(', ')+')로 AI 맞춤 요리 추천받기'+
+          '</button>'+
+        '</div>' : '')+
+    '</section>';
+
     h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
     peopleAndGearFields(false)+
     '</section>'+
@@ -2251,10 +4499,17 @@ details li{margin-bottom:8px}
     return lines.join('\n').trim();
   }
 
+  var noticeTimer = null;
   function showNotice(msg){
+    if(noticeTimer) clearTimeout(noticeTimer);
     ui.notice=msg;
     render();
-    setTimeout(function(){if(ui.notice===msg){ui.notice='';render()}},2800);
+    noticeTimer = setTimeout(function(){
+      if(ui.notice===msg){
+        ui.notice='';
+        render();
+      }
+    }, 2800);
   }
 
   async function copyChecklist(onlyUnchecked){
@@ -2354,6 +4609,26 @@ details li{margin-bottom:8px}
     '<div style="margin-top:12px;font-size:14px;color:var(--hero-fg);opacity:.9"><span id="total-budget-line">💰 총 예산: '+formatCurrency(calculateTotalBudget())+'</span>'+
     (getPrepItems().length>0?'<span style="margin-left:12px">📋 집에서 미리 손질: '+getPrepItems().length+'개</span>':'')+'</div></section>';
 
+    h+='<section class="card" style="margin-top:12px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+        '<div>'+
+          '<b style="font-size:14px;color:var(--brand)">👥 인원수 맞춤 실시간 분량 조절</b>'+
+          '<span style="display:block;font-size:12px;color:var(--muted)">인원에 맞춰 식재료 g/개수와 양념 스푼이 실시간 자동 계산돼요</span>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:6px">'+
+          '<button class="btn sm" type="button" data-a="scale-people" data-v="dec" style="min-width:34px;font-weight:900" title="1명 줄이기">-</button>'+
+          '<span class="chip" style="font-weight:900;font-size:14px;min-width:44px;text-align:center;background:var(--brand);color:#fff">'+list.people+'인분</span>'+
+          '<button class="btn sm" type="button" data-a="scale-people" data-v="inc" style="min-width:34px;font-weight:900" title="1명 늘리기">+</button>'+
+          '<div style="display:flex;gap:4px;margin-left:4px">'+
+            '<button class="chip sm '+(list.people===1?'active':'')+'" type="button" data-a="scale-people-to" data-v="1">1인</button>'+
+            '<button class="chip sm '+(list.people===2?'active':'')+'" type="button" data-a="scale-people-to" data-v="2">2인</button>'+
+            '<button class="chip sm '+(list.people===4?'active':'')+'" type="button" data-a="scale-people-to" data-v="4">4인</button>'+
+            '<button class="chip sm '+(list.people===6?'active':'')+'" type="button" data-a="scale-people-to" data-v="6">6인</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</section>';
+
     h+=wxStrip();
     if(ui.cookMode){
       h+=cookModeCard();
@@ -2381,9 +4656,12 @@ details li{margin-bottom:8px}
           return '<button class="chip sm" type="button" data-a="filter" data-v="'+f.k+'" aria-pressed="'+(ui.filter===f.k)+'">'+esc(f.label)+'</button>';
         }).join('')+
       '</div>'+
-      '<div class="row2">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'+
         '<button class="btn primary" type="button" data-a="copylist">전체 텍스트 복사</button>'+
         '<button class="btn" type="button" data-a="copyunchecked">안 챙긴 것만 복사</button>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+
+        '<button class="btn pop" type="button" data-a="copy-checklist" style="font-weight:900">💬 카톡 장보기 복사</button>'+
         '<button class="btn" type="button" data-a="sharelist">공유하기</button>'+
       '</div>'+
       '<p class="hint" style="margin:10px 0 0">다른 메뉴를 더 추가하려면 <button class="link" type="button" data-a="tab" data-v="rec">추천 탭에서 [＋합산]</button>을 눌러 주세요.</p>'+
@@ -2475,6 +4753,42 @@ details li{margin-bottom:8px}
       '<p class="hint" style="margin:12px 0 0">고른 캠핑지의 날씨는 메뉴 추천과 준비물 팁에 함께 전달돼요. 날씨: Open-Meteo · 캠핑장 위치: 한국관광공사 고캠핑 정보(2024-09).</p>'+
     '</section>';
 
+    h+='<section class="card" style="border:1.5px solid var(--brand);background:linear-gradient(180deg,var(--surface) 0%,rgba(18,73,58,.04) 100%)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<h2 style="margin:0">🌿 나만의 비밀의 정원 (노지&amp;캠장)</h2>'+
+      '</div>'+
+      '<p class="hint" style="margin:0 0 12px">나만 알고 싶은 숨은 노지, 오지 차박지, 비밀 캠핑장을 등록하고 시설별로 관리하세요. 비밀번호 입력을 통해 등록된 비밀 스팟을 안전하게 열람하고 관리할 수 있습니다.</p>'+
+      '<div class="row2">'+
+        '<button class="btn primary" type="button" data-a="tab" data-v="garden" style="width:100%">🌿 비밀의 정원 바로가기</button>'+
+      '</div>'+
+    '</section>';
+
+    h+='<section class="card" style="border-left:4px solid var(--brand)">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<h2>🛡️ 캠핑 안전 수칙 &amp; 비상 연락처</h2>'+
+        '<button class="chip sm" type="button" data-a="toggle-safety-guide">'+(ui.safetyGuideOpen?'접기 ▲':'열기 ▼')+'</button>'+
+      '</div>'+
+      (ui.safetyGuideOpen ? 
+        '<div style="margin-top:12px;font-size:13px;line-height:1.6">'+
+          '<div style="background:var(--chip);padding:10px 12px;border-radius:10px;margin-bottom:8px">'+
+            '🔥 <b>화기 &amp; 일산화탄소 안전:</b><br>'+
+            '• 텐트 내부에서는 숯, 번개탄, 화로대 사용 절대 금지<br>'+
+            '• 등유/팬히터 사용 시 천장 환기창(벤틸레이션) 최소 2곳 개방 및 일산화탄소 경보기 2개 작동 필수'+
+          '</div>'+
+          '<div style="background:var(--chip);padding:10px 12px;border-radius:10px;margin-bottom:8px">'+
+            '🌪️ <b>강풍 &amp; 집중호우 안전:</b><br>'+
+            '• 풍속 8m/s 이상 시 타프 스트링 보강, 10m/s 이상 시 타프 철수<br>'+
+            '• 계곡 수변 야영지는 야간 급류 위험 시 즉시 고지대로 대피'+
+          '</div>'+
+          '<div style="background:var(--chip);padding:10px 12px;border-radius:10px">'+
+            '📞 <b>긴급 비상 연락처:</b><br>'+
+            '• 응급/구조: <b>119</b> · 경찰: <b>112</b><br>'+
+            '• 산불신고: <b>1688-3119</b> · 국립공원 재난안전: <b>033-769-9300</b>'+
+          '</div>'+
+        '</div>' : 
+        '<p class="hint" style="margin:4px 0 0">일산화탄소, 강풍/호우 대피 요령, 긴급 전화번호를 확인하세요.</p>')+
+    '</section>';
+
     h+='<section class="card"><h2>데이터 백업 · 복원</h2>'+
       '<div class="row2">'+
         '<button class="btn" type="button" data-a="exportdata">백업 파일 저장</button>'+
@@ -2485,19 +4799,294 @@ details li{margin-bottom:8px}
     return h;
   }
 
+  function lightboxModalHtml(){
+    if(!ui.lightbox || !ui.lightbox.url) return '';
+    return '<div class="modal-dim" data-a="close-lightbox" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">'+
+      '<div style="max-width:92vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;position:relative" onclick="event.stopPropagation()">'+
+        '<button type="button" data-a="close-lightbox" style="position:absolute;top:-44px;right:0;color:#ffffff;background:rgba(255,255,255,0.2);border:0;border-radius:50%;width:36px;height:36px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer">✕</button>'+
+        '<img src="'+esc(ui.lightbox.url)+'" alt="'+esc(ui.lightbox.title||'사진')+'" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:14px;box-shadow:0 12px 36px rgba(0,0,0,0.6)">'+
+        (ui.lightbox.title ? '<div style="margin-top:12px;color:#ffffff;font-size:15px;font-weight:700;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.8)">'+esc(ui.lightbox.title)+'</div>' : '')+
+      '</div>'+
+    '</div>';
+  }
+
   function render(){
     document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-current',b.getAttribute('data-v')===ui.tab?'page':'false')});
-    document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='camp'?campView():(ui.tab==='list'?listView():meView())))+campDetailModalHtml();
+    document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='plan'?planView():(ui.tab==='camp'?campView():(ui.tab==='garden'?gardenView():(ui.tab==='list'?listView():meView())))))+campDetailModalHtml()+planSwapModalHtml()+gardenModalsHtml()+lightboxModalHtml();
     if(ui.wxOpen)updateSuggest();
+    if(ui.tab==='garden'){
+      setTimeout(initOrUpdateGardenMap, 60);
+    }
   }
 
   function clampPeople(n){return Math.max(1,Math.min(20,n))}
+
+  function copyToClipboard(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text);
+    }else{
+      var ta=document.createElement('textarea');
+      ta.value=text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+
+  function executeDeleteGarden(id, password){
+    fetch('/api/secret-gardens/' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ password: password })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success){
+        ui.gardenList = (ui.gardenList || []).filter(function(g){ return g.id !== id; });
+        if(ui.gardenDetailModal && ui.gardenDetailModal.id === id) ui.gardenDetailModal = null;
+        ui.gardenAuthModal = null;
+        showNotice('🗑️ 비밀 스팟이 삭제되었습니다.');
+        render();
+      } else {
+        alert(d.error || '삭제 실패: 비밀번호를 확인해주세요.');
+      }
+    })
+    .catch(function(err){
+      alert('삭제 처리 중 오류가 발생했습니다.');
+    });
+  }
+
+  function executeEditGarden(id, updatedFields, password){
+    fetch('/api/secret-gardens/' + encodeURIComponent(id), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(Object.assign({}, updatedFields, { password: password }))
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.success && d.garden){
+        var idx = (ui.gardenList || []).findIndex(function(g){ return g.id === id; });
+        if(idx >= 0) ui.gardenList[idx] = d.garden;
+        if(ui.gardenDetailModal && ui.gardenDetailModal.id === id) ui.gardenDetailModal = d.garden;
+        ui.gardenEditModal = null;
+        ui.gardenEditUploadedPhoto = '';
+        showNotice('🌿 스팟 정보가 성공적으로 수정되었습니다.');
+        render();
+      } else {
+        alert(d.error || '수정 실패: 비밀번호 또는 입력값을 확인해주세요.');
+      }
+    })
+    .catch(function(err){
+      alert('수정 처리 중 오류가 발생했습니다.');
+    });
+  }
 
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-a]');
     if(!b)return;
     var a=b.getAttribute('data-a'),v=b.getAttribute('data-v');
-    if(a==='tab'){ui.tab=v;ui.confirmClear=false;window.scrollTo(0,0);render();return}
+    if(a==='tab'){
+      ui.tab=v;
+      ui.confirmClear=false;
+      if(v==='garden'&&!ui.gardenLoaded)loadSecretGardens(false);
+      window.scrollTo(0,0);
+      render();
+      return;
+    }
+
+    // === 나만의 비밀의 정원 클릭 액션들 ===
+    if(a==='garden-reg-open'){ui.gardenRegModal=true;render();return}
+    if(a==='garden-reg-close'){ui.gardenRegModal=false;render();return}
+    if(a==='garden-set-cat'){ui.gardenCategory=v;render();return}
+    if(a==='garden-fac-toggle'){
+      var idx=ui.gardenSelectedFacilities.indexOf(v);
+      if(idx>=0)ui.gardenSelectedFacilities.splice(idx,1);
+      else ui.gardenSelectedFacilities.push(v);
+      render();return;
+    }
+    if(a==='garden-preset-pick'){
+      ui.gardenSelectedPhoto=v;
+      var cPhotoIn=document.getElementById('g-in-photo');
+      if(cPhotoIn)cPhotoIn.value='';
+      render();return;
+    }
+    if(a==='garden-gps-fill'){
+      if(!navigator.geolocation){
+        showNotice('브라우저가 위치 정보 Geolocation을 지원하지 않습니다.');
+        return;
+      }
+      showNotice('📍 현재 GPS 위치를 찾는 중입니다…');
+      navigator.geolocation.getCurrentPosition(function(pos){
+        var lat=pos.coords.latitude.toFixed(4);
+        var lng=pos.coords.longitude.toFixed(4);
+        var latIn=document.getElementById('g-in-lat');
+        var lngIn=document.getElementById('g-in-lng');
+        var addrIn=document.getElementById('g-in-addr');
+        if(latIn)latIn.value=lat;
+        if(lngIn)lngIn.value=lng;
+        if(addrIn&&!addrIn.value)addrIn.value='GPS 좌표 ('+lat+', '+lng+') 부근';
+        showNotice('📍 GPS 위치 좌표가 자동으로 입력되었습니다.');
+      },function(err){
+        showNotice('위치 정보를 가져오지 못했습니다: '+(err.message||'브라우저 권한 허용 필요'));
+      },{enableHighAccuracy:true,timeout:7000});
+      return;
+    }
+    if(a==='garden-detail-open'){
+      var sId=b.getAttribute('data-id');
+      var spot=(ui.gardenList||[]).find(function(g){return g.id===sId});
+      if(spot){
+        spot.views=(spot.views||0)+1;
+        ui.gardenDetailModal=spot;
+        render();
+      }
+      return;
+    }
+    if(a==='garden-detail-close'){ui.gardenDetailModal=null;render();return}
+    if(a==='garden-unlock-open'){
+      ui.gardenAuthModal={action:'unlock',spotId:b.getAttribute('data-id')};
+      render();return;
+    }
+    if(a==='garden-auth-close'){ui.gardenAuthModal=null;render();return}
+    if(a==='garden-edit-open'){
+      var edId=b.getAttribute('data-id');
+      var edSpot=(ui.gardenList||[]).find(function(g){return g.id===edId})||ui.gardenDetailModal;
+      if(!edSpot) return;
+      if(ui.gardenIsMaster){
+        ui.gardenEditModal = edSpot;
+        ui.gardenEditUploadedPhoto = '';
+        render();
+      } else {
+        ui.gardenAuthModal = { action: 'edit', spotId: edId };
+        render();
+      }
+      return;
+    }
+    if(a==='garden-edit-close'){
+      ui.gardenEditModal = null;
+      ui.gardenEditUploadedPhoto = '';
+      render();
+      return;
+    }
+    if(a==='garden-filter'){ui.gardenFilter=v;render();return}
+    if(a==='garden-fac-filter'){ui.gardenFacFilter=(ui.gardenFacFilter===v?'':v);render();return}
+    if(a==='garden-filter-reset'){ui.gardenFilter='all';ui.gardenSearch='';ui.gardenFacFilter='';render();return}
+    if(a==='garden-search-clear'){ui.gardenSearch='';render();return}
+    if(a==='garden-sort'){ui.gardenSort=v;render();return}
+    if(a==='open-lightbox'){
+      ui.lightbox={url:b.getAttribute('data-img'),title:b.getAttribute('data-title')};
+      render();return;
+    }
+    if(a==='close-lightbox'){
+      ui.lightbox=null;
+      render();return;
+    }
+    if(a==='garden-refresh'){loadSecretGardens(true);showNotice('비밀의 정원 목록을 새로고침했습니다.');return}
+    if(a==='garden-like'){
+      var lId=b.getAttribute('data-id');
+      fetch('/api/secret-gardens/'+encodeURIComponent(lId)+'/like',{method:'POST'})
+        .then(function(r){return r.json()})
+        .then(function(d){
+          if(d.success){
+            var target=(ui.gardenList||[]).find(function(g){return g.id===lId});
+            if(target)target.likes=d.likes;
+            if(ui.gardenDetailModal&&ui.gardenDetailModal.id===lId)ui.gardenDetailModal.likes=d.likes;
+            showNotice('❤️ 이 비밀 정원을 추천했습니다!');
+            render();
+          }
+        });
+      return;
+    }
+    if(a==='garden-copy-addr'){
+      copyToClipboard(v||'');
+      showNotice('📋 주소가 클립보드에 복사되었습니다.');
+      return;
+    }
+    if(a==='garden-share'){
+      var shId=b.getAttribute('data-id');
+      var shSpot=(ui.gardenList||[]).find(function(g){return g.id===shId})||ui.gardenDetailModal;
+      if(shSpot){
+        var txt='[🌿 나만의 비밀의 정원]\n🏕️ 스팟명: '+shSpot.name+'\n📍 위치: '+shSpot.address+'\n🚗 진입안내: '+(shSpot.addressDetail||'없음')+'\n⛺ 구비시설: '+(shSpot.facilities||[]).join(', ')+'\n🌾 바닥: '+(shSpot.groundType||'자갈')+' / 🚻 화장실: '+(shSpot.toiletStatus||'정보없음')+' / 💰 요금: '+(shSpot.fee||'무료')+'\n💡 꿀팁: '+(shSpot.tips||'없음');
+        copyToClipboard(txt);
+        showNotice('📤 카카오톡 공유용 텍스트가 복사되었습니다!');
+      }
+      return;
+    }
+    if(a==='garden-delete-open'){
+      var delId=b.getAttribute('data-id');
+      if(ui.gardenIsMaster){
+        if(confirm('이 비밀 스팟을 삭제하시겠습니까?')){
+          executeDeleteGarden(delId, ui.gardenMasterKey || 'auth');
+        }
+      }else{
+        ui.gardenAuthModal={action:'delete',spotId:delId};
+        render();
+      }
+      return;
+    }
+    if(a==='garden-remove-photo'){
+      ui.gardenUploadedPhoto = '';
+      render();
+      showNotice('선택한 사진이 제거되었습니다.');
+      return;
+    }
+    if(a==='garden-map-fit'){
+      if(gardenMapInstance && gardenMapMarkers && gardenMapMarkers.length){
+        try{
+          var group = L.featureGroup(gardenMapMarkers);
+          gardenMapInstance.fitBounds(group.getBounds().pad(0.14));
+          showNotice('🗺️ 모든 등록 스팟이 지도 화면에 맞춰졌습니다.');
+        }catch(e){}
+      }
+      return;
+    }
+    if(a==='garden-map-loc'){
+      if(!navigator.geolocation){
+        showNotice('브라우저가 위치 정보를 지원하지 않습니다.');
+        return;
+      }
+      showNotice('📍 현재 내 GPS 위치를 찾는 중입니다…');
+      navigator.geolocation.getCurrentPosition(function(pos){
+        var myLat = pos.coords.latitude;
+        var myLng = pos.coords.longitude;
+        if(gardenMapInstance){
+          gardenMapInstance.flyTo([myLat, myLng], 12, { duration: 1.0 });
+          var myIcon = L.divIcon({
+            className: 'garden-user-loc-marker',
+            html: '<div style="width:22px;height:22px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 6px rgba(37,99,235,.35), 0 3px 10px rgba(0,0,0,.35)"></div>',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+          });
+          var userMarker = L.marker([myLat, myLng], { icon: myIcon }).addTo(gardenMapInstance);
+          userMarker.bindPopup('<div style="font-weight:900;font-size:13px;padding:3px 2px">📍 현재 내 위치<br><span style="font-size:11px;font-weight:400;color:#555">주변의 비밀 노지 및 캠핑장을 탐색하세요!</span></div>').openPopup();
+          showNotice('📍 내 위치로 지도가 이동했습니다!');
+        }
+      }, function(err){
+        showNotice('위치 정보를 가져올 수 없습니다: ' + (err.message || '브라우저 권한 허용 필요'));
+      }, { enableHighAccuracy: true, timeout: 8000 });
+      return;
+    }
+    if(a==='garden-map-focus'){
+      var fId = b.getAttribute('data-id');
+      ui.gardenMapFocusId = fId;
+      var mapCard = document.getElementById('garden-map-card');
+      if(mapCard){
+        mapCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if(gardenMapInstance && gardenMapMarkers){
+        var targetMarker = gardenMapMarkers.find(function(m){ return m.spotId === fId; });
+        if(targetMarker){
+          setTimeout(function(){
+            if(gardenMapInstance){
+              gardenMapInstance.flyTo(targetMarker.getLatLng(), 14, { duration: 0.9 });
+              targetMarker.openPopup();
+            }
+          }, 350);
+        }
+      }
+      return;
+    }
+
     if(a==='style'||a==='meal'||a==='time'||a==='mood'){ui[a]=v;render();return}
     if(a==='filter'){ui.filter=v;render();return}
     if(a==='dec'){ui.people=clampPeople(ui.people-1);ui.recs=[];render();return}
@@ -2614,17 +5203,131 @@ details li{margin-bottom:8px}
       return;
     }
     if(a==='exportdata'){
-      var payload=JSON.stringify({profile:profile,list:list,recent:recent,logs:logs},null,2);
+      var payload=JSON.stringify({
+        profile:profile,
+        list:list,
+        recent:recent,
+        logs:logs,
+        favCamps:ui.favCamps||[],
+        gardenUnlockedIds:ui.gardenUnlockedIds||[],
+        exportedAt:new Date().toISOString()
+      },null,2);
       var blob=new Blob([payload],{type:'application/json'});
       var url=URL.createObjectURL(blob);
       var link=document.createElement('a');
       link.href=url;
-      link.download='camping-food-backup.json';
+      link.download='camping-helper-backup-'+new Date().toISOString().slice(0,10)+'.json';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      showNotice('백업 파일(camping-food-backup.json)을 저장했어요!');
+      showNotice('📦 내 정보, 장비, 찜, 일지, 잠금해제 데이터 백업을 완료했어요!');
+      return;
+    }
+    if(a==='scale-people'||a==='scale-people-to'){
+      if(!list)return;
+      var oldP = list.people || 2;
+      var newP = (a==='scale-people-to') ? Number(v) : (v==='inc' ? Math.min(20, oldP + 1) : Math.max(1, oldP - 1));
+      if(newP !== oldP && newP > 0){
+        var ratio = newP / oldP;
+        list.people = newP;
+        if(list.items && Array.isArray(list.items)){
+          list.items.forEach(function(it){
+            if(it.text){
+              it.text = it.text.replace(/(\d+(?:\.\d+)?)\s*(g|ml|kg|개|봉|줄|스푼|큰술|마리|캔|장)/gi, function(match, num, unit){
+                var val = parseFloat(num) * ratio;
+                var formatted = val >= 10 ? Math.round(val) : Math.round(val * 10) / 10;
+                return formatted + unit;
+              });
+            }
+          });
+        }
+        store.set('cc.list', list);
+        showNotice('👥 인원수를 ' + newP + '명으로 변경하여 식재료 분량을 실시간 재계산했어요.');
+        render();
+      }
+      return;
+    }
+    if(a==='copy-checklist'){
+      if(!list || !list.items) return;
+      var txt = '🏕️ [캠핑 장보기 & 준비물 체크리스트]\n';
+      txt += '🍳 메뉴: ' + list.dish + ' (' + list.people + '명 기준)\n\n';
+      var preps = list.items.filter(function(x){ return x.tag === 'prep'; });
+      var packs = list.items.filter(function(x){ return x.tag === 'pack'; });
+      var buys = list.items.filter(function(x){ return x.tag === 'buy'; });
+      var etc = list.items.filter(function(x){ return !x.tag || (x.tag!=='prep'&&x.tag!=='pack'&&x.tag!=='buy'); });
+      if(preps.length){
+        txt += '🔪 [집에서 미리 준비/손질할 것]\n';
+        preps.forEach(function(i){ txt += (i.checked ? '☑️ ' : '⬜ ') + i.text + '\n'; });
+        txt += '\n';
+      }
+      if(packs.length){
+        txt += '📦 [집에서 그대로 챙길 것]\n';
+        packs.forEach(function(i){ txt += (i.checked ? '☑️ ' : '⬜ ') + i.text + '\n'; });
+        txt += '\n';
+      }
+      if(buys.length){
+        txt += '🛒 [현장/마트에서 구매할 것]\n';
+        buys.forEach(function(i){ txt += (i.checked ? '☑️ ' : '⬜ ') + i.text + '\n'; });
+        txt += '\n';
+      }
+      if(etc.length){
+        txt += '🧂 [조리도구 및 기타]\n';
+        etc.forEach(function(i){ txt += (i.checked ? '☑️ ' : '⬜ ') + i.text + '\n'; });
+        txt += '\n';
+      }
+      txt += '— 캠핑음식 도우미에서 생성됨';
+      copyToClipboard(txt);
+      showNotice('📋 카카오톡 공유용 장보기 목록이 복사되었습니다!');
+      return;
+    }
+    if(a==='cooler-toggle'){
+      var cidx = (ui.coolerSelected || []).indexOf(v);
+      if(cidx >= 0) ui.coolerSelected.splice(cidx, 1);
+      else ui.coolerSelected.push(v);
+      render();
+      return;
+    }
+    if(a==='cooler-clear'){
+      ui.coolerSelected = [];
+      render();
+      return;
+    }
+    if(a==='cooler-ai-rec'){
+      if(!ui.coolerSelected || !ui.coolerSelected.length){
+        showNotice('남은 재료를 1개 이상 선택해주세요.');
+        return;
+      }
+      var ingsPrompt = ui.coolerSelected.join(', ');
+      pickDish({ name: ui.coolerSelected[0] + ' 쿨러 요리', minutes: 20, level: '보통', equipment: ['버너','코펠'], reason: '남은 재료('+ingsPrompt+')를 알뜰하게 활용한 요리' }, false);
+      return;
+    }
+    if(a==='dish-pick-direct'){
+      var dName = b.getAttribute('data-dish');
+      pickDish({ name: dName, minutes: 20, level: '보통', equipment: ['버너','코펠'], reason: '쿨러백 남은 재료 맞춤 요리' }, false);
+      return;
+    }
+    if(a==='camp-cooklog-go'){
+      var placeName = b.getAttribute('data-name') || '';
+      ui.tab = 'list';
+      ui.campDetail = null;
+      ui.gardenDetailModal = null;
+      window.scrollTo(0,0);
+      render();
+      setTimeout(function(){
+        var noteInput = document.getElementById('log-note');
+        if(noteInput){
+          noteInput.value = '[' + placeName + '] ';
+          noteInput.focus();
+          noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
+      showNotice('📝 「'+placeName+'」 캠핑 요리 일지를 작성해보세요!');
+      return;
+    }
+    if(a==='toggle-safety-guide'){
+      ui.safetyGuideOpen = !ui.safetyGuideOpen;
+      render();
       return;
     }
     if(a==='stop'){if(ctl)ctl.abort();return}
@@ -2640,6 +5343,8 @@ details li{margin-bottom:8px}
     if(a==='camp-fav-toggle'){ui.campOnlyFav=!ui.campOnlyFav;ui.campPage=1;render();return}
     if(a==='camp-fav'){
       var fn=b.getAttribute('data-name');
+      var sid=b.getAttribute('data-spot-id');
+      if(sid){ ui.gardenMapFocusId = sid; }
       var fi=ui.favCamps.indexOf(fn);
       if(fi>=0){ui.favCamps.splice(fi,1);showNotice('「'+fn+'」 찜을 취소했어요.')}
       else{ui.favCamps.push(fn);showNotice('❤️ 「'+fn+'」을 찜한 캠핑장에 저장했어요!')}
@@ -2674,6 +5379,80 @@ details li{margin-bottom:8px}
       var dDish=b.getAttribute('data-dish');
       ui.campDetail=null;ui.campDetailWx=null;
       pickDish({name:dDish,minutes:25,level:'보통',equipment:profile.gear,reason:'선택한 캠핑지의 날씨 맞춤 추천 요리'},false);
+      return;
+    }
+    if(a==='plan-period'){
+      ui.planDays=Number(v)||3;
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.planDays',ui.planDays);
+      store.set('cc.mealPlan',ui.mealPlan);
+      render();return;
+    }
+    if(a==='plan-people-dec'){
+      ui.planPeople=clampPeople(ui.planPeople-1);
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.mealPlan',ui.mealPlan);
+      render();return;
+    }
+    if(a==='plan-people-inc'){
+      ui.planPeople=clampPeople(ui.planPeople+1);
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.mealPlan',ui.mealPlan);
+      render();return;
+    }
+    if(a==='plan-people-set'){
+      ui.planPeople=clampPeople(Number(v)||2);
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.mealPlan',ui.mealPlan);
+      render();return;
+    }
+    if(a==='plan-theme'){
+      ui.planTheme=v;
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.planTheme',v);
+      store.set('cc.mealPlan',ui.mealPlan);
+      render();return;
+    }
+    if(a==='plan-snack-toggle'){
+      ui.planSnack=!ui.planSnack;
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack,profile.avoid,profile.gear);
+      store.set('cc.planSnack',ui.planSnack);
+      store.set('cc.mealPlan',ui.mealPlan);
+      render();return;
+    }
+    if(a==='plan-generate'){
+      ui.mealPlan=buildMultiDayPlan(ui.planDays,ui.planPeople,ui.planTheme,ui.planSnack!==false,profile.avoid,profile.gear);
+      store.set('cc.mealPlan',ui.mealPlan);
+      showNotice('✨ '+ui.mealPlan.label+' 맞춤 식단과 전체 식재료·장비가 새롭게 자동 취합되었어요!');
+      render();return;
+    }
+    if(a==='plan-swap-quick'){
+      var dIdx=Number(b.getAttribute('data-day')), mIdx=Number(b.getAttribute('data-meal'));
+      swapMealQuick(dIdx,mIdx);return;
+    }
+    if(a==='plan-swap-open'){
+      var dIdx=Number(b.getAttribute('data-day')), mIdx=Number(b.getAttribute('data-meal'));
+      ui.planSwapTarget={dayIdx:dIdx,mealIdx:mIdx};
+      render();return;
+    }
+    if(a==='plan-swap-select'){
+      var dishName=b.getAttribute('data-dish');
+      selectSwapDish(dishName);return;
+    }
+    if(a==='plan-swap-close'){
+      ui.planSwapTarget=null;
+      render();return;
+    }
+    if(a==='plan-filter'){
+      ui.planFilter=v;
+      render();return;
+    }
+    if(a==='plan-export'){
+      if(ui.mealPlan)exportPlanToList(ui.mealPlan,aggregatePlan(ui.mealPlan));
+      return;
+    }
+    if(a==='plan-copy'){
+      if(ui.mealPlan)copyPlanText(ui.mealPlan,aggregatePlan(ui.mealPlan));
       return;
     }
     if(a==='wx-refresh'){if(ui.wxLoc)loadWeather();else if(profile.camp){ui.wxLoc=profile.camp;loadWeather();}else showNotice('먼저 캠핑지를 골라 주세요.');return}
@@ -2796,12 +5575,30 @@ details li{margin-bottom:8px}
           if(parsed.list!==undefined){list=parsed.list;store.set('cc.list',list)}
           if(Array.isArray(parsed.recent)){recent=parsed.recent;store.set('cc.recent',recent)}
           if(Array.isArray(parsed.logs)){logs=parsed.logs;store.set('cc.logs',logs)}
-          showNotice('백업 데이터를 성공적으로 복원했어요!');
+          if(Array.isArray(parsed.favCamps)){ui.favCamps=parsed.favCamps;store.set('cc.favCamps',ui.favCamps)}
+          if(Array.isArray(parsed.gardenUnlockedIds)){ui.gardenUnlockedIds=parsed.gardenUnlockedIds;store.set('cc.gardenUnlocked',ui.gardenUnlockedIds)}
+          showNotice('🎉 백업 데이터를 성공적으로 복원했습니다!');
+          render();
         }catch(err){
           showNotice('올바른 백업 파일이 아니에요.');
         }
       };
       reader.readAsText(file);
+      return;
+    }
+
+    if(e.target && (e.target.id === 'g-file-upload' || e.target.id === 'g-camera-upload')){
+      var gFile = e.target.files && e.target.files[0];
+      if(gFile){
+        handleGardenPhotoUpload(gFile, false);
+      }
+    }
+
+    if(e.target && (e.target.id === 'ge-file-upload' || e.target.id === 'ge-camera-upload')){
+      var geFile = e.target.files && e.target.files[0];
+      if(geFile){
+        handleGardenPhotoUpload(geFile, true);
+      }
     }
   });
 
@@ -2828,12 +5625,224 @@ details li{margin-bottom:8px}
       showNotice('캠핑 요리 일지에 저장했어요! (내 정보 탭에서 확인 가능)');
       return;
     }
+
+    // === 나만의 비밀의 정원 폼 서브밋 핸들러 ===
+    if(kind==='garden-register'){
+      var nameIn = document.getElementById('g-in-name');
+      var addrIn = document.getElementById('g-in-addr');
+      var authorIn = document.getElementById('g-in-author');
+      var pwdIn = document.getElementById('g-in-pwd');
+      if(!nameIn || !nameIn.value.trim()){ alert('스팟 이름을 입력해주세요.'); return; }
+      if(!addrIn || !addrIn.value.trim()){ alert('주소 및 위치를 입력해주세요.'); return; }
+      if(!authorIn || !authorIn.value.trim()){ alert('작성자 닉네임을 입력해주세요.'); return; }
+      if(!pwdIn || !pwdIn.value.trim()){ alert('비밀번호를 입력해주세요.'); return; }
+
+      var photoCustom = document.getElementById('g-in-photo') ? document.getElementById('g-in-photo').value.trim() : '';
+      var photoFinal = ui.gardenUploadedPhoto || photoCustom || ui.gardenSelectedPhoto || GARDEN_PHOTO_PRESETS[0].url;
+
+      var newSpotData = {
+        name: nameIn.value.trim(),
+        category: ui.gardenCategory || 'noji',
+        address: addrIn.value.trim(),
+        addressDetail: document.getElementById('g-in-detail') ? document.getElementById('g-in-detail').value.trim() : '',
+        lat: document.getElementById('g-in-lat') ? Number(document.getElementById('g-in-lat').value) || null : null,
+        lng: document.getElementById('g-in-lng') ? Number(document.getElementById('g-in-lng').value) || null : null,
+        navQuery: document.getElementById('g-in-nav') ? document.getElementById('g-in-nav').value.trim() : '',
+        facilities: ui.gardenSelectedFacilities || [],
+        groundType: document.getElementById('g-in-ground') ? document.getElementById('g-in-ground').value : '자갈/모래',
+        fee: document.getElementById('g-in-fee') ? document.getElementById('g-in-fee').value.trim() : '무료',
+        toiletStatus: document.getElementById('g-in-toilet') ? document.getElementById('g-in-toilet').value.trim() : '정보 없음',
+        entryRoad: document.getElementById('g-in-road') ? document.getElementById('g-in-road').value.trim() : '일반 승용차 진입 가능',
+        photoUrl: photoFinal,
+        tips: document.getElementById('g-in-tips') ? document.getElementById('g-in-tips').value.trim() : '',
+        author: authorIn.value.trim(),
+        password: pwdIn.value.trim(),
+        isPrivate: document.getElementById('g-in-isprivate') ? document.getElementById('g-in-isprivate').checked : true
+      };
+
+      fetch('/api/secret-gardens', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(newSpotData)
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.success && d.garden){
+          ui.gardenRegModal = false;
+          ui.gardenUploadedPhoto = '';
+          ui.gardenCustomPhoto = '';
+          ui.gardenList = ui.gardenList || [];
+          ui.gardenList.unshift(d.garden);
+          if(ui.gardenUnlockedIds.indexOf(d.garden.id) < 0) ui.gardenUnlockedIds.push(d.garden.id);
+          store.set('cc.gardenUnlocked', ui.gardenUnlockedIds);
+          showNotice('🌿 새로운 비밀의 정원이 등록되었습니다!');
+          render();
+        } else {
+          alert(d.error || '등록 중 오류가 발생했습니다.');
+        }
+      })
+      .catch(function(e){
+        alert('서버 등록에 실패했습니다.');
+      });
+      return;
+    }
+
+    if(kind==='garden-unlock'){
+      var sId = f.getAttribute('data-id');
+      var unlockPwdIn = document.getElementById('g-unlock-pwd');
+      var enteredPwd = unlockPwdIn ? unlockPwdIn.value.trim() : '';
+      if(!enteredPwd) return;
+
+      fetch('/api/secret-gardens/verify', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id: sId, password: enteredPwd })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.success && d.garden){
+          if(ui.gardenUnlockedIds.indexOf(sId) < 0) ui.gardenUnlockedIds.push(sId);
+          store.set('cc.gardenUnlocked', ui.gardenUnlockedIds);
+
+          var idx = (ui.gardenList || []).findIndex(function(g){ return g.id === sId; });
+          if(idx >= 0) ui.gardenList[idx] = d.garden;
+          ui.gardenDetailModal = d.garden;
+
+          if(d.authorized || d.isMaster){
+            ui.gardenIsMaster = true;
+            ui.gardenMasterKey = enteredPwd;
+            store.set('cc.gardenMasterKey', enteredPwd);
+            loadSecretGardens(true);
+            showNotice('🔓 상세 정보가 잠금 해제되었습니다!');
+          } else {
+            showNotice('🔓 상세 정보가 잠금 해제되었습니다!');
+            render();
+          }
+        } else {
+          alert(d.error || '비밀번호가 일치하지 않습니다.');
+        }
+      })
+      .catch(function(e){
+        alert('비밀번호 확인 중 오류가 발생했습니다.');
+      });
+      return;
+    }
+
+    if(kind==='garden-auth-submit'){
+      if(!ui.gardenAuthModal) return;
+      var authAction = ui.gardenAuthModal.action;
+      var spotId = ui.gardenAuthModal.spotId;
+      var authPwdIn = document.getElementById('g-auth-pwd-input');
+      var authPwd = authPwdIn ? authPwdIn.value.trim() : '';
+
+      if(authAction === 'delete'){
+        executeDeleteGarden(spotId, authPwd);
+      } else {
+        fetch('/api/secret-gardens/verify', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ id: spotId, password: authPwd })
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d.success && d.garden){
+            ui.gardenAuthModal = null;
+            if(ui.gardenUnlockedIds.indexOf(spotId) < 0) ui.gardenUnlockedIds.push(spotId);
+            store.set('cc.gardenUnlocked', ui.gardenUnlockedIds);
+            var idx = (ui.gardenList || []).findIndex(function(g){ return g.id === spotId; });
+            if(idx >= 0) ui.gardenList[idx] = d.garden;
+            ui.gardenDetailModal = d.garden;
+
+            if(d.authorized || d.isMaster){
+              ui.gardenIsMaster = true;
+              ui.gardenMasterKey = authPwd;
+              store.set('cc.gardenMasterKey', authPwd);
+              loadSecretGardens(true);
+            }
+
+            if(authAction === 'edit'){
+              ui.gardenEditModal = d.garden;
+              ui.gardenEditUploadedPhoto = '';
+              render();
+            } else {
+              showNotice('🔓 비밀의 정원이 잠금 해제되었습니다!');
+              render();
+            }
+          } else {
+            alert(d.error || '비밀번호가 일치하지 않습니다.');
+          }
+        })
+        .catch(function(e){
+          alert('비밀번호 확인 중 오류가 발생했습니다.');
+        });
+      }
+      return;
+    }
+
+    if(kind==='garden-edit-save'){
+      var editId = f.getAttribute('data-id');
+      var editSpot = (ui.gardenList || []).find(function(g){ return g.id === editId; }) || ui.gardenEditModal;
+      if(!editSpot) return;
+
+      var edNameIn = document.getElementById('ge-name');
+      var edCatIn = document.getElementById('ge-cat');
+      var edAddrIn = document.getElementById('ge-addr');
+      var edDetailIn = document.getElementById('ge-detail');
+      var edGroundIn = document.getElementById('ge-ground');
+      var edToiletIn = document.getElementById('ge-toilet');
+      var edRoadIn = document.getElementById('ge-road');
+      var edFeeIn = document.getElementById('ge-fee');
+      var edTipsIn = document.getElementById('ge-tips');
+      var edIsPrivIn = document.getElementById('ge-isprivate');
+      var edNewPwdIn = document.getElementById('ge-newpwd');
+
+      if(!edNameIn || !edNameIn.value.trim()){ alert('스팟 이름을 입력해주세요.'); return; }
+
+      var selectedFacs = [];
+      document.querySelectorAll('input[name="ge-facilities"]:checked').forEach(function(ck){
+        selectedFacs.push(ck.value);
+      });
+
+      var updatedFields = {
+        name: edNameIn.value.trim(),
+        category: edCatIn ? edCatIn.value : editSpot.category,
+        address: edAddrIn ? edAddrIn.value.trim() : editSpot.address,
+        addressDetail: edDetailIn ? edDetailIn.value.trim() : editSpot.addressDetail,
+        facilities: selectedFacs,
+        groundType: edGroundIn ? edGroundIn.value : editSpot.groundType,
+        toiletStatus: edToiletIn ? edToiletIn.value : editSpot.toiletStatus,
+        entryRoad: edRoadIn ? edRoadIn.value : editSpot.entryRoad,
+        fee: edFeeIn ? edFeeIn.value.trim() : editSpot.fee,
+        tips: edTipsIn ? edTipsIn.value.trim() : editSpot.tips,
+        isPrivate: edIsPrivIn ? edIsPrivIn.checked : editSpot.isPrivate
+      };
+
+      if(ui.gardenEditUploadedPhoto){
+        updatedFields.photoUrl = ui.gardenEditUploadedPhoto;
+      }
+      if(edNewPwdIn && edNewPwdIn.value.trim()){
+        updatedFields.newPassword = edNewPwdIn.value.trim();
+      }
+
+      var authKey = ui.gardenMasterKey || editSpot.password || '';
+      executeEditGarden(editId, updatedFields, authKey);
+      return;
+    }
+
     if(!val)return;
+    if(kind==='plan-custom'){selectSwapDish(val);return}
     if(kind==='modify'){ui.modText=val;modifyChecklist(val);return}
     if(kind==='dish'){ui.dishText=val;pickDish({name:val,minutes:0,level:'',equipment:[],reason:'직접 고른 요리'},false);return}
     if(kind==='gear'){if(profile.gear.indexOf(val)<0)profile.gear.push(val)}
     if(kind==='avoid'){if(profile.avoid.indexOf(val)<0)profile.avoid.push(val)}
     saveProfile();render();
+  });
+
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id === 'garden-search-input'){
+      ui.gardenSearch = e.target.value;
+      render();
+    }
   });
 
   render();
@@ -2880,6 +5889,7 @@ details li{margin-bottom:8px}
       render();
       if(ui.myLoc)loadOsmNearby();
     }
+    loadSecretGardens(false);
   })();
 })();
 </script>
