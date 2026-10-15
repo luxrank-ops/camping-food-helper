@@ -6,6 +6,22 @@
 - `캠핑음식앱_기획안.md`: 개인용 앱 기획안 (v0.4)
 - `camp-kitchen.html` / `index.html`: 1단계 웹앱 (인원·장비 입력 → 맞춤 메뉴 추천 → 준비물 체크리스트, 요리 직접 지정)
 
+## UI 디자인 쇼케이스 (2026-10-16 추가)
+
+화면 구성을 보여 주는 디자인 이미지입니다. 원본 6종은 `design/` 폴더에 있습니다(`ui-ux-showcase.png`는 영문 컨셉 원본).
+
+**기능 흐름 시리즈** — 추천 → 캠핑지 날씨 → 준비물
+
+| 추천 | 캠핑지 찾기 · 날씨 | 준비물 · 조리 |
+|---|---|---|
+| <img src="design/series-1-menu-budae.png" alt="추천 화면: 비 날씨 맞춤 추천 부대찌개" width="250"> | <img src="design/series-2-campsite-weather.png" alt="캠핑지 찾기 · 날씨 화면" width="250"> | <img src="design/series-3-prep-checklist.png" alt="준비물 · 조리 화면" width="250"> |
+
+**추천 화면 레시피 변형**
+
+| 김치참치찌개 · 비 날씨 | 옥수수버터구이 · 맑은 날씨 |
+|---|---|
+| <img src="design/ui-ux-showcase-ko.png" alt="추천 화면: 김치참치찌개" width="250"> | <img src="design/menu-variant-corn.png" alt="추천 화면: 옥수수버터구이" width="250"> |
+
 ## 캠핑지 날씨 · 인근 캠핑장 찾기 (2026-10-13 추가)
 
 추천 탭의 **[캠핑지 찾기]** 카드에서 씁니다.
