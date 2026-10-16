@@ -2495,14 +2495,14 @@ details li{margin-bottom:8px}
   function locCard(){
     var picked=profile.camp||ui.wxLoc;
     var h='<section class="card loc-card" id="loc-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(ui.locCardOpen?'8':'0')+'px">'+
-      '<h2 style="margin:0">캠핑지 찾기</h2>'+
+      '<button type="button" data-a="loc-card-toggle" style="margin:0;padding:0;border:none;background:none;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px" aria-expanded="'+(ui.locCardOpen?'true':'false')+'"><h2 style="margin:0">캠핑지 찾기</h2><span style="font-size:11px;opacity:.7">'+(ui.locCardOpen?'▲':'▼')+'</span></button>'+
       '<span style="display:flex;gap:10px;align-items:center">'+
         '<button class="link" type="button" data-a="tab" data-v="camp" style="font-size:13px">전국 4,000+ 탐색 →</button>'+
         '<button class="chip sm" type="button" data-a="loc-card-toggle" style="font-size:11px">'+(ui.locCardOpen?'접기 ▲':'열기 ▼')+'</button>'+
       '</span>'+
       '</div>';
     if(!ui.locCardOpen){
-      h+='<p class="hint" style="margin:8px 0 0">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</p>';
+      h+='<p class="hint" style="margin:8px 0 0"><button type="button" data-a="loc-card-toggle" style="padding:0;border:none;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</button></p>';
       // 접혀 있어도 '지금 날씨를 직접 고르기'는 바로 쓸 수 있게 남겨 둔다(네트워크 없이도 동작).
       if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
       return h+'</section>';
