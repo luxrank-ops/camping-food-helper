@@ -207,6 +207,25 @@ details li{margin-bottom:8px}
 .picked small{color:var(--muted);font-size:12px}
 .picked b{font-weight:900}
 
+/* 캠핑지를 고르면 나오는 소개 카드 */
+.intro-card{border:1.5px solid var(--brand);background:linear-gradient(180deg,var(--surface) 0%,rgba(244,115,90,.06) 100%)}
+.intro-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.intro-head>div{min-width:0}
+.intro-title{font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.25;margin:2px 0 4px;overflow-wrap:anywhere}
+.intro-badge{font-size:11px;font-weight:900;border-radius:999px;padding:4px 10px;background:var(--chip);color:var(--muted);white-space:nowrap;flex:none}
+.intro-badge.ai{background:var(--pop);color:var(--pop-fg)}
+.intro-sum{background:var(--bg);border-radius:16px;padding:12px 14px;margin:12px 0 0;font-size:14px;line-height:1.55}
+.intro-sub{font-size:13px;font-weight:900;color:var(--brand);margin:16px 0 6px}
+.intro-list{margin:0;padding-left:18px;font-size:13.5px;line-height:1.55}
+.intro-list li{margin-bottom:5px}
+.intro-grid{display:grid;gap:8px;margin-top:14px}
+.intro-box{background:var(--chip);border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.5}
+.intro-box>b{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:var(--fg);margin-bottom:6px}
+.intro-box .intro-list{padding-left:16px;font-size:13px}
+.intro-chips{display:flex;flex-wrap:wrap;gap:6px}
+.intro-chips .camp-tag{background:var(--surface)}
+@media (max-width:420px){.intro-head{flex-wrap:wrap}.intro-title{font-size:21px}}
+
 /* 캠핑지 날씨 */
 .wx-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .wx-tags{display:flex;gap:6px;flex-wrap:wrap}
@@ -757,6 +776,7 @@ details li{margin-bottom:8px}
     wxQ:'',wxSug:[],wxPick:[],wxOpen:false,wxIdx:-1,wxBusy:false,wx:null,wxKey:'',wxLoc:null,
     wxErr:'',wxStale:false,myLoc:null,locBusy:false,osmCamps:[],osmBusy:false,osmErr:false,places:[],placesQ:'',notice:'',
     favCamps:store.get('cc.favCamps',[]),campSearch:'',campSido:'전체',campSg:'전체',campKind:'전체',campTheme:'전체',campSort:'dist',campOnlyFav:false,campPage:1,campDetail:null,campDetailWx:null,campDetailWxBusy:false,
+    campIntro:store.get('cc.campIntro',{})||{},introBusyName:'',introErrName:'',introErrMsg:'',
     planDays:store.get('cc.planDays',3),planPeople:profile.people||2,planTheme:store.get('cc.planTheme','all'),planSnack:store.get('cc.planSnack',true),planFilter:'all',mealPlan:store.get('cc.mealPlan',null),planSwapTarget:null,planBusy:false,
     gardenList:[],gardenLoaded:false,gardenBusy:false,gardenErr:'',gardenFilter:'all',gardenSearch:'',gardenFacFilter:'',gardenSort:'newest',
     gardenMasterKey:store.get('cc.gardenMasterKey',''),gardenIsMaster:!!store.get('cc.gardenMasterKey',''),
@@ -906,6 +926,7 @@ details li{margin-bottom:8px}
     '- 끼니: '+ui.meal+'\n'+
     '- 조리 시간: '+ui.time+'\n'+
     '- 계절: '+season+'\n'+
+    campPromptBlock()+
     wxPromptBlock()+
     '- 원하는 분위기: '+ui.mood+'\n'+
     '- 가진 조리 장비: '+gearText()+'\n'+
@@ -929,6 +950,7 @@ details li{margin-bottom:8px}
     '인원: '+ui.people+'명\n'+
     '캠핑 스타일: '+ui.style+'\n'+
     '계절: '+season+'\n'+
+    campPromptBlock()+
     wxPromptBlock()+
     '가진 조리 장비: '+gearText()+'\n'+
     '못 먹는 재료 (재료와 대체 재료 어디에도 넣지 말 것): '+avoidText()+'\n\n'+
@@ -1726,6 +1748,8 @@ details li{margin-bottom:8px}
       ui.wxLoc=loc;
       profile.camp={name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon,src:'gps'};
       saveProfile();
+      ui.introBusyName='';ui.introErrName='';ui.introErrMsg='';
+      ensureCampIntro(profile.camp,false);
       loadOsmNearby();
       await loadWeather();
     }catch(e){
@@ -1884,15 +1908,24 @@ details li{margin-bottom:8px}
     ui.wxOpen=false;ui.wxQ='';ui.wxIdx=-1;ui.places=[];
     // 캠핑지를 직접 고른 순간에는 첫 화면이 접혀 있어도 결과가 바로 보이게 펼친다.
     ui.locCardOpen=true;
+    var full=resolveCamp(c.name);
     var loc={name:c.name,region:c.region||'',kindText:c.kindText||'',lat:c.lat,lon:c.lon,src:c.src||'data',at:Date.now()};
+    // 소개 카드가 시설 구분까지 쓸 수 있게 번들 데이터의 상세 정보를 붙인다.
+    if(full){
+      loc.kind=full.kind;loc.kindText=full.kindText||loc.kindText;loc.sido=full.sido||'';loc.sg=full.sg||'';
+      if(!loc.region)loc.region=full.region||'';
+    }
     ui.wxLoc=loc;
-    profile.camp={name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon,src:loc.src};
+    profile.camp={name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon,src:loc.src,kind:loc.kind,kindText:loc.kindText,sido:loc.sido,sg:loc.sg};
     saveProfile();
     var recents=(store.get('cc.camps',[])||[]).filter(function(x){return x.name!==loc.name});
     recents.unshift({name:loc.name,region:loc.region,lat:loc.lat,lon:loc.lon});
     store.set('cc.camps',recents.slice(0,6));
     ui.wx=null;ui.wxKey='';
+    ui.introErrName='';ui.introErrMsg='';ui.introBusyName='';
     loadWeather();
+    // 데이터 요약 소개는 즉시, AI 소개는 준비되면 이어서 붙인다.
+    ensureCampIntro(loc,false);
   }
   function clearCamp(){
     profile.camp=null;ui.wxLoc=null;ui.wx=null;ui.wxKey='';ui.wxQ='';ui.wxOpen=false;ui.places=[];
@@ -2154,7 +2187,7 @@ details li{margin-bottom:8px}
     var w=ui.campDetailWx;
 
     var h='<div class="camp-modal-backdrop" data-a="camp-modal-close">'+
-      '<div class="camp-modal-content" onclick="event.stopPropagation()">'+
+      '<div class="camp-modal-content">'+
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px">'+
           '<div>'+
             '<span class="lab" style="color:var(--brand)">전국 캠핑장 상세 정보</span>'+
@@ -2169,6 +2202,8 @@ details li{margin-bottom:8px}
           themes.map(function(t){return '<span class="camp-tag theme">'+esc(t)+'</span>'}).join('')+
           '<button class="chip sm" type="button" data-a="camp-fav" data-name="'+esc(c.name)+'" style="margin-left:auto">'+(isFav?'❤️ 찜 해제':'🤍 찜하기')+'</button>'+
         '</div>';
+
+        h+=campIntroModalBlock(c);
 
         h+='<div style="background:var(--bg);border-radius:18px;padding:14px;margin-bottom:16px">';
         if(ui.campDetailWxBusy){
@@ -2272,7 +2307,7 @@ details li{margin-bottom:8px}
             '</a>'+
           '</div>'+
         '</div>'+
-      '</div>';+
+      '</div>'+
     '</div>';
 
     return h;
@@ -2485,6 +2520,404 @@ details li{margin-bottom:8px}
       showNotice((turnedOn?'날씨 맞춤 추천을 켜고, ':'')+wx.icon+' '+wx.label+' 날씨에 맞춰 분위기를 「'+ui.mood+'」로 두고 추천을 시작해요.');
     }
     getRecs(false);
+  }
+
+  /* ---------- 선택한 캠핑장 소개 ----------
+     캠핑지를 고르면 실제 데이터(이름·지역·시설 구분·거리·날씨·주변 캠핑장)만으로 소개 카드를 만든다.
+     AI(/api/sample)가 연결돼 있으면 소개를 더 자세히 다듬고, 끊겨 있으면 데이터 요약만으로도 그대로 쓴다.
+     공공데이터에 없는 편의시설·요금·예약 정보는 지어내지 않고 '확인 필요'로 안내한다. */
+  var CAMP_INTRO_VERSION=1;
+  var CAMP_THEME_SHORT={water:'물과 가까운 곳',forest:'숲·힐링',sea:'바다·해변',pet:'반려견 동반',kids:'가족·키즈',view:'뷰·노을'};
+  var CAMP_THEME_LINES={
+    water:'계곡·강·호수 같은 물이 이름에 들어 있어요. 여름엔 물놀이, 그 외엔 물소리 들으며 쉬기 좋아요.',
+    forest:'숲·산자락과 이어지는 이름이에요. 그늘과 조용한 분위기를 기대할 수 있어요.',
+    sea:'바다·해변과 가까운 이름이에요. 노을과 바닷바람까지 함께 즐길 수 있어요.',
+    pet:'반려견과 함께 갈 수 있는 곳으로 소개된 이름이에요. 목줄·배변봉투·리드줄을 챙기세요.',
+    kids:'가족·키즈 캠퍼가 많이 찾는 유형이에요. 아이와 함께라면 밝을 때 도착해 자리를 잡는 게 좋아요.',
+    view:'별·노을·전망이 이름에 들어 있어요. 랜턴과 삼각대를 챙기면 저녁 풍경이 더 좋아요.'
+  };
+  var CAMP_BEST_FOR={water:'여름 물놀이 캠핑',forest:'조용한 힐링 캠핑',sea:'노을·바다 여행',pet:'반려견과 함께',kids:'아이 동반 가족',view:'별·노을 사진 캠핑'};
+  var CAMP_FOOD_SUGGEST={
+    water:['코펠 비빔국수 & 열무김치','코펠 시원한 바지락 술찜 & 파스타 사리','그리들 대패삼겹 콩나물불고기 (콩불)'],
+    forest:['그리들 통삼겹 구이 & 구운 김치','코펠 캠핑 부대찌개','핫초코 마시멜로 & 스모어'],
+    sea:['코펠 시원한 바지락 술찜 & 파스타 사리','스킬렛 감바스 알 아히요','숯불 소시지 플래터 & 통새송이 구이'],
+    view:['숯불 소고기 토마호크 스테이크','스킬렛 콘치즈 & 나초','핫초코 마시멜로 & 스모어'],
+    kids:['그리들 국물 떡볶이 & 바삭 모둠 튀김','스킬렛 콘치즈 & 나초','프라이팬 프렌치토스트 & 크리스피 베이컨'],
+    pet:['숯불 소시지 플래터 & 통새송이 구이','그리들 차돌박이 숙주볶음','코펠 구수한 누룽지 & 팽이버섯 계란국'],
+    default:['그리들 통삼겹 구이 & 구운 김치','코펠 김치찌개 & 라면 사리','코펠 얼큰 어묵탕 & 우동']
+  };
+  var CAMP_SEASON_TIPS={
+    '봄':'봄 캠핑은 낮과 밤 기온 차가 10도 넘게 벌어져요. 얇은 패딩과 여분 담요를 챙기세요.',
+    '여름':'여름엔 그늘·타프와 해충 대비가 핵심이에요. 얼음과 보냉 가방을 넉넉히 준비하세요.',
+    '가을':'가을은 일교차와 이슬이 커요. 밤엔 보온, 아침엔 결로를 닦을 수건을 챙기세요.',
+    '겨울':'겨울엔 난방과 일산화탄소 경보기가 필수예요. 텐트 안 화기는 절대 쓰지 마세요.'
+  };
+  function hasBatchim(word){
+    var s=String(word==null?'':word).replace(/[\s)\]}»”’]+$/,'');
+    if(!s)return false;
+    var code=s.charCodeAt(s.length-1)-0xAC00;
+    if(code<0||code>11171)return false;
+    return code%28!==0;
+  }
+  /* 받침에 맞춰 조사를 붙인다. pair는 '은/는'처럼 받침 있을 때/없을 때 순서로 쓴다. */
+  function josa(word,pair){
+    var p=String(pair).split('/'),s=String(word==null?'':word).trim();
+    var pick=hasBatchim(s)?p[0]:(p[1]||p[0]);
+    if(pair==='으로/로'){
+      var code=s.charCodeAt(s.length-1)-0xAC00;
+      pick=(code>=0&&code<=11171&&code%28===8)?'로':(hasBatchim(s)?'으로':'로');
+    }
+    return s+pick;
+  }
+  function campKindMask(camp){
+    if(!camp)return 0;
+    var mask=Number(camp.kind)||0;
+    if(!mask&&camp.kindText){
+      String(camp.kindText).split('·').forEach(function(txt){
+        camps().kinds.forEach(function(k){if(String(txt).indexOf(k[1])>=0)mask|=k[0]});
+      });
+    }
+    return mask;
+  }
+  /* 소개에 쓸 시설 구분만 뽑는다. '저장됨'·'GPS'·'지역' 같은 앱 내부 라벨은 시설 정보가 아니다. */
+  function campFacilityText(camp){
+    if(!camp)return '';
+    var out=[];
+    function collect(raw){
+      if(!raw)return;
+      camps().kinds.forEach(function(k){if(String(raw).indexOf(k[1])>=0&&out.indexOf(k[1])<0)out.push(k[1])});
+    }
+    collect(camp.kindText);
+    if(!out.length&&camp.name){
+      var full=campPool().find(function(x){return x.name===camp.name});
+      if(full)collect(full.kindText);
+    }
+    return out.join('·');
+  }
+  function campThemeIds(camp){
+    var name=str(camp&&camp.name),out=[];
+    if(!name)return out;
+    THEME_RULES.forEach(function(t){if(t.test(name))out.push(t.id)});
+    return out;
+  }
+  function campKindLines(mask){
+    var out=[];
+    if(mask&2)out.push('차를 사이트 옆에 세우는 자동차야영장이라 짐 내리기와 철수가 편해요.');
+    if(mask&1)out.push('텐트를 세우는 일반야영장 사이트가 있어요.');
+    if(mask&4)out.push('글램핑 시설이 있어 장비 없이도 묵을 수 있어요.');
+    if(mask&8)out.push('카라반 사이트가 있어 카라반·차박 캠퍼에게 잘 맞아요.');
+    if(mask&16)out.push('캠프닉(당일 피크닉·차박) 형태로도 쓸 수 있어요.');
+    if(!out.length)out.push('야영장으로 등록된 곳이에요.');
+    return out;
+  }
+  function driveMinutes(km){
+    /* 고속·국도 섞은 평균 45km/h 가정. 어디까지나 대략치라 '약'을 붙여 쓴다. */
+    return Math.max(5,Math.round(km/45*60/5)*5);
+  }
+  function resolveCamp(name){
+    if(!name)return null;
+    var found=campPool().find(function(x){return x.name===name});
+    if(found)return found;
+    var cur=currentCamp();
+    if(cur&&cur.name===name)return cur;
+    if(ui.campDetail&&ui.campDetail.name===name)return ui.campDetail;
+    return null;
+  }
+  function currentCamp(){
+    var c=profile.camp||ui.wxLoc||null;
+    if(!c||!c.name)return c;
+    if(c.kind==null&&!c.kindText){
+      var full=campPool().find(function(x){return x.name===c.name});
+      if(full)return {name:c.name,region:c.region||full.region,lat:c.lat,lon:c.lon,src:c.src||full.src,kind:full.kind,kindText:full.kindText,sido:full.sido,sg:full.sg};
+    }
+    return c;
+  }
+  function campIntroCache(){
+    if(!ui.campIntro||typeof ui.campIntro!=='object')ui.campIntro={};
+    return ui.campIntro;
+  }
+  function campIntroGet(camp){
+    if(!camp||!camp.name)return null;
+    var e=campIntroCache()[camp.name];
+    if(!e||e.v!==CAMP_INTRO_VERSION||!e.data)return null;
+    return e;
+  }
+  function campIntroPut(camp,mode,data){
+    if(!camp||!camp.name||!data)return;
+    var cache=campIntroCache();
+    cache[camp.name]={v:CAMP_INTRO_VERSION,mode:mode,data:data,at:Date.now()};
+    var keys=Object.keys(cache);
+    if(keys.length>12){
+      keys.sort(function(a,b){return (cache[a].at||0)-(cache[b].at||0)});
+      keys.slice(0,keys.length-12).forEach(function(k){delete cache[k]});
+    }
+    store.set('cc.campIntro',cache);
+  }
+  /* 캠핑지에 대해 앱이 실제로 알고 있는 날씨(같은 캠핑지를 보고 있을 때만) */
+  function campWxNow(camp){
+    if(!camp||!ui.wx)return null;
+    if(!ui.wxLoc||ui.wxLoc.name!==camp.name)return null;
+    var info=wxInfo(ui.wx);
+    return info?{info:info,menus:wxMenus(info)}:null;
+  }
+  /* 네트워크·AI가 없어도 항상 만들 수 있는 데이터 요약 소개 */
+  function localCampIntro(camp){
+    camp=camp||{};
+    var name=str(camp.name)||'이 캠핑지';
+    var region=str(camp.region)||[str(camp.sido),str(camp.sg)].filter(Boolean).join(' ');
+    var mask=campKindMask(camp);
+    var kinds=campFacilityText(camp).split('·').filter(Boolean);
+    var themes=campThemeIds(camp);
+    var km=(ui.myLoc&&camp.lat!=null)?distKm(ui.myLoc,camp):null;
+    var dist=km!=null?fmtKm(km):'';
+    var isGps=camp.src==='gps';
+    var isRegion=camp.src==='geo';
+    var wxNow=campWxNow(camp);
+    var summary,highlights=[],best=[],food=[],checkpoints=[],tips=[];
+
+    if(isGps){
+      summary='GPS로 찾은 현재 위치 기준이에요. 이 지점 주변의 캠핑장과 날씨를 함께 보여드려요.';
+      highlights.push('내 위치 좌표('+Number(camp.lat).toFixed(3)+', '+Number(camp.lon).toFixed(3)+')에서 가까운 순서로 캠핑장을 모아 보여드려요.');
+      highlights.push('[📍 내 위치]를 다시 누르면 위치를 새로 읽고, 반경 30km 밖은 이름·지역으로 검색하면 찾을 수 있어요.');
+    }else if(isRegion){
+      var regionCamps=camps().list.filter(function(x){return x.sg===name||x.sido===name});
+      summary='「'+name+'」 지역 기준이에요. 이 지역의 날씨와 캠핑장을 함께 보여드려요.';
+      highlights.push(regionCamps.length
+        ?'이 지역에 등록된 캠핑장이 '+regionCamps.length+'곳 있어요. 검색창이나 [전국 4,000+ 탐색]에서 캠핑장을 고르면 그 캠핑장 소개를 만들어 드려요.'
+        :'이 지역은 번들 목록에 등록된 캠핑장이 없어요. 캠핑장 이름으로 검색하거나 실시간 지도(OpenStreetMap) 결과를 함께 보세요.');
+      var nearRegion=nearbyCamps(camp,4,25);
+      if(nearRegion.length)highlights.push('이 지점 반경 25km 안에 '+nearRegion.slice(0,2).map(function(x){return x.name}).join(', ')+' 등 '+nearRegion.length+'곳이 있어요.');
+      best.push('지역 날씨 먼저 보기');
+      checkpoints.push('이 카드는 지역 기준이라 캠핑장 시설 정보가 아니에요. 캠핑장을 고르면 그 캠핑장 기준으로 다시 정리해 드려요.');
+    }else{
+      summary=josa(name,'은/는')+' '+(region?region+'에 있는 ':'')+(kinds.length?kinds.join('·'):'야영장')+' 캠핑지예요.';
+      if(themes.length)summary+=' 이름·지역으로 보아 '+(themes.length>1?'여러 특징이 묶인 곳이에요.':CAMP_THEME_SHORT[themes[0]]+' 쪽이에요.');
+      if(dist)summary+=' 내 위치에서 '+dist+' 거리예요.';
+      campKindLines(mask).slice(0,2).forEach(function(t){highlights.push(t)});
+      themes.slice(0,2).forEach(function(id){highlights.push(CAMP_THEME_LINES[id])});
+      if(km!=null)highlights.push('내 위치에서 '+dist+' · 차로 대략 '+driveMinutes(km)+'분 거리예요.');
+      var near=nearbyCamps(camp,4,25).filter(function(x){return x.name!==camp.name});
+      if(near.length)highlights.push('반경 25km 안에 '+near.slice(0,2).map(function(x){return x.name}).join(', ')+' 등 '+near.length+'곳이 더 있어요. 근처 캠핑장을 함께 둘러보기 좋아요.');
+
+      if(mask&4||mask&8)best.push('장비 없이 가는 첫 캠핑');
+      if(mask&2)best.push('오토캠핑·차박');
+      if(mask&1)best.push('텐트 감성 캠핑');
+      themes.forEach(function(id){if(best.length<3&&CAMP_BEST_FOR[id])best.push(CAMP_BEST_FOR[id])});
+      if(profile.people>=4&&best.length<3)best.push(profile.people+'명 이상 단체');
+      if(!best.length)best.push('조용한 1박 2일');
+
+      if(wxNow&&wxNow.menus.length){
+        food=wxNow.menus.map(function(m){return m.n});
+        tips.push(WX_RULES[wxNow.info.primary].tip);
+      }
+      var themeFood=null;
+      themes.forEach(function(id){if(!themeFood&&CAMP_FOOD_SUGGEST[id])themeFood=CAMP_FOOD_SUGGEST[id]});
+      (themeFood||CAMP_FOOD_SUGGEST.default).forEach(function(n){if(food.length<3&&food.indexOf(n)<0)food.push(n)});
+
+      if(mask&(4|8))checkpoints.push('글램핑·카라반은 침구·조리도구 제공 범위와 냉난방 옵션이 시설마다 달라요. 예약 전에 확인하세요.');
+      if(mask&2)checkpoints.push('자동차야영장이라도 전기 사용 가능 여부와 사이트 크기는 달라요. 차량 길이와 전기(암페어)를 미리 확인하세요.');
+      checkpoints.push('샤워장·매점·반려견 동반 여부와 요금은 공공데이터에 없어요. 예약처나 지도 앱 후기에서 확인하는 게 확실해요.');
+      checkpoints.push('성수기 주말은 예약이 일찍 차요. 최소 2주 전 예약을 권해요.');
+      if(camp.lat!=null)checkpoints.push('지도 앱에서 이름만으로 안 나오면 좌표 '+Number(camp.lat).toFixed(4)+', '+Number(camp.lon).toFixed(4)+'를 붙여 넣어 보세요.');
+
+      tips.push(CAMP_SEASON_TIPS[season]||CAMP_SEASON_TIPS['가을']);
+      tips.push('불멍은 화로대 안에서만, 잔불은 물로 완전히 끄고 나오세요. 쓰레기는 되가져가는 게 기본이에요.');
+    }
+    if(!highlights.length)highlights.push('이름과 지역 정보만으로 정리한 소개예요. 시설 정보는 예약처에서 확인해 주세요.');
+    if(!best.length)best.push('조용한 1박 2일');
+    if(!food.length)food=CAMP_FOOD_SUGGEST.default.slice(0,3);
+    if(!checkpoints.length)checkpoints.push('운영 기간과 예약 방식은 캠핑장마다 달라요. 방문 전 예약처에 확인하세요.');
+    if(!tips.length)tips.push('불멍은 화로대 안에서만, 잔불은 물로 완전히 끄고 나오세요.');
+
+    return {
+      mode:'local',
+      summary:summary,
+      highlights:highlights.slice(0,4),
+      bestFor:best.slice(0,3),
+      food:food.slice(0,3),
+      checkpoints:checkpoints.slice(0,3),
+      tips:tips.slice(0,2)
+    };
+  }
+  function normCampIntro(d,camp){
+    var base=localCampIntro(camp);
+    var out={};
+    out.summary=strs([d&&d.summary],1)[0]||base.summary;
+    out.highlights=strs(d&&d.highlights,4);
+    out.bestFor=strs(d&&d.bestFor,3);
+    out.food=strs(d&&d.food,3);
+    out.checkpoints=strs(d&&d.checkpoints,3);
+    out.tips=strs(d&&d.tips,2);
+    if(!out.highlights.length)out.highlights=base.highlights;
+    if(!out.bestFor.length)out.bestFor=base.bestFor;
+    if(!out.food.length)out.food=base.food;
+    if(!out.checkpoints.length)out.checkpoints=base.checkpoints;
+    if(!out.tips.length)out.tips=base.tips;
+    out.summary=out.summary.slice(0,400);
+    return out;
+  }
+  function campIntroPrompt(camp){
+    var mask=campKindMask(camp);
+    var themes=campThemeIds(camp).map(function(id){return CAMP_THEME_SHORT[id]});
+    var km=(ui.myLoc&&camp.lat!=null)?distKm(ui.myLoc,camp):null;
+    var wxNow=campWxNow(camp);
+    var region=str(camp.region)||[str(camp.sido),str(camp.sg)].filter(Boolean).join(' ');
+    return '당신은 한국 캠핑장 안내 도우미입니다. 아래 캠핑장을 처음 찾은 사람에게 소개하는 글을 만드세요.\n\n'+
+      '캠핑장 정보 (앱이 가진 전부입니다)\n'+
+      '- 이름: '+str(camp.name)+'\n'+
+      '- 지역: '+(region||'모름')+'\n'+
+      '- 시설 구분(공공데이터): '+(campFacilityText(camp)||'모름')+'\n'+
+      '- 이름에서 읽히는 특징: '+(themes.join(', ')||'없음')+'\n'+
+      '- 내 위치에서 거리: '+(km!=null?fmtKm(km)+' (차로 대략 '+driveMinutes(km)+'분)':'모름')+'\n'+
+      (wxNow?'- 이 캠핑지 현재 날씨: '+wxNow.info.icon+' '+wxNow.info.label+' 체감 '+deg(wxNow.info.feels)+' · 강수확률 '+wxNow.info.pop+'%\n':'')+
+      '- 기준 시점: '+(new Date().getMonth()+1)+'월 / '+season+' / 인원 '+profile.people+'명 / 보유 장비 '+gearText()+'\n\n'+
+      '규칙\n'+
+      '- 공공데이터에는 편의시설·요금·예약 정보가 없습니다. 확인할 수 없는 사실(샤워장, 전기, 매점, 반려견 동반, 요금 등)은 지어내지 말고 [확인 필요]로 안내하세요.\n'+
+      '- 이름에 들어 있는 고유명사만으로 실제 경관을 단정하지 말고 "이름으로 보아 ~로 짐작돼요"처럼 표현하세요.\n'+
+      '- summary는 이 캠핑지 소개 두 문장 이내. highlights는 매력 3개(각 40자 이내). bestFor는 어울리는 캠핑 스타일 2~3개. food는 이곳에서 하기 좋은 캠핑 요리 3개. checkpoints는 방문 전 확인할 것 3개. tips는 현장 팁 2개입니다.\n'+
+      '- 문장은 한국어 한 줄 문자열로 쓰고, 같은 말을 반복하지 마세요.\n\n'+
+      'JSON 객체만 출력하세요. 예:\n'+
+      '{"summary":"","highlights":["","",""],"bestFor":["",""],"food":["","",""],"checkpoints":["","",""],"tips":["",""]}';
+  }
+  function campIntroState(camp){
+    var e=campIntroGet(camp);
+    return {
+      mode:(e&&e.mode)||'local',
+      ai:!!(e&&e.mode==='ai'),
+      data:(e&&e.data)||localCampIntro(camp),
+      busy:!!(camp&&ui.introBusyName===camp.name),
+      err:!!(camp&&ui.introErrName===camp.name),
+      errMsg:!!(camp&&ui.introErrName===camp.name)?(ui.introErrMsg||''):''
+    };
+  }
+  /* 소개를 준비한다. 데이터 요약은 즉시 만들고, AI가 연결돼 있으면 뒤이어 다듬는다. */
+  function ensureCampIntro(camp,force){
+    if(!camp||!camp.name)return;
+    var cached=campIntroGet(camp);
+    if(camp.src==='gps'||camp.src==='geo'){campIntroPut(camp,'local',localCampIntro(camp));return}
+    if(!cached)campIntroPut(camp,'local',localCampIntro(camp));
+    else if(!force&&cached.mode==='ai')return;
+    if(!sampleFn||ui.introBusyName===camp.name)return;
+    var name=camp.name;
+    ui.introBusyName=name;ui.introErrName='';ui.introErrMsg='';render();
+    sampleFn.json(campIntroPrompt(camp),{modelTier:'quick'})
+      .then(function(data){
+        if(!data)throw {code:'invalid_json'};
+        campIntroPut(camp,'ai',normCampIntro(data,camp));
+      })
+      .catch(function(e){
+        if(!e||e.code!=='cancelled'){
+          ui.introErrName=name;
+          ui.introErrMsg=(e&&e.code==='capability_disabled')?'AI 키가 설정되지 않아 데이터 요약 소개만 보여드려요. 서버에 GEMINI_API_KEY를 넣으면 AI가 더 자세히 정리해 드려요.'
+            :((e&&e.code==='rate_limited')?'AI 사용량 한도에 닿았어요. 잠시 뒤 [✨ AI 소개 다시 받기]를 눌러 주세요.':'');
+        }
+      })
+      .then(function(){
+        if(ui.introBusyName===name)ui.introBusyName='';
+        render();
+      });
+  }
+  function introListHtml(arr){
+    return '<ul class="intro-list">'+arr.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ul>';
+  }
+  function campIntroCard(){
+    var camp=currentCamp();
+    if(!camp||!camp.name)return '';
+    var dist=(ui.myLoc&&camp.lat!=null)?fmtKm(distKm(ui.myLoc,camp)):'';
+    var region=str(camp.region)||[str(camp.sido),str(camp.sg)].filter(Boolean).join(' ');
+    var st=campIntroState(camp),d=st.data;
+    var kinds=campFacilityText(camp).split('·').filter(Boolean);
+    var themes=campThemeIds(camp);
+    var isPointOnly=(camp.src==='gps'||camp.src==='geo');
+    var badge=st.ai?'✨ AI 소개':(camp.src==='gps'?'📡 GPS 기준':(camp.src==='geo'?'🗺️ 지역 기준':'📊 데이터 요약'));
+    var h='<section class="card intro-card" id="camp-intro-card">'+
+      '<div class="intro-head">'+
+        '<div>'+
+          '<span class="lab">선택한 캠핑장 소개</span>'+
+          '<h2 class="intro-title">⛺ '+esc(camp.name)+'</h2>'+
+          '<p class="camp-item-loc" style="margin:0">📍 '+esc(region||'위치 정보 없음')+(dist?' · 내 위치에서 '+esc(dist):'')+'</p>'+
+        '</div>'+
+        '<span class="intro-badge'+(st.ai?' ai':'')+'">'+badge+'</span>'+
+      '</div>'+
+      '<div class="camp-tags" style="margin:10px 0 0">'+
+        kinds.map(function(k){return '<span class="camp-tag">'+esc(k)+'</span>'}).join('')+
+        themes.map(function(id){return '<span class="camp-tag theme">'+esc((THEME_RULES.find(function(t){return t.id===id})||{}).label||'')+'</span>'}).join('')+
+      '</div>'+
+      '<p class="intro-sum">'+esc(d.summary)+'</p>';
+    if(st.busy)h+='<div class="loading" style="margin:12px 0 0" role="status"><span class="spin" aria-hidden="true"></span><p>AI가 「'+esc(camp.name)+'」 소개를 다듬는 중이에요…</p></div>';
+    h+='<div class="intro-sub">이런 곳이에요</div>'+introListHtml(d.highlights);
+    h+='<div class="intro-grid">'+
+        '<div class="intro-box"><b>어울리는 캠핑</b><div class="intro-chips">'+d.bestFor.map(function(t){return '<span class="camp-tag">'+esc(t)+'</span>'}).join('')+'</div></div>'+
+      '</div>';
+    h+='<div class="intro-sub">'+(isPointOnly?'이 근처에서 먹기 좋은 메뉴':'이 캠핑지에서 먹기 좋은 메뉴')+'</div>'+
+      '<div class="wx-menu">'+d.food.map(function(n){
+        return '<button class="wx-menu-item" type="button" data-a="camp-intro-dish" data-dish="'+esc(n)+'">'+
+          '<span><b>'+esc(n)+'</b><small>누르면 준비물 목록을 만들어요</small></span>'+
+          '<span class="go">준비물 →</span></button>';
+      }).join('')+'</div>';
+    h+='<div class="intro-grid">'+
+        '<div class="intro-box"><b>가기 전에 확인하세요</b>'+introListHtml(d.checkpoints)+'</div>'+
+        '<div class="intro-box"><b>'+(campWxNow(camp)?'오늘 날씨에 맞춘 팁':'현장 팁')+'</b>'+introListHtml(d.tips)+'</div>'+
+      '</div>';
+    h+='<p class="hint" style="margin:14px 0 0">'+
+      (st.ai?'AI가 이름·지역·시설·거리·날씨 정보를 바탕으로 정리했어요. 편의시설과 요금은 방문 전 예약처에서 확인하세요.'
+            :(isPointOnly?'GPS·지역 기준이라 캠핑장 시설 정보가 아니에요. 캠핑장을 고르면 그 캠핑장 소개로 바뀌어요.'
+            :'이름·지역·시설·거리 데이터로 정리했어요. 편의시설·요금 정보는 공공데이터에 없어 [확인 필요]로 표시했어요.'
+              +(ui.aiOk===false?' AI가 연결되지 않아 데이터 요약만 보여드려요.':'')))+
+      '</p>';
+    if(st.err)h+='<p class="hint" style="margin:8px 0 0;color:var(--ember);font-weight:700">'+esc(st.errMsg||'AI 소개를 만들지 못했어요(연결 불안정 또는 AI 꺼짐). 위 데이터 요약은 그대로 쓸 수 있고, [✨ AI 소개 다시 받기]로 다시 시도할 수 있어요.')+'</p>';
+    h+='<div class="row2" style="margin-top:14px">'+
+        '<button class="btn primary" type="button" data-a="camp-intro-ai"'+(isPointOnly?' disabled title="GPS·지역 기준은 캠핑장이 아니라서 AI 소개를 만들지 않아요"':'')+'>'+(st.ai?'✨ AI 소개 다시 받기':'✨ AI 소개 받기')+'</button>'+
+        '<button class="btn" type="button" data-a="camp-intro-copy">📋 소개 복사</button>'+
+      '</div>'+
+      '<div class="row2" style="margin-top:10px">'+
+        (camp.lat!=null?'<button class="btn" type="button" data-a="camp-detail" data-name="'+esc(camp.name)+'">🌤️ 날씨·상세 보기</button>':'')+
+        (camp.lat!=null?'<a class="btn" href="https://map.kakao.com/link/to/'+encodeURIComponent(camp.name)+','+camp.lat+','+camp.lon+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none">🧭 길찾기</a>':'')+
+      '</div>'+
+    '</section>';
+    return h;
+  }
+  /* 캠핑장 상세 모달 안에 넣는 요약 소개(모달에서는 AI를 자동 호출하지 않는다) */
+  function campIntroModalBlock(camp){
+    if(!camp||!camp.name)return '';
+    var st=campIntroState(camp),d=st.data;
+    var h='<div class="intro-box" style="margin-bottom:16px">'+
+      '<b>캠핑장 소개 <span class="intro-badge'+(st.ai?' ai':'')+'">'+(st.ai?'✨ AI':'📊 데이터')+'</span></b>'+
+      '<p style="margin:0 0 8px;font-size:13.5px;line-height:1.5">'+esc(d.summary)+'</p>'+
+      (d.highlights.length?introListHtml(d.highlights.slice(0,3)):'')+
+      (d.food.length?'<p style="margin:8px 0 0;font-size:12.5px;color:var(--muted)">🍳 추천 메뉴 · '+esc(d.food.join(' · '))+'</p>':'')+
+      (st.busy?'<div class="loading" style="margin:10px 0 0" role="status"><span class="spin" aria-hidden="true"></span><p>AI가 소개를 다듬는 중이에요…</p></div>':'')+
+      (st.err?'<p style="margin:8px 0 0;font-size:12.5px;color:var(--ember);font-weight:700">'+esc(st.errMsg||'AI 소개를 못 만들었어요. 다시 시도해 볼래요?')+'</p>':'')+
+      '<div class="row2" style="margin-top:10px">'+
+        '<button class="btn" type="button" data-a="camp-intro-ai" data-name="'+esc(camp.name)+'" style="min-height:44px;font-size:13px">'+(st.ai?'✨ AI 소개 다시 받기':'✨ AI 소개 받기')+'</button>'+
+        '<button class="btn" type="button" data-a="camp-intro-copy" data-name="'+esc(camp.name)+'" style="min-height:44px;font-size:13px">📋 소개 복사</button>'+
+      '</div>'+
+    '</div>';
+    return h;
+  }
+  function campIntroText(camp){
+    var st=campIntroState(camp),d=st.data;
+    var region=str(camp.region)||[str(camp.sido),str(camp.sg)].filter(Boolean).join(' ');
+    var lines=['⛺ '+camp.name+(region?' · '+region:'')+(st.ai?'':' (데이터 요약)'),''];
+    lines.push(d.summary,'');
+    if(d.highlights.length){lines.push('[이런 곳이에요]');d.highlights.forEach(function(t){lines.push('· '+t)});lines.push('')}
+    if(d.bestFor.length)lines.push('[어울리는 캠핑] '+d.bestFor.join(' / '));
+    if(d.food.length)lines.push('[먹기 좋은 메뉴] '+d.food.join(' / '));
+    if(d.checkpoints.length){lines.push('','[가기 전 확인]');d.checkpoints.forEach(function(t){lines.push('· '+t)})}
+    if(d.tips.length){lines.push('','[현장 팁]');d.tips.forEach(function(t){lines.push('· '+t)})}
+    if(camp.lat!=null)lines.push('','📍 좌표 '+camp.lat+', '+camp.lon);
+    lines.push('','— 캠핑음식 도우미에서 정리한 캠핑장 소개');
+    return lines.join('\n');
+  }
+  /* 캠핑지가 정해지면 AI 추천·준비물 프롬프트에도 캠핑지 특징을 한 줄 넣는다. */
+  function campPromptBlock(){
+    var camp=currentCamp();
+    if(!camp||!camp.name||camp.src==='gps'||camp.src==='geo')return '';
+    var facts=[campFacilityText(camp),str(camp.region)].filter(Boolean).join(' · ');
+    var line='- 캠핑지: '+camp.name+(facts?' ('+facts+')':'')+'\n';
+    var hl=(campIntroState(camp).data.highlights||[])[0];
+    if(hl)line+='- 캠핑지 특징: '+hl+'\n';
+    return line;
   }
 
   /* ---------- 화면: 캠핑지 찾기 카드 ---------- */
@@ -3892,7 +4325,7 @@ details li{margin-bottom:8px}
     // 1. 스팟 등록 모달 (새로운 비밀의 정원 등록)
     if(ui.gardenRegModal){
       h += '<div class="camp-modal-backdrop" data-a="garden-reg-close">'+
-        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:540px;max-height:88vh;overflow-y:auto">'+
+        '<div class="camp-modal-content" style="max-width:540px;max-height:88vh;overflow-y:auto">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
             '<div>'+
               '<h3 style="font-family:var(--font-display);font-size:22px;margin:0">🌿 나만의 비밀의 정원 등록</h3>'+
@@ -4073,7 +4506,7 @@ details li{margin-bottom:8px}
       var dateStr = spot.createdAt ? spot.createdAt.slice(0,10) : '';
 
       h += '<div class="camp-modal-backdrop" data-a="garden-detail-close">'+
-        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:540px;max-height:90vh;overflow-y:auto;padding:0">'+
+        '<div class="camp-modal-content" style="max-width:540px;max-height:90vh;overflow-y:auto;padding:0">'+
           // 사진 헤더
           '<div style="position:relative;width:100%;height:220px;background:#000;cursor:zoom-in" data-a="open-lightbox" data-img="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(spot.name)+'" title="사진 크게 보기">'+
             '<img src="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" alt="'+esc(spot.name)+'" style="width:100%;height:100%;object-fit:cover">'+
@@ -4186,7 +4619,7 @@ details li{margin-bottom:8px}
           '상세 위치를 열람하려면 등록 시 설정한 비밀번호를 입력하세요.');
 
       h += '<div class="camp-modal-backdrop" data-a="garden-auth-close">'+
-        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:380px;text-align:center">'+
+        '<div class="camp-modal-content" style="max-width:380px;text-align:center">'+
           '<div style="font-size:32px;margin-bottom:8px">'+(authAction==='delete'?'🗑️':(authAction==='edit'?'✏️':'🔓'))+'</div>'+
           '<h3 style="font-size:19px;font-weight:900;margin:0 0 6px">'+actionTitle+'</h3>'+
           '<p style="font-size:12.5px;color:var(--muted);margin:0 0 16px;line-height:1.5">'+actionDesc+'</p>'+
@@ -4208,7 +4641,7 @@ details li{margin-bottom:8px}
       var curFacs = es.facilities || [];
 
       h += '<div class="camp-modal-backdrop" data-a="garden-edit-close">'+
-        '<div class="camp-modal-content" onclick="event.stopPropagation()" style="max-width:540px;max-height:92vh;overflow-y:auto">'+
+        '<div class="camp-modal-content" style="max-width:540px;max-height:92vh;overflow-y:auto">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
             '<div>'+
               '<h2 style="font-size:20px;font-weight:900;margin:0 0 2px">✏️ 스팟 정보 수정</h2>'+
@@ -4408,6 +4841,7 @@ details li{margin-bottom:8px}
       '</section>';
     }
     h+=locCard();
+    h+=campIntroCard();
     h+=wxCard();
     
     if(ui.recs.length && !ui.imageLoading && ui.recs.some(function(r){return !r.imageUrl && !r.imageFailed})) {
@@ -4855,7 +5289,7 @@ details li{margin-bottom:8px}
   function lightboxModalHtml(){
     if(!ui.lightbox || !ui.lightbox.url) return '';
     return '<div class="modal-dim" data-a="close-lightbox" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">'+
-      '<div style="max-width:92vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;position:relative" onclick="event.stopPropagation()">'+
+      '<div style="max-width:92vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;position:relative">'+
         '<button type="button" data-a="close-lightbox" style="position:absolute;top:-44px;right:0;color:#ffffff;background:rgba(255,255,255,0.2);border:0;border-radius:50%;width:36px;height:36px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer">✕</button>'+
         '<img src="'+esc(ui.lightbox.url)+'" alt="'+esc(ui.lightbox.title||'사진')+'" style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:14px;box-shadow:0 12px 36px rgba(0,0,0,0.6)">'+
         (ui.lightbox.title ? '<div style="margin-top:12px;color:#ffffff;font-size:15px;font-weight:700;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.8)">'+esc(ui.lightbox.title)+'</div>' : '')+
@@ -4935,6 +5369,14 @@ details li{margin-bottom:8px}
     });
   }
 
+  /* 모달 닫기 규칙: 바깥(백드롭·딤 영역)을 누르면 닫고, 내용 안쪽 클릭은 그냥 무시한다.
+     내용 안의 ✕·취소 버튼은 그 자체가 data-a="...close"라서 정상 동작한다. */
+  function closeFromBackdrop(b,e){
+    if(!b||!e||!e.target)return true;
+    if(e.target===b)return true;
+    return !(b.classList&&(b.classList.contains('camp-modal-backdrop')||b.classList.contains('modal-dim')));
+  }
+
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-a]');
     if(!b)return;
@@ -4950,7 +5392,7 @@ details li{margin-bottom:8px}
 
     // === 나만의 비밀의 정원 클릭 액션들 ===
     if(a==='garden-reg-open'){ui.gardenRegModal=true;render();return}
-    if(a==='garden-reg-close'){ui.gardenRegModal=false;render();return}
+    if(a==='garden-reg-close'){if(!closeFromBackdrop(b,e))return;ui.gardenRegModal=false;render();return}
     if(a==='garden-set-cat'){ui.gardenCategory=v;render();return}
     if(a==='garden-fac-toggle'){
       var idx=ui.gardenSelectedFacilities.indexOf(v);
@@ -4995,12 +5437,12 @@ details li{margin-bottom:8px}
       }
       return;
     }
-    if(a==='garden-detail-close'){ui.gardenDetailModal=null;render();return}
+    if(a==='garden-detail-close'){if(!closeFromBackdrop(b,e))return;ui.gardenDetailModal=null;render();return}
     if(a==='garden-unlock-open'){
       ui.gardenAuthModal={action:'unlock',spotId:b.getAttribute('data-id')};
       render();return;
     }
-    if(a==='garden-auth-close'){ui.gardenAuthModal=null;render();return}
+    if(a==='garden-auth-close'){if(!closeFromBackdrop(b,e))return;ui.gardenAuthModal=null;render();return}
     if(a==='garden-edit-open'){
       var edId=b.getAttribute('data-id');
       var edSpot=(ui.gardenList||[]).find(function(g){return g.id===edId})||ui.gardenDetailModal;
@@ -5016,6 +5458,7 @@ details li{margin-bottom:8px}
       return;
     }
     if(a==='garden-edit-close'){
+      if(!closeFromBackdrop(b,e))return;
       ui.gardenEditModal = null;
       ui.gardenEditUploadedPhoto = '';
       render();
@@ -5030,7 +5473,7 @@ details li{margin-bottom:8px}
       ui.lightbox={url:b.getAttribute('data-img'),title:b.getAttribute('data-title')};
       render();return;
     }
-    if(a==='close-lightbox'){
+    if(a==='close-lightbox'){if(!closeFromBackdrop(b,e))return;
       ui.lightbox=null;
       render();return;
     }
@@ -5432,15 +5875,41 @@ details li{margin-bottom:8px}
     }
     if(a==='camp-detail'){
       var dn=b.getAttribute('data-name');
-      var dObj=campPool().find(function(x){return x.name===dn});
+      var dObj=resolveCamp(dn)||campPool().find(function(x){return x.name===dn});
       if(dObj)openCampDetail(dObj);
+      else showNotice('캠핑장 정보를 찾지 못했어요. 검색으로 다시 골라 주세요.');
       return;
     }
-    if(a==='camp-modal-close'){ui.campDetail=null;ui.campDetailWx=null;render();return}
+    if(a==='camp-modal-close'){if(!closeFromBackdrop(b,e))return;ui.campDetail=null;ui.campDetailWx=null;render();return}
     if(a==='camp-dish-pick'){
       var dDish=b.getAttribute('data-dish');
       ui.campDetail=null;ui.campDetailWx=null;
       pickDish({name:dDish,minutes:25,level:'보통',equipment:profile.gear,reason:'선택한 캠핑지의 날씨 맞춤 추천 요리'},false);
+      return;
+    }
+    if(a==='camp-intro-ai'){
+      var iName=b.getAttribute('data-name');
+      var iCamp=(iName&&resolveCamp(iName))||currentCamp();
+      if(!iCamp||!iCamp.name){showNotice('먼저 캠핑지를 골라 주세요.');return}
+      if(iCamp.src==='gps'||iCamp.src==='geo'){showNotice('GPS·지역 기준은 주변 캠핑장·날씨 정보로 안내해요. 이름으로 캠핑지를 골라 주세요.');return}
+      if(!sampleFn){showNotice('지금은 AI를 쓸 수 없어 데이터 요약 소개를 보여드려요.');ensureCampIntro(iCamp,false);return}
+      ensureCampIntro(iCamp,true);
+      showNotice('✨ 「'+iCamp.name+'」 소개를 AI로 다시 정리하고 있어요.');
+      return;
+    }
+    if(a==='camp-intro-copy'){
+      var cName=b.getAttribute('data-name');
+      var cCamp=(cName&&resolveCamp(cName))||currentCamp();
+      if(!cCamp||!cCamp.name){showNotice('먼저 캠핑지를 골라 주세요.');return}
+      copyToClipboard(campIntroText(cCamp));
+      showNotice('📋 「'+cCamp.name+'」 캠핑장 소개를 복사했어요. 카톡으로 공유해 보세요!');
+      return;
+    }
+    if(a==='camp-intro-dish'){
+      var iDish=b.getAttribute('data-dish');
+      if(!iDish)return;
+      var dishCamp=currentCamp();
+      pickDish({name:iDish,minutes:25,level:'보통',equipment:profile.gear,reason:(dishCamp&&dishCamp.name?dishCamp.name+' · ':'')+'캠핑장 소개에서 고른 메뉴'},false);
       return;
     }
     if(a==='plan-period'){
@@ -5936,7 +6405,8 @@ details li{margin-bottom:8px}
     var savedLoc=store.get('cc.loc',null);
     if(savedLoc&&savedLoc.lat&&savedLoc.lon)ui.myLoc=savedLoc;
     if(profile.camp&&profile.camp.lat!=null){
-      ui.wxLoc={name:profile.camp.name,region:profile.camp.region||'',lat:profile.camp.lat,lon:profile.camp.lon,src:profile.camp.src||'data'};
+      ui.wxLoc={name:profile.camp.name,region:profile.camp.region||'',lat:profile.camp.lat,lon:profile.camp.lon,src:profile.camp.src||'data',
+        kind:profile.camp.kind,kindText:profile.camp.kindText||'',sido:profile.camp.sido||'',sg:profile.camp.sg||''};
       var cachedWx=store.get('cc.wx',null);
       if(cachedWx&&cachedWx.key===wxKey(ui.wxLoc)&&cachedWx.data){
         ui.wx=cachedWx.data;
@@ -5945,6 +6415,8 @@ details li{margin-bottom:8px}
       }
       render();
       if(ui.myLoc)loadOsmNearby();
+      // 저장해 둔 캠핑지가 있으면 소개 카드도 바로 준비한다(데이터 요약 → AI).
+      ensureCampIntro(ui.wxLoc,false);
       if(!ui.wx||ui.wxStale)loadWeather();
       else updateSuggest();
     }else{
