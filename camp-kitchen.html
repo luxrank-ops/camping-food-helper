@@ -176,6 +176,15 @@ details li{margin-bottom:8px}
 
 /* 캠핑지 찾기 · 자동완성 */
 .loc-card{overflow:visible}
+/* 캠핑지 찾기 카드: 제목과 열기/접기 버튼만 본문 토글 기준이다. */
+.loc-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.loc-card .loc-heading{flex:1;min-width:0;margin:0;font-size:18px;font-weight:900;letter-spacing:-.01em}
+.loc-title-toggle{appearance:none;border:0;background:none;color:inherit;display:flex;align-items:center;gap:6px;width:100%;min-height:44px;padding:0;text-align:left;font:inherit;cursor:pointer}
+.loc-title-toggle .loc-arrow{font-size:11px;line-height:1;opacity:.7}
+.loc-head-actions{display:flex;align-items:center;gap:10px;flex:none}
+.loc-head-actions .link{white-space:nowrap}
+.loc-fold[hidden]{display:none!important}
+@media(max-width:420px){.loc-head{flex-wrap:wrap;gap:4px}.loc-card .loc-heading{flex:1 1 100%}.loc-head-actions{width:100%;justify-content:space-between;gap:8px}.loc-head-actions .link{font-size:12px!important}}
 .ac-wrap{position:relative}
 .loc-row{display:flex;gap:8px;align-items:stretch}
 .loc-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
@@ -2494,41 +2503,55 @@ details li{margin-bottom:8px}
   }
   function locCard(){
     var picked=profile.camp||ui.wxLoc;
-    var h='<section class="card loc-card" id="loc-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(ui.locCardOpen?'8':'0')+'px">'+
-      '<h2 style="margin:0">캠핑지 찾기</h2>'+
-      '<span style="display:flex;gap:10px;align-items:center">'+
-        '<button class="link" type="button" data-a="tab" data-v="camp" style="font-size:13px">전국 4,000+ 탐색 →</button>'+
-        '<button class="chip sm" type="button" data-a="loc-card-toggle" style="font-size:11px">'+(ui.locCardOpen?'접기 ▲':'열기 ▼')+'</button>'+
-      '</span>'+
-      '</div>';
-    if(!ui.locCardOpen){
-      h+='<p class="hint" style="margin:8px 0 0"><button type="button" data-a="loc-card-toggle" style="padding:0;border:none;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</button></p>';
-      // 접혀 있어도 '지금 날씨를 직접 고르기'는 바로 쓸 수 있게 남겨 둔다(네트워크 없이도 동작).
-      if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
-      return h+'</section>';
-    }
-    h+='<p class="hint" style="margin:0 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
-      '<div class="ac-wrap">'+
-        '<div class="loc-row">'+
-          '<input id="camp-search" class="loc-input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="camp-ac" autocomplete="off" spellcheck="false" placeholder="예: 자라섬, 가평, 제주 서귀포" aria-label="캠핑장 또는 지역 검색" value="'+esc(ui.wxQ)+'">'+
-          '<button class="btn" type="button" data-a="loc-use"'+(ui.locBusy?' disabled':'')+'>'+(ui.locBusy?'찾는 중…':'📍 내 위치')+'</button>'+
+    var open=!!ui.locCardOpen;
+    var expanded=open?'true':'false';
+    var h='<section class="card loc-card" id="loc-card">'+
+      '<div class="loc-head">'+
+        '<h2 class="loc-heading"><button class="loc-title-toggle" type="button" data-a="loc-card-toggle" aria-expanded="'+expanded+'" aria-controls="loc-fold">'+
+          '<span>캠핑지 찾기</span><span class="loc-arrow" aria-hidden="true">'+(open?'▲':'▼')+'</span>'+
+        '</button></h2>'+
+        '<div class="loc-head-actions">'+
+          '<button class="link" type="button" data-a="tab" data-v="camp" style="font-size:13px">전국 4,000+ 탐색 →</button>'+
+          '<button class="chip sm" type="button" data-a="loc-card-toggle" style="font-size:11px" aria-expanded="'+expanded+'" aria-controls="loc-fold">'+(open?'접기 ▲':'열기 ▼')+'</button>'+
         '</div>'+
-        '<ul class="ac-list" id="camp-ac" role="listbox" aria-label="캠핑장 제안" hidden></ul>'+
-      '</div>'+
-      pickedCampRow()+
-      '<div style="margin-top:12px;display:flex;gap:8px">'+
-        '<button class="btn primary wide" type="button" data-a="tab" data-v="camp">🏕️ 전국 캠핑장 둘러보기 (지역·테마·거리별) →</button>'+
       '</div>';
-    if(!ui.myLoc)h+='<p class="hint" style="margin:12px 0 0">📡 <b>내 위치</b>를 누르면 GPS로 반경 30km 안의 캠핑장을 가까운 순서로 보여드려요.</p>';
-    else h+='<p class="hint" style="margin:12px 0 0">📍 현재 위치: '+esc(ui.myLoc.lat.toFixed(3))+', '+esc(ui.myLoc.lon.toFixed(3))+(ui.osmCamps&&ui.osmCamps.length?' · 실시간 지도에서 '+ui.osmCamps.length+'곳을 함께 반영했어요.':'')+'</p>';
-    if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
-    return h+'</section>';
+    if(!open){
+      h+='<p class="hint" style="margin:8px 0 0">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</p>';
+    }
+    h+='<div class="loc-fold" id="loc-fold"'+(open?'':' hidden')+'>';
+    if(open){
+      h+='<p class="hint" style="margin:8px 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
+        '<div class="ac-wrap">'+
+          '<div class="loc-row">'+
+            '<input id="camp-search" class="loc-input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="camp-ac" autocomplete="off" spellcheck="false" placeholder="예: 자라섬, 가평, 제주 서귀포" aria-label="캠핑장 또는 지역 검색" value="'+esc(ui.wxQ)+'">'+
+            '<button class="btn" type="button" data-a="loc-use"'+(ui.locBusy?' disabled':'')+'>'+(ui.locBusy?'찾는 중…':'📍 내 위치')+'</button>'+
+          '</div>'+
+          '<ul class="ac-list" id="camp-ac" role="listbox" aria-label="캠핑장 제안" hidden></ul>'+
+        '</div>'+
+        pickedCampRow()+
+        '<div style="margin-top:12px;display:flex;gap:8px">'+
+          '<button class="btn primary wide" type="button" data-a="tab" data-v="camp">🏕️ 전국 캠핑장 둘러보기 (지역·테마·거리별) →</button>'+
+        '</div>';
+      if(!ui.myLoc)h+='<p class="hint" style="margin:12px 0 0">📡 <b>내 위치</b>를 누르면 GPS로 반경 30km 안의 캠핑장을 가까운 순서로 보여드려요.</p>';
+      else h+='<p class="hint" style="margin:12px 0 0">📍 현재 위치: '+esc(ui.myLoc.lat.toFixed(3))+', '+esc(ui.myLoc.lon.toFixed(3))+(ui.osmCamps&&ui.osmCamps.length?' · 실시간 지도에서 '+ui.osmCamps.length+'곳을 함께 반영했어요.':'')+'</p>';
+      if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
+    }
+    return h+'</div></section>';
   }
   function manualWxPicker(){
     return '<div class="field" style="margin:16px 0 0"><span class="lab">지금 날씨를 직접 고르기 (네트워크 없이도 동작)</span>'+
       '<div class="chips">'+MANUAL_WX.map(function(p){
         return '<button class="chip sm" type="button" data-a="wx-manual" data-v="'+esc(p.k)+'" aria-pressed="'+(ui.wxKey==='manual:'+p.k)+'">'+esc(p.label)+'</button>';
       }).join('')+'</div></div>';
+  }
+  /* 제목 왼쪽 영역과 열기/접기 버튼만 토글한다. 탐색 링크와 카드 본문은 토글 기준이 아니다. */
+  function toggleLocCard(){
+    ui.locCardOpen=!ui.locCardOpen;
+    if(!ui.locCardOpen){
+      ui.wxOpen=false;
+      ui.wxIdx=-1;
+    }
+    render();
   }
 
   /* ---------- 화면: 날씨 카드 ---------- */
@@ -5361,8 +5384,7 @@ details li{margin-bottom:8px}
       return;
     }
     if(a==='loc-card-toggle'){
-      ui.locCardOpen = !ui.locCardOpen;
-      render();
+      toggleLocCard();
       return;
     }
     if(a==='cooler-card-toggle'){
@@ -5924,19 +5946,6 @@ details li{margin-bottom:8px}
       render();
       if(ui.myLoc)loadOsmNearby();
       if(!ui.wx||ui.wxStale)loadWeather();
-      else updateSuggest();
-    }else{
-      render();
-      if(ui.myLoc)loadOsmNearby();
-    }
-    loadSecretGardens(false);
-  })();
-})();
-</script>
-
-</body>
-</html>
-();
       else updateSuggest();
     }else{
       render();
