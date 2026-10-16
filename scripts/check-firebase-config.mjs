@@ -6,7 +6,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PROJECT_ID = /^[a-z][a-z0-9-]{4,28}[a-z0-9]$/;
 const MISSING_ACCOUNT = 'FIREBASE_SERVICE_ACCOUNT가 없습니다. 저장소 Settings → Secrets and variables → Actions에 서비스 계정 JSON 전체를 등록하세요.';
 
@@ -15,7 +14,6 @@ class FirebaseConfigError extends Error {}
 export function checkFirebaseConfig({
   serviceAccount = '',
   projectId = '',
-  defaultProjectId = '',
   allowMissing = false,
 } = {}) {
   if (!serviceAccount.trim()) {
@@ -48,20 +46,21 @@ export function checkFirebaseConfig({
   }
 
   const explicitProjectId = projectId.trim();
-  const selectedProjectId = explicitProjectId || defaultProjectId;
+  // 저장소에 남은 예시 .firebaserc 대신 등록된 서비스 계정의 프로젝트를 기본으로 쓴다.
+  const selectedProjectId = explicitProjectId || account.project_id;
   if (typeof selectedProjectId !== 'string' || !PROJECT_ID.test(selectedProjectId)) {
-    throw new FirebaseConfigError('배포 대상 프로젝트 ID가 올바르지 않습니다. FIREBASE_PROJECT_ID 또는 .firebaserc의 projects.default에 표시 이름이 아닌 프로젝트 ID를 설정하세요.');
+    throw new FirebaseConfigError('배포 대상 프로젝트 ID가 올바르지 않습니다. FIREBASE_PROJECT_ID에 표시 이름이 아닌 프로젝트 ID를 설정하세요.');
   }
 
   const warnings = [];
   if (selectedProjectId !== account.project_id) {
     // 다른 프로젝트의 서비스 계정에 대상 프로젝트 권한을 준 구성도 유효하다.
-    warnings.push('배포 대상과 서비스 계정의 소속 프로젝트가 다릅니다. FIREBASE_PROJECT_ID와 .firebaserc를 확인하고, 의도한 교차 프로젝트 배포라면 대상 프로젝트의 Hosting 권한을 확인하세요.');
+    warnings.push('FIREBASE_PROJECT_ID로 지정한 배포 대상과 서비스 계정의 소속 프로젝트가 다릅니다. 명시한 프로젝트 ID를 확인하고, 의도한 교차 프로젝트 배포라면 대상 프로젝트의 Hosting 권한을 확인하세요.');
   }
   return {
     ready: true,
     projectId: selectedProjectId,
-    source: explicitProjectId ? 'FIREBASE_PROJECT_ID' : '.firebaserc',
+    source: explicitProjectId ? 'FIREBASE_PROJECT_ID' : '서비스 계정 project_id',
     warnings,
   };
 }
@@ -75,19 +74,9 @@ function appendSummary(text) {
 function main() {
   const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT || '';
   const projectId = process.env.FIREBASE_PROJECT_ID || '';
-  let defaultProjectId = '';
-  if (serviceAccount.trim() && !projectId.trim()) {
-    try {
-      const config = JSON.parse(fs.readFileSync(path.join(ROOT, '.firebaserc'), 'utf8'));
-      defaultProjectId = config?.projects?.default;
-    } catch {
-      throw new FirebaseConfigError('.firebaserc를 읽을 수 없습니다. 유효한 projects.default를 지정하거나 FIREBASE_PROJECT_ID를 설정하세요.');
-    }
-  }
   const result = checkFirebaseConfig({
     serviceAccount,
     projectId,
-    defaultProjectId,
     allowMissing: process.env.FIREBASE_ALLOW_MISSING === 'true',
   });
   if (process.env.GITHUB_OUTPUT) {

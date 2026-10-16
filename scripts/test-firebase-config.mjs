@@ -14,12 +14,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
 const account = {
   type: 'service_account',
-  project_id: 'camping-food-helper',
-  client_email: 'test-deploy@camping-food-helper.iam.gserviceaccount.com',
+  project_id: 'test-camping-project',
+  client_email: 'test-deploy@test-camping-project.iam.gserviceaccount.com',
   private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }),
 };
 const serviceAccount = JSON.stringify(account);
-const options = { serviceAccount, defaultProjectId: 'camping-food-helper' };
+const options = { serviceAccount };
 
 function runCheck(env = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'firebase-config-test-'));
@@ -48,23 +48,23 @@ function assertNoCredentials(text) {
   assert.ok(!text.includes(account.private_key.split('\n')[1]), '키 본문을 출력하지 않아야 한다');
 }
 
-test('Firebase: FIREBASE_PROJECT_ID가 .firebaserc 기본값보다 우선한다', () => {
+test('Firebase: FIREBASE_PROJECT_ID가 서비스 계정의 기본 프로젝트보다 우선한다', () => {
   const result = checkFirebaseConfig({ ...options, projectId: 'another-camping-app' });
   assert.equal(result.ready, true);
   assert.equal(result.projectId, 'another-camping-app');
   assert.equal(result.source, 'FIREBASE_PROJECT_ID');
 });
 
-test('Firebase: 명시한 프로젝트가 없으면 .firebaserc 기본값을 사용한다', () => {
+test('Firebase: 명시한 프로젝트가 없으면 서비스 계정의 프로젝트를 사용한다', () => {
   const result = checkFirebaseConfig(options);
-  assert.equal(result.projectId, 'camping-food-helper');
-  assert.equal(result.source, '.firebaserc');
+  assert.equal(result.projectId, 'test-camping-project');
+  assert.equal(result.source, '서비스 계정 project_id');
   assert.deepEqual(result.warnings, []);
 });
 
 test('Firebase: 프로젝트 시크릿 앞뒤 공백은 제거한다', () => {
-  assert.equal(checkFirebaseConfig({ ...options, projectId: '  camping-food-helper\n' }).projectId, 'camping-food-helper');
-  assert.equal(checkFirebaseConfig({ ...options, projectId: ' \n' }).source, '.firebaserc');
+  assert.equal(checkFirebaseConfig({ ...options, projectId: '  test-camping-project\n' }).projectId, 'test-camping-project');
+  assert.equal(checkFirebaseConfig({ ...options, projectId: ' \n' }).source, '서비스 계정 project_id');
 });
 
 test('Firebase: 자격 증명이 없는 PR은 배포를 명시적으로 건너뛴다', () => {
@@ -112,14 +112,13 @@ test('Firebase: 손상된 PEM과 RSA가 아닌 키를 거부한다', () => {
 });
 
 test('Firebase: 프로젝트 ID 오류와 Actions 출력 줄바꿈 주입을 거부한다', () => {
-  for (const projectId of ['표시 이름', 'test/app', '123456789', 'camping-food-helper\nready=true']) {
+  for (const projectId of ['표시 이름', 'test/app', '123456789', 'test-camping-project\nready=true']) {
     assert.throws(() => checkFirebaseConfig({ ...options, projectId }), /프로젝트 ID가 올바르지 않습니다/);
   }
-  assert.throws(() => checkFirebaseConfig({ serviceAccount }), /프로젝트 ID가 올바르지 않습니다/);
 });
 
 test('Firebase: 교차 프로젝트 서비스 계정은 허용하되 대상 권한을 경고한다', () => {
-  const result = checkFirebaseConfig({ ...options, defaultProjectId: 'another-camping-app' });
+  const result = checkFirebaseConfig({ ...options, projectId: 'another-camping-app' });
   assert.equal(result.ready, true);
   assert.equal(result.projectId, 'another-camping-app');
   assert.match(result.warnings[0], /소속 프로젝트가 다릅니다/);
@@ -135,12 +134,14 @@ test('Firebase CLI: 검증한 프로젝트만 배포 액션에 전달하고 자�
   assertNoCredentials(run.stdout + run.stderr + run.output + run.summary);
 });
 
-test('Firebase CLI: 저장소 .firebaserc의 실제 기본 프로젝트를 읽는다', () => {
+test('Firebase CLI: .firebaserc의 예시 값 대신 서비스 계정의 실제 프로젝트를 사용한다', () => {
   const run = runCheck({ FIREBASE_SERVICE_ACCOUNT: serviceAccount });
   const config = JSON.parse(fs.readFileSync(path.join(ROOT, '.firebaserc'), 'utf8'));
+  assert.notEqual(account.project_id, config.projects.default, '회귀 검사를 위해 서로 다른 값을 사용한다');
   assert.equal(run.status, 0, run.stderr);
-  assert.equal(run.output, `ready=true\nproject_id=${config.projects.default}\n`);
-  assert.match(run.summary, /\.firebaserc/);
+  assert.equal(run.output, `ready=true\nproject_id=${account.project_id}\n`);
+  assert.match(run.summary, /서비스 계정 project_id/);
+  assert.equal(run.stderr, '', '명시적 프로젝트 설정이 없으면 불일치 경고가 없어야 한다');
 });
 
 test('Firebase CLI: 시크릿 없는 PR은 성공과 배포 생략을 구분한다', () => {
