@@ -59,6 +59,13 @@ button{font-family:var(--font-body)}
 .home h1{font-family:var(--font-display);font-weight:400;font-size:38px;line-height:1.12;letter-spacing:.01em;margin-bottom:10px}
 .home h1 em{font-style:normal;color:var(--pop)}
 .home p.sub{margin:0;max-width:17em;font-size:14px;opacity:.88}
+/* 모바일 제목 개선: 글자 크기·줄바꿈을 조정하고 배경 그림(씬)의 시각적 간섭을 완화한다 */
+@media(max-width:480px){
+  .home h1{font-size:clamp(26px,7.6vw,34px);line-height:1.18;word-break:keep-all;text-wrap:balance;margin-bottom:8px}
+  .home h1 em{display:inline-block}
+  .hero .scene{opacity:.4;width:54%;right:-8px}
+  .hero-top{margin-bottom:22px}
+}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:6px 2px 16px}
 .bar h1{font-size:28px;font-weight:900;letter-spacing:-.02em;line-height:1.2}
 
@@ -68,6 +75,12 @@ button{font-family:var(--font-body)}
 .field{display:grid;gap:9px;margin-bottom:16px}
 .lab{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+/* '세부 조건 설정' 접이 영역: 기본 접힘, 펼침 버튼으로 토글 */
+.fold{border:1.5px dashed var(--line);border-radius:16px;padding:10px 12px;margin:2px 0 14px}
+.fold-head{appearance:none;border:0;background:none;color:var(--fg);display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;font:800 14px/1.2 var(--font-body);cursor:pointer;text-align:left}
+.fold-head .fold-caret{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
+.fold-body{margin-top:8px}
+.fold-summary{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
 .chip{appearance:none;border:1.5px solid transparent;background:var(--chip);color:var(--fg);font:500 14px/1 var(--font-body);min-height:44px;padding:0 16px;border-radius:999px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-fg);font-weight:700}
 .chip.sm{min-height:36px;padding:0 12px;font-size:13px}
@@ -97,6 +110,11 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .time{flex:none;background:var(--cream-fg);color:var(--cream);font-weight:900;font-size:13px;border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums}
 .rec .why{margin:0 0 10px;color:var(--fg);font-weight:500}
 .rec-meta-line{font-size:13px;color:var(--muted);margin:0 0 12px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+/* 추천 카드 비교 개선: 예상 조리시간·난이도는 모든 카드에서 같은 라벨·형식으로 표시한다 */
+.rec-facts{display:flex;flex-wrap:wrap;gap:6px 10px;margin:0 0 10px}
+.rec-facts .fact{font-size:13px;color:var(--muted);background:var(--bg);border:1px solid var(--cream-line);border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums}
+.rec-facts .fact b{color:var(--fg);font-weight:900}
+.why-lab{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.04em;background:var(--pop);color:var(--pop-fg);border-radius:8px;padding:2px 8px;margin-right:6px;vertical-align:1px}
 .rec-ings{background:var(--bg);border-radius:14px;padding:10px 12px;margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.5}
 .rec-ings b{color:var(--fg);font-weight:700}
 
@@ -798,7 +816,9 @@ details li{margin-bottom:8px}
     locCardOpen:false,
     // 캠핑지 날씨 카드도 처음에는 접혀 있다(요약 한 줄만 보임).
     wxCardOpen:false,
-    coolerCardOpen:false
+    coolerCardOpen:false,
+    // 스타일·조리시간·분위기는 '세부 조건 설정'에 접어 두고 필요할 때만 펼친다(기본 접힘).
+    condDetailsOpen:false
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
   var gardenMapInstance=null, gardenMapMarkers=[];
@@ -4829,11 +4849,18 @@ details li{margin-bottom:8px}
   }
 
   function recommendationCard(r,i){
+    // 추천 카드 비교 개선: 예상 조리시간·난이도·추천 이유는 모든 카드에서 같은 라벨·형식으로 보여 준다.
     var parts=[];
     parts.push((r.people||ui.people)+'명 기준');
-    if(r.level)parts.push('난이도 '+r.level);
     if(r.equipment&&r.equipment.length)parts.push('사용 장비: '+r.equipment.join(', '));
     var metaLine=parts.map(function(p){return '<span>'+esc(p)+'</span>'}).join('<span aria-hidden="true">·</span>');
+    var timeVal=(r.minutes&&r.minutes>0)?r.minutes+'분':'미정';
+    var levelVal=r.level?String(r.level):'미정';
+    var facts='<div class="rec-facts">'+
+      '<span class="fact">⏱️ 예상 조리시간 <b>'+esc(timeVal)+'</b></span>'+
+      '<span class="fact">📊 난이도 <b>'+esc(levelVal)+'</b></span>'+
+    '</div>';
+    var reasonHtml='<p class="why"><span class="why-lab">추천 이유</span>'+esc(r.reason||'')+'</p>';
     var ingHtml=r.ingredientsPreview?'<p class="rec-ings"><b>예상 주요 재료</b> · '+esc(r.ingredientsPreview)+'</p>':'';
     var btns='<button class="btn primary wide" type="button" data-a="pick" data-i="'+i+'">'+(list?'새 준비물로 만들기':'이 요리로 준비물 만들기')+'</button>';
     if(list){
@@ -4850,9 +4877,10 @@ details li{margin-bottom:8px}
     }
     return '<article class="card rec">'+
       imageHtml+
-      '<div class="rec-top"><h3>'+esc(r.name)+'</h3>'+(r.minutes?'<span class="time">'+r.minutes+'분</span>':'')+'</div>'+
+      '<div class="rec-top"><h3>'+esc(r.name)+'</h3></div>'+
+      facts+
       '<p class="rec-meta-line">'+metaLine+'</p>'+
-      '<p class="why">'+esc(r.reason)+'</p>'+
+      reasonHtml+
       ingHtml+
       btns+
     '</article>';
@@ -4872,6 +4900,42 @@ details li{margin-bottom:8px}
         '<button class="link" type="button" data-a="tab" data-v="list">준비물 보기 →</button>'+
       '</section>';
     }
+    h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
+    peopleAndGearFields(false)+
+    '</section>'+
+    // 끼니는 바로 고르고, 스타일·조리시간·분위기는 '세부 조건 설정'에 접어 둔다(기본 접힘).
+    '<section class="card"><h2>오늘 캠핑 조건</h2>'+
+    '<div class="field"><span class="lab">끼니</span><div class="chips">'+chips('meal',MEALS,ui.meal)+'</div></div>'+
+    '<div class="fold">'+
+      '<button class="fold-head" type="button" data-a="cond-details-toggle" aria-expanded="'+(ui.condDetailsOpen?'true':'false')+'">'+
+        '<span>세부 조건 설정</span>'+
+        '<span class="fold-caret">'+(ui.condDetailsOpen?'접기 ▲':'열기 ▼')+'</span>'+
+      '</button>'+
+      (ui.condDetailsOpen?
+        '<div class="fold-body">'+
+        '<div class="field"><span class="lab">스타일</span><div class="chips">'+chips('style',STYLES,ui.style)+'</div></div>'+
+        '<div class="field"><span class="lab">조리 시간</span><div class="chips">'+chips('time',TIMES,ui.time)+'</div></div>'+
+        '<div class="field"><span class="lab">원하는 분위기</span><div class="chips">'+chips('mood',MOODS,ui.mood)+'</div></div>'+
+        '</div>'
+        :'<p class="fold-summary">스타일 '+esc(ui.style)+' · 조리 시간 '+esc(ui.time)+' · 분위기 '+esc(ui.mood)+'</p>')+
+    '</div>'+
+    '<p class="hint">못 먹는 재료: '+esc(profile.avoid.join(', ')||'없음')+' <button class="link" type="button" data-a="tab" data-v="me">바꾸기</button></p>'+
+    '<button class="btn primary big wide" type="button" data-a="recs"'+off+'>'+FLAME+'이 조건으로 메뉴 추천받기</button></section>';
+    if(ui.err)h+='<p class="err" role="alert">'+esc(ui.err)+'</p>';
+    if(ui.busy==='rec')h+=loadingCard('메뉴를 고르는 중이에요…');
+    else if(ui.busy==='prep')h+=loadingCard('「'+ui.busyName+'」 준비물을 만드는 중이에요…');
+    else if(activeRecs.length){
+      ui.CurrentRenderedRecs=activeRecs;
+      var wxSec=wxContext();
+      h+='<div class="sec-title"><h2>'+(ui.recs.length?'AI 추천 캠핑 요리':(wxSec?wxSec.icon+' '+esc(wxSec.label)+' 날씨 맞춤 추천 요리':'내 인원·장비 맞춤 추천 요리'))+' ('+ui.people+'명)</h2></div>';
+      activeRecs.forEach(function(r,i){
+        h+=recommendationCard(r,i);
+      });
+      h+='<button class="btn wide" type="button" data-a="more" style="margin-bottom:14px">다른 요리로 추천받기</button>';
+    }
+    h+='<form class="card" data-form="dish"><h2>만들 요리가 정해져 있다면</h2>'+
+      '<div class="addrow" style="margin-top:0"><input id="dish-add" type="text" maxlength="40" placeholder="예: 부대찌개, 감바스, 토마호크" value="'+esc(ui.dishText)+'" aria-label="만들 요리 이름"><button class="btn primary" type="submit"'+off+'>새로 만들기</button>'+(list?'<button class="btn pop" type="button" data-a="mergedish"'+off+'>＋합산</button>':'')+'</div>'+
+      '<p class="hint" style="margin:12px 0 0">여러 끼니(저녁 + 안주 + 아침)를 차례대로 합산해 장보기 목록 하나로 묶을 수 있어요.</p></form>';
     h+=locCard();
     h+=campIntroCard();
     h+=wxCard();
@@ -4959,31 +5023,6 @@ details li{margin-bottom:8px}
     }
     h+='</section>';
 
-    h+='<section class="card"><h2>인원 · 조리 장비 설정</h2>'+
-    peopleAndGearFields(false)+
-    '</section>'+
-    '<section class="card"><h2>오늘 캠핑 조건</h2>'+
-    '<div class="field"><span class="lab">스타일</span><div class="chips">'+chips('style',STYLES,ui.style)+'</div></div>'+
-    '<div class="field"><span class="lab">끼니</span><div class="chips">'+chips('meal',MEALS,ui.meal)+'</div></div>'+
-    '<div class="field"><span class="lab">조리 시간</span><div class="chips">'+chips('time',TIMES,ui.time)+'</div></div>'+
-    '<div class="field"><span class="lab">원하는 분위기</span><div class="chips">'+chips('mood',MOODS,ui.mood)+'</div></div>'+
-    '<p class="hint">못 먹는 재료: '+esc(profile.avoid.join(', ')||'없음')+' <button class="link" type="button" data-a="tab" data-v="me">바꾸기</button></p>'+
-    '<button class="btn primary big wide" type="button" data-a="recs"'+off+'>'+FLAME+'AI 맞춤 메뉴 추천받기</button></section>';
-    if(ui.err)h+='<p class="err" role="alert">'+esc(ui.err)+'</p>';
-    if(ui.busy==='rec')h+=loadingCard('메뉴를 고르는 중이에요…');
-    else if(ui.busy==='prep')h+=loadingCard('「'+ui.busyName+'」 준비물을 만드는 중이에요…');
-    else if(activeRecs.length){
-      ui.CurrentRenderedRecs=activeRecs;
-      var wxSec=wxContext();
-      h+='<div class="sec-title"><h2>'+(ui.recs.length?'AI 추천 캠핑 요리':(wxSec?wxSec.icon+' '+esc(wxSec.label)+' 날씨 맞춤 추천 요리':'내 인원·장비 맞춤 추천 요리'))+' ('+ui.people+'명)</h2></div>';
-      activeRecs.forEach(function(r,i){
-        h+=recommendationCard(r,i);
-      });
-      h+='<button class="btn wide" type="button" data-a="more" style="margin-bottom:14px">다른 요리로 추천받기</button>';
-    }
-    h+='<form class="card" data-form="dish"><h2>만들 요리가 정해져 있다면</h2>'+
-      '<div class="addrow" style="margin-top:0"><input id="dish-add" type="text" maxlength="40" placeholder="예: 부대찌개, 감바스, 토마호크" value="'+esc(ui.dishText)+'" aria-label="만들 요리 이름"><button class="btn primary" type="submit"'+off+'>새로 만들기</button>'+(list?'<button class="btn pop" type="button" data-a="mergedish"'+off+'>＋합산</button>':'')+'</div>'+
-      '<p class="hint" style="margin:12px 0 0">여러 끼니(저녁 + 안주 + 아침)를 차례대로 합산해 장보기 목록 하나로 묶을 수 있어요.</p></form>';
     return h;
   }
 
@@ -5869,6 +5908,11 @@ details li{margin-bottom:8px}
     }
     if(a==='cooler-card-toggle'){
       ui.coolerCardOpen = !ui.coolerCardOpen;
+      render();
+      return;
+    }
+    if(a==='cond-details-toggle'){
+      ui.condDetailsOpen=!ui.condDetailsOpen;
       render();
       return;
     }

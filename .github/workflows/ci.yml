@@ -59,6 +59,17 @@ jobs:
         # 버전을 고정해서 검사 결과가 임의로 바뀌지 않게 한다
         run: npx --yes html-validate@8.29.0 index.html camp-kitchen.html
 
+  ui-tests:
+    name: UI 자동 테스트 (node --test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 첫 화면·추천 카드 회귀 테스트 (4개)
+        run: npm test
+
   dependency-audit:
     name: 의존성 취약점 점검 (npm audit, 운영 의존성 기준)
     runs-on: ubuntu-latest
