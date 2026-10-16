@@ -176,6 +176,13 @@ details li{margin-bottom:8px}
 
 /* 캠핑지 찾기 · 자동완성 */
 .loc-card{overflow:visible}
+/* 캠핑지 찾기 카드: 헤더(기준축)를 누르면 아래 본문이 접히고 펼쳐진다 */
+.loc-head{cursor:pointer;user-select:none;-webkit-user-select:none;margin:-6px -8px 0;padding:6px 8px;border-radius:14px;transition:background .15s ease}
+.loc-head:hover{background:rgba(32,114,84,.07)}
+.loc-head:active{background:rgba(32,114,84,.13)}
+.loc-fold{transition:height .3s ease}
+.loc-fold.clipping{overflow:hidden}
+@media (prefers-reduced-motion: reduce){.loc-fold{transition:none}}
 .ac-wrap{position:relative}
 .loc-row{display:flex;gap:8px;align-items:stretch}
 .loc-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
@@ -2494,20 +2501,23 @@ details li{margin-bottom:8px}
   }
   function locCard(){
     var picked=profile.camp||ui.wxLoc;
-    var h='<section class="card loc-card" id="loc-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(ui.locCardOpen?'8':'0')+'px">'+
-      '<button type="button" data-a="loc-card-toggle" style="margin:0;padding:0;border:none;background:none;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px" aria-expanded="'+(ui.locCardOpen?'true':'false')+'"><h2 style="margin:0">캠핑지 찾기</h2><span style="font-size:11px;opacity:.7">'+(ui.locCardOpen?'▲':'▼')+'</span></button>'+
+    // 헤더(제목 줄) 전체가 접기/펼치기의 기준축: 어디를 눌러도 아래 본문이 접히고 펼쳐진다.
+    var h='<section class="card loc-card" id="loc-card">'+
+      '<div class="loc-head" data-a="loc-card-toggle" style="display:flex;justify-content:space-between;align-items:center;gap:10px">'+
+      '<h2 style="margin:0;display:inline-flex;align-items:center;gap:6px">캠핑지 찾기 <span style="font-size:11px;opacity:.7" aria-hidden="true">'+(ui.locCardOpen?'▲':'▼')+'</span></h2>'+
       '<span style="display:flex;gap:10px;align-items:center">'+
         '<button class="link" type="button" data-a="tab" data-v="camp" style="font-size:13px">전국 4,000+ 탐색 →</button>'+
-        '<button class="chip sm" type="button" data-a="loc-card-toggle" style="font-size:11px">'+(ui.locCardOpen?'접기 ▲':'열기 ▼')+'</button>'+
+        '<button class="chip sm" type="button" data-a="loc-card-toggle" style="font-size:11px" aria-expanded="'+(ui.locCardOpen?'true':'false')+'" aria-controls="loc-fold">'+(ui.locCardOpen?'접기 ▲':'열기 ▼')+'</button>'+
       '</span>'+
-      '</div>';
+      '</div>'+
+      '<div class="loc-fold" id="loc-fold">';
     if(!ui.locCardOpen){
       h+='<p class="hint" style="margin:8px 0 0"><button type="button" data-a="loc-card-toggle" style="padding:0;border:none;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left">'+(picked?'⛺ 선택된 캠핑지: <b>'+esc(picked.name)+'</b>'+(picked.region?' · '+esc(picked.region):''):'캠핑장 검색 · 내 위치 찾기가 접혀 있어요. 열기를 눌러 다시 펼치세요.')+'</button></p>';
       // 접혀 있어도 '지금 날씨를 직접 고르기'는 바로 쓸 수 있게 남겨 둔다(네트워크 없이도 동작).
       if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
-      return h+'</section>';
+      return h+'</div></section>';
     }
-    h+='<p class="hint" style="margin:0 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
+    h+='<p class="hint" style="margin:8px 0 10px">캠핑장 이름이나 지역 이름을 치면 <b>인근 캠핑장을 자동으로 제안</b>해요. 고른 캠핑지의 날씨로 맞춤 메뉴까지 뽑아 드려요.</p>'+
       '<div class="ac-wrap">'+
         '<div class="loc-row">'+
           '<input id="camp-search" class="loc-input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="camp-ac" autocomplete="off" spellcheck="false" placeholder="예: 자라섬, 가평, 제주 서귀포" aria-label="캠핑장 또는 지역 검색" value="'+esc(ui.wxQ)+'">'+
@@ -2522,13 +2532,48 @@ details li{margin-bottom:8px}
     if(!ui.myLoc)h+='<p class="hint" style="margin:12px 0 0">📡 <b>내 위치</b>를 누르면 GPS로 반경 30km 안의 캠핑장을 가까운 순서로 보여드려요.</p>';
     else h+='<p class="hint" style="margin:12px 0 0">📍 현재 위치: '+esc(ui.myLoc.lat.toFixed(3))+', '+esc(ui.myLoc.lon.toFixed(3))+(ui.osmCamps&&ui.osmCamps.length?' · 실시간 지도에서 '+ui.osmCamps.length+'곳을 함께 반영했어요.':'')+'</p>';
     if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)h+=manualWxPicker();
-    return h+'</section>';
+    return h+'</div></section>';
   }
   function manualWxPicker(){
     return '<div class="field" style="margin:16px 0 0"><span class="lab">지금 날씨를 직접 고르기 (네트워크 없이도 동작)</span>'+
       '<div class="chips">'+MANUAL_WX.map(function(p){
         return '<button class="chip sm" type="button" data-a="wx-manual" data-v="'+esc(p.k)+'" aria-pressed="'+(ui.wxKey==='manual:'+p.k)+'">'+esc(p.label)+'</button>';
       }).join('')+'</div></div>';
+  }
+  /* 캠핑지 찾기 카드 접기/펼치기: 헤더(.loc-head)를 기준축으로 본문(.loc-fold)이 부드럽게 접히고 펼쳐진다.
+     빠르게 연달아 눌러도 애니메이션이 겹치지 않도록 토큰/타이머로 관리한다. */
+  var locFoldTimer=null, locFoldToken=0;
+  function toggleLocCard(){
+    locFoldToken++;
+    var my=locFoldToken;
+    if(locFoldTimer){clearTimeout(locFoldTimer);locFoldTimer=null;}
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var fold=document.querySelector('#loc-card .loc-fold');
+    if(reduce||!fold){ui.locCardOpen=!ui.locCardOpen;render();return;}
+    if(ui.locCardOpen){
+      // 접기: 열려 있는 본문을 0으로 줄어들게 한 뒤 상태를 반영한다.
+      fold.classList.add('clipping');
+      fold.style.height=fold.scrollHeight+'px';
+      void fold.offsetHeight;
+      fold.style.height='0px';
+      var fin=function(){ if(my!==locFoldToken)return; locFoldTimer=null; ui.locCardOpen=false; render(); };
+      fold.addEventListener('transitionend',function(ev){ if(ev.propertyName==='height')fin(); },{once:true});
+      locFoldTimer=setTimeout(fin,360);
+    }else{
+      // 펼치기: 상태를 반영한 뒤 본문을 0에서 내용 높이까지 자라나게 한다.
+      ui.locCardOpen=true;
+      render();
+      var f=document.querySelector('#loc-card .loc-fold');
+      if(!f)return;
+      var target=f.scrollHeight;
+      f.classList.add('clipping');
+      f.style.height='0px';
+      void f.offsetHeight;
+      f.style.height=target+'px';
+      var rest=function(){ if(my!==locFoldToken)return; locFoldTimer=null; f.style.height='auto'; f.classList.remove('clipping'); };
+      f.addEventListener('transitionend',function(ev){ if(ev.propertyName==='height')rest(); },{once:true});
+      locFoldTimer=setTimeout(rest,360);
+    }
   }
 
   /* ---------- 화면: 날씨 카드 ---------- */
@@ -5361,8 +5406,7 @@ details li{margin-bottom:8px}
       return;
     }
     if(a==='loc-card-toggle'){
-      ui.locCardOpen = !ui.locCardOpen;
-      render();
+      toggleLocCard();
       return;
     }
     if(a==='cooler-card-toggle'){
