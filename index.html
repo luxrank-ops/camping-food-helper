@@ -238,6 +238,12 @@ details li{margin-bottom:8px}
 .wx-cond{margin-left:auto;text-align:right;font-size:15px}
 .wx-cond small{color:var(--muted);font-size:12px}
 .wx-loc{font-size:13px;color:var(--muted);margin:12px 0 0;overflow-wrap:anywhere}
+/* 캠핑지 날씨 카드 접기·펼치기: 제목 영역과 [열기 ▼]만 토글 기준. 접힌 상태에는 한 줄 요약만 남는다. */
+.wx-fold-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wx-title-toggle{appearance:none;border:0;background:none;color:inherit;display:flex;align-items:center;gap:6px;flex:1;min-width:0;min-height:44px;padding:0;text-align:left;font:inherit;font-size:18px;font-weight:900;letter-spacing:-.01em;cursor:pointer}
+.wx-arrow{font-size:11px;line-height:1;opacity:.7}
+.wx-sum{margin:8px 0 0;overflow-wrap:anywhere}
+.wx-fold[hidden]{display:none!important}
 .wx-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
 .wx-cell{background:var(--bg);border-radius:14px;padding:10px 6px;text-align:center;font-size:11px;color:var(--muted)}
 .wx-cell b{display:block;font-size:16px;color:var(--fg);font-variant-numeric:tabular-nums;margin-top:2px}
@@ -790,6 +796,8 @@ details li{margin-bottom:8px}
     safetyGuideOpen:false,
     // 첫 화면(추천 탭)은 접힌 상태로 시작한다. 펼치기는 각 카드의 [열기 ▼] 버튼으로.
     locCardOpen:false,
+    // 캠핑지 날씨 카드도 처음에는 접혀 있다(요약 한 줄만 보임).
+    wxCardOpen:false,
     coolerCardOpen:false
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
@@ -3006,22 +3014,28 @@ details li{margin-bottom:8px}
         '<span class="wx-d-temp">'+deg(d.tmin)+'~'+deg(d.tmax)+(d.pop!=null?' · 💧'+Math.round(d.pop)+'%':'')+'</span></div>';
     }).join('')+'</div>';
   }
-  function wxCard(){
-    if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)return '';
+  /* 접힌 카드 머리줄에 보여 줄 한 줄 요약(캠핑지·현재 날씨·체감·강수확률). */
+  function wxSummaryText(){
+    if(ui.wxBusy)return '날씨를 불러오는 중이에요…';
+    if(ui.wxErr)return '날씨를 못 불러왔어요. 펼쳐서 다시 불러오거나 직접 골라 주세요.';
+    var w=ui.wx;
+    if(!w)return '';
+    var info=wxInfo(w),loc=ui.wxLoc||profile.camp||null;
+    return (loc&&loc.name?'⛺ '+loc.name+' · ':'')+wmo(w.code)[1]+' '+deg(w.temp)+' '+info.label+' · 체감 '+deg(info.feels)+' · 강수확률 '+(info.pop||0)+'%';
+  }
+  /* 펼쳤을 때 보이는 본문(로딩·오류·날씨 상세). */
+  function wxBodyHtml(){
     if(ui.wxBusy){
-      return '<section class="card"><h2>캠핑지 날씨</h2><div class="loading" role="status"><span class="spin" aria-hidden="true"></span><p>'+esc((ui.wxLoc&&ui.wxLoc.name)||'캠핑지')+' 날씨를 불러오는 중이에요…</p></div></section>';
+      return '<div class="loading" role="status"><span class="spin" aria-hidden="true"></span><p>'+esc((ui.wxLoc&&ui.wxLoc.name)||'캠핑지')+' 날씨를 불러오는 중이에요…</p></div>';
     }
-    var h='';
     if(ui.wxErr){
-      h+='<section class="card"><h2>캠핑지 날씨</h2><p class="err" role="alert">'+esc(ui.wxErr)+'</p>'+
-        '<button class="btn wide" type="button" data-a="wx-refresh">날씨 다시 불러오기</button>'+manualWxPicker()+'</section>';
-      return h;
+      return '<p class="err" role="alert">'+esc(ui.wxErr)+'</p>'+
+        '<button class="btn wide" type="button" data-a="wx-refresh">날씨 다시 불러오기</button>'+manualWxPicker();
     }
-    var w=ui.wx,info=wxInfo(w),wx=wxContext(),loc=ui.wxLoc||profile.camp||{name:'캠핑지'};
+    var w=ui.wx,info=wxInfo(w),loc=ui.wxLoc||profile.camp||{name:'캠핑지'};
     var rule=WX_RULES[info.primary];
     var dist=(ui.myLoc&&loc.lat!=null)?fmtKm(distKm(ui.myLoc,loc)):'';
-    h+='<section class="card"><div class="wx-head"><h2 style="margin:0">캠핑지 날씨</h2>'+
-      '<div class="wx-tags">'+info.tags.slice(0,3).map(function(t,i){
+    var h='<div class="wx-head"><div class="wx-tags">'+info.tags.slice(0,3).map(function(t,i){
         return '<span class="wx-tag'+(i?' warn':'')+'">'+WX_RULES[t].icon+' '+esc(WX_RULES[t].label)+'</span>';
       }).join('')+'</div></div>'+
       '<div class="wx-now">'+
@@ -3053,7 +3067,25 @@ details li{margin-bottom:8px}
       '</div>'+
       (list?'<p class="hint" style="margin:10px 0 0">진행 중인 준비물이 있어요. 날씨 메뉴를 고르면 <b>새 목록으로 시작</b>해요(추천 탭의 [＋합산]을 쓰면 기존 목록에 더할 수 있어요).</p>':'')+
       '<p class="hint" style="margin:12px 0 0">'+(profile.wxAware?'날씨는 AI 추천·준비물에도 함께 전달돼요. ':'<b>날씨 맞춤 추천이 꺼져 있어요.</b> 내 정보 탭에서 켤 수 있어요. ')+
-      '기상 자료: Open-Meteo · 캠핑장 위치: 한국관광공사 고캠핑 정보(2024-09)</p>'+
+      '기상 자료: Open-Meteo · 캠핑장 위치: 한국관광공사 고캠핑 정보(2024-09)</p>';
+    return h;
+  }
+  function wxCard(){
+    if(!ui.wx&&!ui.wxBusy&&!ui.wxErr)return '';
+    var open=!!ui.wxCardOpen;
+    var expanded=open?'true':'false';
+    var h='<section class="card wx-card" id="wx-card">'+
+      '<div class="wx-fold-head">'+
+        '<button class="wx-title-toggle" type="button" data-a="wx-card-toggle" aria-expanded="'+expanded+'" aria-controls="wx-fold">'+
+          '<span class="wx-title">캠핑지 날씨</span><span class="wx-arrow" aria-hidden="true">'+(open?'▲':'▼')+'</span>'+
+        '</button>'+
+        '<button class="chip sm" type="button" data-a="wx-card-toggle" aria-expanded="'+expanded+'" aria-controls="wx-fold" style="font-size:11px">'+(open?'접기 ▲':'열기 ▼')+'</button>'+
+      '</div>';
+    if(!open){
+      var sum=wxSummaryText();
+      h+='<p class="hint wx-sum">'+(sum?esc(sum):'캠핑지를 고르면 날씨와 날씨 맞춤 메뉴가 여기 나와요.')+'</p>';
+    }
+    h+='<div class="wx-fold" id="wx-fold"'+(open?'':' hidden')+'>'+wxBodyHtml()+'</div>'+
     '</section>';
     return h;
   }
@@ -5828,6 +5860,11 @@ details li{margin-bottom:8px}
     }
     if(a==='loc-card-toggle'){
       toggleLocCard();
+      return;
+    }
+    if(a==='wx-card-toggle'){
+      ui.wxCardOpen=!ui.wxCardOpen;
+      render();
       return;
     }
     if(a==='cooler-card-toggle'){
