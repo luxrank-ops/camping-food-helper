@@ -9,6 +9,7 @@
     "build": "node --check server.js && node scripts/build-hosting.mjs",
     "build:hosting": "node scripts/build-hosting.mjs",
     "lint": "node --check server.js",
+    "test": "node --test scripts/test-ui.mjs",
     "check:client": "node scripts/check-client-env.mjs",
     "check:uptime": "node scripts/uptime-check.mjs"
   },
