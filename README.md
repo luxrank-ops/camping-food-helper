@@ -84,7 +84,7 @@
 
 ## 자동화 · 품질 검증
 
-푸시와 PR마다 GitHub Actions가 검사를 돌리고, 배포는 Vercel이 `main` 머지 시 자동으로 합니다. 수동 배포는 없습니다.
+푸시와 PR마다 GitHub Actions가 검사를 돌리고, Vercel 배포는 `main` 머지 시 자동으로 실행됩니다. Firebase Hosting 배포·재실행 방법은 아래 배포 절을 참고하세요.
 
 ### CI (`.github/workflows/ci.yml`)
 
@@ -93,7 +93,7 @@
 | 백엔드 문법 검사 | `server.js`, `api/`, `lib/`, `scripts/` 문법 (`node --check`) | `node --check server.js` |
 | 클라이언트 정적 스캔 | `index.html`, `camp-kitchen.html`, `data/*.js`에서 `process.env`, `require(`, `module.exports`, `__dirname` 같은 서버 전용 참조 검출. 주석은 무시합니다. | `npm run check:client` |
 | HTML 유효성 | `html-validate`로 구조 오류 검사 | `npx html-validate@8.29.0 index.html camp-kitchen.html` |
-| UI 자동 테스트 | 첫 화면 배치·세부 조건 접이·추천 카드 라벨·모바일 제목 회귀 테스트 4개 | `npm test` |
+| 자동 테스트 | UI 회귀 테스트 4개 + Firebase 배포 설정·워크플로 회귀 테스트 | `npm test` |
 | 의존성 취약점 | `npm audit --omit=dev --audit-level=high` (high 이상이면 실패) | — |
 
 - 클라이언트 코드는 브라우저에 `process`가 없습니다. `process.env`를 쓰면 앱 전체가 멈추므로, 키 유무는 서버가 판단해서 503으로 알려주도록 되어 있습니다.
@@ -107,13 +107,15 @@
 ### 배포 (Firebase Hosting GitHub Actions CI/CD & Vercel)
 
 - **Firebase Hosting 자동 배포 (`.github/workflows/firebase-deploy.yml`)**:
-  - `main` 브랜치에 푸시(또는 PR 머지)되면 **백엔드·스크립트 문법 검사 → 클라이언트 보안 스캔 → UI 자동 테스트 → HTML 유효성 검사 → 정적 번들(`dist/`) 빌드**를 거친 뒤 **Firebase Hosting(`live` 채널)**에 자동으로 배포됩니다.
-  - Pull Request 생성 시에는 임시 프리뷰 채널(7일 유지)에 배포하고 PR 코멘트로 미리보기 URL을 남깁니다.
+  - `main` 브랜치에 푸시(또는 PR 머지)되면 **백엔드·스크립트 문법 검사 → 클라이언트 보안 스캔 → 자동 테스트 → HTML 유효성 검사 → 정적 번들(`dist/`) 빌드 → Firebase 설정 검증**을 거친 뒤 **Firebase Hosting(`live` 채널)**에 자동으로 배포됩니다.
+  - 같은 저장소의 일반 Pull Request는 자격 증명이 있을 때 임시 프리뷰 채널(7일 유지)에 배포하고 PR 코멘트로 미리보기 URL을 남깁니다. fork·Dependabot PR은 품질 검사와 빌드만 수행합니다.
+  - 배포 대상은 **`FIREBASE_PROJECT_ID` 시크릿 → 미설정 시 서비스 계정 JSON의 `project_id`** 순서로 선택하며, 검증한 값을 live·PR 배포 액션 양쪽에 명시적으로 전달합니다.
+  - `main` 배포에 필요한 서비스 계정 시크릿이 없거나 설정 형식이 잘못되면 실패합니다. 일반 PR에서 시크릿이 없으면 경고와 함께 배포를 건너뜁니다. **검증만 성공한 실행과 실제 배포 성공은 다릅니다**(Actions 실행 요약 참고).
   - 빌드 단계(`npm run build:hosting`)에서 `dist/` 폴더에 클라이언트 필수 자산(`index.html`, `camp-kitchen.html`, `data/campgrounds.js`, 비밀번호·비공개 상세주소가 마스킹된 `data/secret_gardens.json`)만 추출하여 서버 전용 코드나 민감 정보가 정적 호스팅에 노출되지 않도록 보호합니다.
 
 **Firebase Hosting 자동 배포 초기 설정 (GitHub Secrets 1회 등록)**
 
-1. **Firebase 프로젝트 준비**: [Firebase 콘솔](https://console.firebase.google.com/)에서 프로젝트를 생성하거나 기존 프로젝트 ID를 확인합니다 (`.firebaserc`의 기본값은 `camping-food-helper`이며, GitHub Secret으로 덮어쓸 수 있습니다).
+1. **Firebase 프로젝트 준비**: [Firebase 콘솔](https://console.firebase.google.com/)에서 프로젝트를 생성하거나 기존 프로젝트 ID를 확인합니다. GitHub Actions는 등록된 서비스 계정의 프로젝트를 기본 배포 대상으로 사용합니다. `.firebaserc`의 `camping-food-helper`는 로컬 CLI용 기본값이므로, 로컬에서 직접 배포한다면 실제 프로젝트에 맞추거나 `--project`를 지정하세요.
 2. **서비스 계정 키 발급 (권장 방법 A - CLI 자동 설정)**:
    로컬 터미널에서 프로젝트 루트 폴더로 이동한 뒤 아래 명령어를 실행하면 GitHub 인증과 서비스 계정 생성·시크릿 등록이 한 번에 완료됩니다.
    ```bash
@@ -124,7 +126,23 @@
    - Firebase 콘솔 → **프로젝트 설정(⚙️) → 서비스 계정 → 새 비공개 키 생성**으로 JSON 파일을 다운로드합니다(또는 Google Cloud IAM에서 `Firebase Hosting Admin` 권한이 부여된 서비스 계정 JSON 키 발급).
    - GitHub 저장소 **Settings → Secrets and variables → Actions → New repository secret**에서 아래 시크릿을 추가합니다:
      - `FIREBASE_SERVICE_ACCOUNT`: 다운로드한 서비스 계정 JSON 파일의 전체 내용 붙여넣기 (필수)
-     - `FIREBASE_PROJECT_ID`: 배포할 Firebase 프로젝트 ID (선택, 미설정 시 `.firebaserc`의 `camping-food-helper` 사용)
+     - `FIREBASE_PROJECT_ID`: 배포할 Firebase 프로젝트 **ID** (표시 이름·프로젝트 번호가 아님). 선택 사항이며, 미설정 시 `FIREBASE_SERVICE_ACCOUNT` JSON의 `project_id`를 사용합니다. 서비스 계정 소속과 다른 프로젝트로 배포하려면 이 값을 명시하고 대상 프로젝트의 IAM 권한을 부여하세요.
+
+#### Firebase 배포 문제 해결 (2026-10-16)
+
+`FIREBASE_PROJECT_ID`를 안내만 하고 배포 액션에 전달하지 않던 누락을 수정했습니다. 별도 프로젝트 ID가 없으면 저장소의 예시 프로젝트 이름 대신 **서비스 계정과 같은 프로젝트**로 배포합니다. 또한 `scripts/check-firebase-config.mjs`(`npm run check:firebase`)로 JSON 형식, 서비스 계정 필수 필드, RSA 비공개 키, 배포 대상 ID를 먼저 확인합니다. 키 원문·이메일은 로그/요약에 기록하지 않습니다. 계정 소속과 배포 대상 프로젝트가 다르면 경고하되, 대상 프로젝트에 권한을 부여한 교차 프로젝트 배포는 허용합니다.
+
+이 검사는 **설정 형식만** 확인합니다. 키의 실제 유효성·IAM 권한·Firebase/Hosting 활성화 여부는 배포 단계에서 확인해야 합니다. 설정 검사에 통과했다는 이유만으로 배포 문제가 해결됐다고 판단하지 마세요.
+
+1. **실패 단계 확인**: Actions → **Deploy to Firebase Hosting** → 실패한 실행을 열어 설정 검사 실패인지 실제 배포 실패인지 구분합니다. `npx ... exit code 2`만으로 원인을 단정하지 말고, 실패한 배포 단계에 나온 첫 Firebase 오류를 확인합니다.
+2. **프로젝트 없음/권한 거부**: `FIREBASE_PROJECT_ID`가 정확한지, 서비스 계정에 **배포 대상 프로젝트**의 `Firebase Hosting Admin` 권한이 있는지 확인합니다. 계정 소속 프로젝트의 권한만으로 다른 프로젝트에 배포할 수는 없습니다.
+3. **인증 오류**: 서비스 계정 키가 삭제·비활성화되지 않았는지 확인하고, 필요하면 새 키를 발급해 GitHub Secret을 교체합니다. JSON 일부, 파일 경로, API 키를 서비스 계정 JSON 대신 넣으면 안 됩니다. **키 원문을 채팅·PR·이슈에 붙여 넣지 마세요.**
+4. **Hosting 사이트 없음**: Firebase 콘솔에서 대상 프로젝트와 기본 Hosting 사이트가 준비되어 있는지 확인합니다. 다른 사이트/멀티사이트를 사용한다면 별도의 Hosting 대상 설정이 필요합니다.
+5. **수정 후 재실행**: 코드 변경은 새 PR의 프리뷰 배포로 확인하고, 머지 후 `main`의 live 배포 결과를 확인합니다. 시크릿만 바꿨다면 최신 `main` 워크플로의 **Run workflow**를 사용합니다. 이전 커밋의 실행을 재실행하면 예전 워크플로가 실행되므로 코드 수정 확인에는 적합하지 않습니다. `main` 이외 브랜치의 수동 실행은 빌드·검사만 하고 live에는 배포하지 않습니다.
+
+회귀 테스트(`scripts/test-firebase-config.mjs`)는 임시 테스트 키만 사용해 프로젝트 선택 우선순위, 잘못된 자격 증명, 비밀정보 미출력, 배포 생략/실패 구분, 워크플로 연결·브랜치 제한을 검사합니다. `npm test`에 포함되어 CI와 배포 워크플로에서 함께 실행됩니다.
+
+> Firebase Hosting은 현재 **정적 프런트엔드만** 배포합니다. Express/Vercel의 `/api/*` 서버 기능은 이 번들에 포함되지 않으며, Firebase에서 AI 등 서버 기능까지 제공하려면 별도 백엔드 연결이 필요합니다. 이번 수정은 Hosting 배포 설정 범위입니다.
 
 - **Vercel 병행 배포**: `main`에 머지되면 Vercel GitOps 연동 환경에서도 함께 자동 배포됩니다.
 

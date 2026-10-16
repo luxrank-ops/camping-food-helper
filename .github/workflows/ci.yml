@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: 첫 화면·추천 카드 회귀 테스트 (4개)
+      - name: UI·Firebase 배포 설정 회귀 테스트
         run: npm test
 
   dependency-audit:
