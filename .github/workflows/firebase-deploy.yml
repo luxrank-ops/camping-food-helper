@@ -45,7 +45,7 @@ jobs:
       - name: 클라이언트 정적 보안 스캔 (process.env 등 서버 전용 참조 검출)
         run: npm run check:client
 
-      - name: UI 자동 테스트 (첫 화면·추천 카드 회귀 테스트)
+      - name: 자동 테스트 (UI 및 Firebase 배포 설정)
         run: npm test
 
       - name: HTML 유효성 검사
@@ -54,31 +54,57 @@ jobs:
       - name: Firebase Hosting 배포용 번들(dist/) 빌드
         run: npm run build
 
-      - name: Firebase 서비스 계정 시크릿 확인
-        id: check_secret
+      - name: Firebase 배포 설정 검증
+        id: firebase_config
+        # fork·Dependabot PR에는 배포 자격 증명을 사용하지 않는다.
+        # 수동 실행도 main에서만 live 배포를 허용한다.
+        if: >-
+          (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.head.repo.full_name == github.repository &&
+           github.actor != 'dependabot[bot]')
         env:
-          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: |
-          if [ -n "$SERVICE_ACCOUNT" ]; then
-            echo "has_secret=true" >> "$GITHUB_OUTPUT"
-            echo "FIREBASE_SERVICE_ACCOUNT 시크릿이 확인되었습니다."
-          else
-            echo "has_secret=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::FIREBASE_SERVICE_ACCOUNT 시크릿이 아직 설정되지 않았습니다. GitHub 저장소의 Settings -> Secrets and variables -> Actions에 FIREBASE_SERVICE_ACCOUNT를 등록하면 자동 배포가 완료됩니다."
-          fi
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_ALLOW_MISSING: ${{ github.event_name == 'pull_request' }}
+        run: npm run check:firebase
 
-      - name: Firebase Hosting 프로덕션 배포 (main 브랜치 푸시 시)
-        if: steps.check_secret.outputs.has_secret == 'true' && github.event_name != 'pull_request'
+      - name: Firebase 배포 생략 안내
+        if: steps.firebase_config.outcome == 'skipped'
+        run: |
+          echo '### Firebase 배포 생략' >> "$GITHUB_STEP_SUMMARY"
+          echo 'fork·Dependabot PR 또는 main 이외 브랜치의 수동 실행은 품질 검사와 빌드만 수행합니다. Firebase 배포 성공을 의미하지 않습니다.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Firebase Hosting 프로덕션 배포 (main 전용)
+        id: deploy_live
+        if: steps.firebase_config.outputs.ready == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ steps.firebase_config.outputs.project_id }}
           channelId: live
 
       - name: Firebase Hosting PR 프리뷰 배포 (Pull Request 시)
-        if: steps.check_secret.outputs.has_secret == 'true' && github.event_name == 'pull_request'
+        id: deploy_preview
+        if: steps.firebase_config.outputs.ready == 'true' && github.event_name == 'pull_request'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ steps.firebase_config.outputs.project_id }}
           expires: 7d
+
+      - name: Firebase 배포 실패 확인 사항
+        if: failure() && (steps.deploy_live.outcome == 'failure' || steps.deploy_preview.outcome == 'failure')
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### Firebase Hosting 배포 실패
+
+          설정 형식 검사·빌드 통과는 실제 배포 성공을 의미하지 않습니다. 실패한 배포 단계의 첫 Firebase 오류를 확인하세요.
+
+          - 프로젝트 없음/접근 거부: `FIREBASE_PROJECT_ID`(미설정 시 `.firebaserc`)와 대상 프로젝트의 서비스 계정 Hosting 권한을 확인합니다.
+          - 인증 오류: `FIREBASE_SERVICE_ACCOUNT` 키가 삭제·만료·비활성화되지 않았는지 확인합니다.
+          - Hosting 사이트 없음: 대상 프로젝트에 Firebase와 Hosting 사이트가 준비되어 있는지 확인합니다.
+          - 자세한 점검·재실행 절차는 README의 Firebase 배포 문제 해결 절을 참고하세요. 키 JSON이나 원본 디버그 로그를 공개 이슈에 첨부하지 마세요.
+          EOF
