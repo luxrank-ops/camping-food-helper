@@ -54,6 +54,25 @@ test('추천 카드 비교 개선: 예상 조리시간·난이도·추천 이유
   assert.match(fn, /미정/, '값이 없어도 라벨을 유지하고 미정으로 표시해야 한다');
 });
 
+test('비밀의 정원 등록: 유형·시설·사진 선택 후에도 입력한 초안을 복원한다', () => {
+  assert.match(html, /gardenRegDraft:null/, '등록 초안 상태가 있어야 한다');
+  assert.match(html, /function captureGardenRegistrationDraft\(\)/, '입력값을 상태로 보존하는 함수가 있어야 한다');
+  const modalStart = html.indexOf('if(ui.gardenRegModal){');
+  const modalEnd = html.indexOf('// 2. 상세 모달 (스팟 상세 보기)', modalStart);
+  const modal = html.slice(modalStart, modalEnd);
+  assert.ok(modalStart >= 0 && modalEnd > modalStart, '등록 모달 영역을 찾아야 한다');
+  for (const field of ['name', 'address', 'lat', 'lng', 'addressDetail', 'navQuery', 'fee', 'toiletStatus', 'entryRoad', 'tips', 'author', 'password']) {
+    assert.ok(modal.includes('regDraft.' + field), `등록 폼의 ${field} 값을 다시 그릴 때 복원해야 한다`);
+  }
+  const actionsStart = html.indexOf("if(a==='garden-set-cat'){");
+  const actionsEnd = html.indexOf("if(a==='garden-gps-fill'){");
+  const actions = html.slice(actionsStart, actionsEnd);
+  assert.match(actions, /garden-set-cat'\)\{\s*captureGardenRegistrationDraft\(\)/, '유형 선택 전에 입력을 저장해야 한다');
+  assert.match(actions, /garden-fac-toggle'\)\{\s*captureGardenRegistrationDraft\(\)/, '시설 선택 전에 입력을 저장해야 한다');
+  assert.match(actions, /garden-preset-pick'\)\{\s*captureGardenRegistrationDraft\(\)/, '사진 선택 전에 입력을 저장해야 한다');
+  assert.match(html, /ui\.gardenRegError=error&&error\.status[\s\S]{0,250}render\(\)/, '등록 실패 메시지를 모달에 표시하고 입력을 유지해야 한다');
+});
+
 test('모바일 제목 개선: 글자 크기·줄바꿈 조정과 배경 그림 간섭 완화가 있다', () => {
   const m = html.match(/@media\(max-width:480px\)\{\s*\.home h1\{([^}]*)\}[\s\S]{0,200}?\.hero \.scene\{([^}]*)\}/);
   assert.ok(m, '모바일 제목·배경 그림 미디어 쿼리가 있어야 한다');

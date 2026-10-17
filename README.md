@@ -82,6 +82,20 @@
 
 > 실제 모바일 브라우저에서의 화면·터치 동작 확인은 후속 검증으로 남겨 두었습니다. 오프라인 지원, 재료 합산 로직 개선도 후속 작업 범위입니다.
 
+## 비밀의 정원 등록 오류·입력 초기화 개선 (2026-10-17)
+
+- 유형·시설·사진 선택으로 화면을 다시 그릴 때 등록 폼 입력값이 날아가던 문제를 고쳤습니다. 입력 초안을 상태로 보존하므로 선택을 바꾸거나 등록에 실패해도 다시 입력할 필요가 없습니다.
+- 기존 운영 경로(Vercel)에 비밀의 정원 API가 없었습니다. Express API는 로컬 개발에서만 실행되고 Vercel에는 `/api/sample`, `/api/generate-image`만 배포되어 등록 요청이 실패했습니다. 이제 Vercel에 목록·등록·잠금 해제·수정·삭제·좋아요 API를 추가하고, 로컬 Express와 같은 처리 로직을 공유합니다.
+- Vercel 서버리스 파일 시스템은 영구 저장소가 아니므로 운영 데이터는 Firebase Firestore에 저장합니다. 로컬 `npm run dev`는 기존 `data/secret_gardens.json`을 사용합니다. Firestore가 설정되지 않은 운영 환경에서는 성공으로 속이지 않고 HTTP 503과 원인을 반환합니다.
+- **Vercel 최초 설정이 필요합니다**(시크릿 값은 저장소에 넣지 마세요).
+  1. Firebase 콘솔에서 프로젝트의 기본 Firestore 데이터베이스를 생성합니다.
+  2. 서버용 서비스 계정에 해당 프로젝트의 Firestore 읽기·쓰기 권한(`Cloud Datastore User`)을 부여합니다.
+  3. Vercel 프로젝트의 Environment Variables에 `FIREBASE_PROJECT_ID`(프로젝트 ID)와 `FIREBASE_SERVICE_ACCOUNT`(서비스 계정 JSON 전체)를 등록합니다. 이 값은 GitHub Actions의 배포 시크릿과 별도로 Vercel에도 등록해야 합니다.
+  4. 사진 파일 업로드도 쓸 경우 Firebase Storage 버킷을 생성하고 서비스 계정에 `Storage Object Admin` 권한을 준 뒤 `FIREBASE_STORAGE_BUCKET`(예: `project-id.firebasestorage.app`)도 등록합니다. 사진 저장소를 설정하지 않은 경우에도 프리셋 사진이나 이미지 URL로 스팟 등록은 가능합니다.
+  5. 환경 변수를 등록한 뒤 Vercel에서 새 배포를 실행합니다. 최초 API 조회 시 기존 샘플 스팟이 Firestore에 한 번 초기화됩니다.
+- Vercel 빌드는 `dist/`의 정제된 정적 자산만 배포하므로 공개 JSON에 비밀번호나 비공개 상세 주소가 포함되지 않습니다. 사진 포함 여부와 관계없이 비밀글 상세 주소는 서버에서 비공개 처리합니다.
+- `index.html`과 `camp-kitchen.html`은 같은 앱 진입점이며, 두 파일 모두 같은 수정이 반영됩니다. Firebase Hosting 워크플로는 현재 정적 파일만 배포하므로, 등록 API가 필요한 운영 앱은 Vercel 배포 주소를 사용해야 합니다.
+
 ## 자동화 · 품질 검증
 
 푸시와 PR마다 GitHub Actions가 검사를 돌리고, Vercel 배포는 `main` 머지 시 자동으로 실행됩니다. Firebase Hosting 배포·재실행 방법은 아래 배포 절을 참고하세요.
@@ -93,7 +107,7 @@
 | 백엔드 문법 검사 | `server.js`, `api/`, `lib/`, `scripts/` 문법 (`node --check`) | `node --check server.js` |
 | 클라이언트 정적 스캔 | `index.html`, `camp-kitchen.html`, `data/*.js`에서 `process.env`, `require(`, `module.exports`, `__dirname` 같은 서버 전용 참조 검출. 주석은 무시합니다. | `npm run check:client` |
 | HTML 유효성 | `html-validate`로 구조 오류 검사 | `npx html-validate@8.29.0 index.html camp-kitchen.html` |
-| 자동 테스트 | UI 회귀 테스트 4개 + Firebase 배포 설정·워크플로 회귀 테스트 | `npm test` |
+| 자동 테스트 | UI 회귀 테스트 5개 + 비밀의 정원 API·저장소 테스트 + Firebase 배포 설정·워크플로 회귀 테스트 | `npm test` |
 | 의존성 취약점 | `npm audit --omit=dev --audit-level=high` (high 이상이면 실패) | — |
 
 - 클라이언트 코드는 브라우저에 `process`가 없습니다. `process.env`를 쓰면 앱 전체가 멈추므로, 키 유무는 서버가 판단해서 503으로 알려주도록 되어 있습니다.
@@ -142,7 +156,7 @@
 
 회귀 테스트(`scripts/test-firebase-config.mjs`)는 임시 테스트 키만 사용해 프로젝트 선택 우선순위, 잘못된 자격 증명, 비밀정보 미출력, 배포 생략/실패 구분, 워크플로 연결·브랜치 제한을 검사합니다. `npm test`에 포함되어 CI와 배포 워크플로에서 함께 실행됩니다.
 
-> Firebase Hosting은 현재 **정적 프런트엔드만** 배포합니다. Express/Vercel의 `/api/*` 서버 기능은 이 번들에 포함되지 않으며, Firebase에서 AI 등 서버 기능까지 제공하려면 별도 백엔드 연결이 필요합니다. 이번 수정은 Hosting 배포 설정 범위입니다.
+> Firebase Hosting 워크플로는 현재 **정적 프런트엔드만** 배포합니다. `/api/*` 서버 기능(비밀의 정원·AI·사진 업로드)은 Vercel 서버리스 함수에서 제공되므로, Firebase Hosting URL만으로는 이 API를 사용할 수 없습니다. 운영 앱은 Vercel 주소를 사용하고, Firebase Hosting에서도 API를 제공하려면 별도 백엔드 연결이 필요합니다.
 
 - **Vercel 병행 배포**: `main`에 머지되면 Vercel GitOps 연동 환경에서도 함께 자동 배포됩니다.
 
@@ -154,6 +168,7 @@
 |---|---|
 | https://camping-food-helper.vercel.app/ | HTTP 200 |
 | `POST /api/sample`, `POST /api/generate-image` | 빈 요청에 HTTP 400 (프롬프트 없음 → Gemini를 호출하지 않아 쿼터를 쓰지 않음) |
+| `GET /api/secret-gardens` | HTTP 200 + 공개 스팟 배열 (Firestore와 Vercel API 함수 점검) |
 | Open-Meteo 날씨 API | HTTP 200 + 현재 기온 값 존재 |
 
 - 응답이 5초를 넘거나 연결이 실패하면 장애로 봅니다. 한 번 더 확인한 뒤에도 실패해야 알림을 보냅니다.

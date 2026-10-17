@@ -759,6 +759,47 @@ details li{margin-bottom:8px}
     {label:'바다 오션뷰 차박',url:'https://images.unsplash.com/photo-1496080174650-637e3f22fa03?auto=format&fit=crop&w=800&q=80'},
     {label:'밤하늘 별멍 캠핑',url:'https://images.unsplash.com/photo-1506535772317-9fca71c959c6?auto=format&fit=crop&w=800&q=80'}
   ];
+  var GARDEN_DEFAULT_FACILITIES=['화장실(간이/이동식)','차박 가능(스텔스)','불멍/장작 가능'];
+
+  function newGardenRegistrationDraft(){
+    return {
+      name:'',address:'',lat:'',lng:'',addressDetail:'',navQuery:'',
+      groundType:'자갈/모래',fee:'무료',toiletStatus:'간이화장실 (도보 3분)',
+      entryRoad:'일반 승용차 진입 가능',tips:'',author:'',password:'',isPrivate:true
+    };
+  }
+
+  function resetGardenRegistrationForm(){
+    ui.gardenRegDraft=null;
+    ui.gardenRegBusy=false;
+    ui.gardenRegError='';
+    ui.gardenCategory='noji';
+    ui.gardenSelectedFacilities=GARDEN_DEFAULT_FACILITIES.slice();
+    ui.gardenSelectedPhoto=GARDEN_PHOTO_PRESETS[0].url;
+    ui.gardenCustomPhoto='';
+    ui.gardenUploadedPhoto='';
+  }
+
+  function captureGardenRegistrationDraft(){
+    var form=document.querySelector('[data-form="garden-register"]');
+    if(!form)return ui.gardenRegDraft||newGardenRegistrationDraft();
+    var draft={};
+    [
+      ['name','g-in-name'],['address','g-in-addr'],['lat','g-in-lat'],['lng','g-in-lng'],
+      ['addressDetail','g-in-detail'],['navQuery','g-in-nav'],['groundType','g-in-ground'],
+      ['fee','g-in-fee'],['toiletStatus','g-in-toilet'],['entryRoad','g-in-road'],
+      ['tips','g-in-tips'],['author','g-in-author'],['password','g-in-pwd']
+    ].forEach(function(pair){
+      var field=document.getElementById(pair[1]);
+      draft[pair[0]]=field?field.value:'';
+    });
+    var privateField=document.getElementById('g-in-isprivate');
+    draft.isPrivate=privateField?privateField.checked:true;
+    ui.gardenRegDraft=draft;
+    var customPhoto=document.getElementById('g-in-photo');
+    if(customPhoto)ui.gardenCustomPhoto=customPhoto.value;
+    return draft;
+  }
 
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
   var str=function(v){return typeof v==='string'?v.trim():(v==null?'':String(v))};
@@ -804,8 +845,8 @@ details li{margin-bottom:8px}
     planDays:store.get('cc.planDays',3),planPeople:profile.people||2,planTheme:store.get('cc.planTheme','all'),planSnack:store.get('cc.planSnack',true),planFilter:'all',mealPlan:store.get('cc.mealPlan',null),planSwapTarget:null,planBusy:false,
     gardenList:[],gardenLoaded:false,gardenBusy:false,gardenErr:'',gardenFilter:'all',gardenSearch:'',gardenFacFilter:'',gardenSort:'newest',
     gardenMasterKey:store.get('cc.gardenMasterKey',''),gardenIsMaster:!!store.get('cc.gardenMasterKey',''),
-    gardenRegModal:false,gardenDetailModal:null,gardenEditModal:null,gardenAuthModal:null,
-    gardenCategory:'noji',gardenSelectedFacilities:['화장실(간이/이동식)','차박 가능(스텔스)','불멍/장작 가능'],
+    gardenRegModal:false,gardenRegDraft:null,gardenRegBusy:false,gardenRegError:'',gardenDetailModal:null,gardenEditModal:null,gardenAuthModal:null,
+    gardenCategory:'noji',gardenSelectedFacilities:GARDEN_DEFAULT_FACILITIES.slice(),
     gardenSelectedPhoto:GARDEN_PHOTO_PRESETS[0].url,gardenCustomPhoto:'',gardenUploadedPhoto:'',
     gardenMapFocusId:null,gardenHidePrivateOnMap:false,
     gardenUnlockedIds:store.get('cc.gardenUnlocked',[]),
@@ -3931,6 +3972,7 @@ details li{margin-bottom:8px}
 
   function handleGardenPhotoUpload(file, isEdit){
     if(!file) return;
+    if(!isEdit)captureGardenRegistrationDraft();
     if(!file.type || !file.type.startsWith('image/')){
       showNotice('이미지 파일만 선택할 수 있습니다.');
       return;
@@ -3959,7 +4001,8 @@ details li{margin-bottom:8px}
           ctx.drawImage(img, 0, 0, w, h);
           var compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
-          // 즉시 UI 프리뷰 반영
+          // 사진 상태 변경으로 화면을 다시 그려도 입력 폼의 초안은 유지한다.
+          if(!isEdit)captureGardenRegistrationDraft();
           if(isEdit){
             ui.gardenEditUploadedPhoto = compressedBase64;
           } else {
@@ -3973,29 +4016,39 @@ details li{margin-bottom:8px}
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ imageBase64: compressedBase64 })
           })
-          .then(function(r){ return r.json(); })
-          .then(function(d){
-            if(d.success && d.url){
-              if(isEdit){
-                ui.gardenEditUploadedPhoto = d.url;
-              } else {
-                ui.gardenUploadedPhoto = d.url;
-              }
-              showNotice('📸 사진이 성공적으로 업로드되었습니다!');
-            }
+          .then(function(r){
+            return r.json().catch(function(){return {error:'서버 응답을 읽지 못했습니다.'}}).then(function(d){
+              if(!r.ok||!d.success||!d.url)throw new Error(d.error||'사진을 서버에 저장하지 못했습니다.');
+              return d;
+            });
           })
-          .catch(function(){
-            showNotice('📸 사진이 정상적으로 선택되었습니다.');
+          .then(function(d){
+            if(isEdit){
+              ui.gardenEditUploadedPhoto = d.url;
+            } else {
+              ui.gardenUploadedPhoto = d.url;
+            }
+            showNotice('📸 사진이 성공적으로 업로드되었습니다!');
+          })
+          .catch(function(err){
+            if(isEdit){
+              ui.gardenEditUploadedPhoto = '';
+            } else {
+              ui.gardenUploadedPhoto = '';
+            }
+            if(!isEdit)render();
+            showNotice('📸 사진 저장 실패: '+(err.message||'프리셋 사진 또는 이미지 URL을 사용해주세요.'));
           });
         } catch(err){
           console.error('Image compression error:', err);
           if(isEdit){
-            ui.gardenEditUploadedPhoto = ev.target.result;
+            ui.gardenEditUploadedPhoto = '';
           } else {
-            ui.gardenUploadedPhoto = ev.target.result;
+            ui.gardenUploadedPhoto = '';
+            captureGardenRegistrationDraft();
           }
           render();
-          showNotice('📸 사진이 선택되었습니다.');
+          showNotice('사진을 처리하지 못했습니다. 감성 프리셋 또는 이미지 URL을 선택해주세요.');
         }
       };
       img.onerror = function(){
@@ -4376,6 +4429,7 @@ details li{margin-bottom:8px}
 
     // 1. 스팟 등록 모달 (새로운 비밀의 정원 등록)
     if(ui.gardenRegModal){
+      var regDraft=ui.gardenRegDraft||newGardenRegistrationDraft();
       h += '<div class="camp-modal-backdrop" data-a="garden-reg-close">'+
         '<div class="camp-modal-content" style="max-width:540px;max-height:88vh;overflow-y:auto">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
@@ -4401,7 +4455,7 @@ details li{margin-bottom:8px}
             // 스팟 이름
             '<div style="margin-bottom:14px">'+
               '<label for="g-in-name" style="display:block;font-size:13px;font-weight:900;margin-bottom:4px">스팟 이름 (명칭) <span style="color:var(--ember)">*</span></label>'+
-              '<input id="g-in-name" type="text" placeholder="예: 홍천강 모곡밤벌 인근 비밀 자갈밭 노지" maxlength="40" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px" required>'+
+              '<input id="g-in-name" type="text" value="'+esc(regDraft.name)+'" placeholder="예: 홍천강 모곡밤벌 인근 비밀 자갈밭 노지" maxlength="40" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px" required>'+
             '</div>'+
 
             // 주소 및 위치
@@ -4410,18 +4464,18 @@ details li{margin-bottom:8px}
                 '<label for="g-in-addr" style="font-size:13px;font-weight:900">주소 및 위치 <span style="color:var(--ember)">*</span></label>'+
                 '<button class="link" type="button" data-a="garden-gps-fill" style="font-size:12px;font-weight:700">📍 내 GPS 위치로 채우기</button>'+
               '</div>'+
-              '<input id="g-in-addr" type="text" placeholder="도로명 또는 지번 주소 (예: 강원 홍천군 서면 모곡리 497-1)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:6px" required>'+
+              '<input id="g-in-addr" type="text" value="'+esc(regDraft.address)+'" placeholder="도로명 또는 지번 주소 (예: 강원 홍천군 서면 모곡리 497-1)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:6px" required>'+
               '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">'+
-                '<input id="g-in-lat" type="text" placeholder="위도 (선택)" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px">'+
-                '<input id="g-in-lng" type="text" placeholder="경도 (선택)" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px">'+
+                '<input id="g-in-lat" type="text" value="'+esc(regDraft.lat)+'" placeholder="위도 (선택)" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px">'+
+                '<input id="g-in-lng" type="text" value="'+esc(regDraft.lng)+'" placeholder="경도 (선택)" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px">'+
               '</div>'+
-              '<textarea id="g-in-detail" rows="2" placeholder="🚗 상세 진입로 안내 (예: 다리 밑 비포장 제방길 200m 직진 후 붉은 컨테이너 앞 자갈밭)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12.5px"></textarea>'+
+              '<textarea id="g-in-detail" rows="2" placeholder="🚗 상세 진입로 안내 (예: 다리 밑 비포장 제방길 200m 직진 후 붉은 컨테이너 앞 자갈밭)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12.5px">'+esc(regDraft.addressDetail)+'</textarea>'+
             '</div>'+
 
             // 네비 검색어
             '<div style="margin-bottom:14px">'+
               '<label for="g-in-nav" style="display:block;font-size:13px;font-weight:900;margin-bottom:4px">네비게이션 추천 검색어</label>'+
-              '<input id="g-in-nav" type="text" placeholder="카카오맵/티맵 검색 키워드 (예: 모곡밤벌유원지)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">'+
+              '<input id="g-in-nav" type="text" value="'+esc(regDraft.navQuery)+'" placeholder="카카오맵/티맵 검색 키워드 (예: 모곡밤벌유원지)" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">'+
             '</div>'+
 
             // 시설물 다중 선택
@@ -4449,27 +4503,27 @@ details li{margin-bottom:8px}
               '<div>'+
                 '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">바닥 환경</label>'+
                 '<select id="g-in-ground" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
-                  '<option value="자갈/모래">자갈 / 모래</option>'+
-                  '<option value="흙/솔잎">흙 / 솔잎 바닥</option>'+
-                  '<option value="파쇄석">파쇄석 사이트</option>'+
-                  '<option value="잔디">잔디 사이트</option>'+
-                  '<option value="나무 데크">나무 데크</option>'+
+                  '<option value="자갈/모래" '+(regDraft.groundType==='자갈/모래'?'selected':'')+'>자갈 / 모래</option>'+
+                  '<option value="흙/솔잎" '+(regDraft.groundType==='흙/솔잎'?'selected':'')+'>흙 / 솔잎 바닥</option>'+
+                  '<option value="파쇄석" '+(regDraft.groundType==='파쇄석'?'selected':'')+'>파쇄석 사이트</option>'+
+                  '<option value="잔디" '+(regDraft.groundType==='잔디'?'selected':'')+'>잔디 사이트</option>'+
+                  '<option value="나무 데크" '+(regDraft.groundType==='나무 데크'?'selected':'')+'>나무 데크</option>'+
                 '</select>'+
               '</div>'+
               '<div>'+
                 '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">이용 요금</label>'+
-                '<input id="g-in-fee" type="text" value="무료" placeholder="예: 무료 또는 1박 4만원" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+                '<input id="g-in-fee" type="text" value="'+esc(regDraft.fee)+'" placeholder="예: 무료 또는 1박 4만원" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
               '</div>'+
             '</div>'+
 
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'+
               '<div>'+
                 '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">화장실 상태</label>'+
-                '<input id="g-in-toilet" type="text" value="간이화장실 (도보 3분)" placeholder="예: 수세식 온수 / 간이화장실 / 화장실 없음" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+                '<input id="g-in-toilet" type="text" value="'+esc(regDraft.toiletStatus)+'" placeholder="예: 수세식 온수 / 간이화장실 / 화장실 없음" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
               '</div>'+
               '<div>'+
                 '<label style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px">진입 도로 상태</label>'+
-                '<input id="g-in-road" type="text" value="일반 승용차 진입 가능" placeholder="예: 승용차 가능 / SUV 권장 / 4WD 필수" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
+                '<input id="g-in-road" type="text" value="'+esc(regDraft.entryRoad)+'" placeholder="예: 승용차 가능 / SUV 권장 / 4WD 필수" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px">'+
               '</div>'+
             '</div>'+
 
@@ -4518,7 +4572,7 @@ details li{margin-bottom:8px}
             // 나만의 꿀팁 & 주의사항
             '<div style="margin-bottom:14px">'+
               '<label for="g-in-tips" style="display:block;font-size:13px;font-weight:900;margin-bottom:4px">나만의 명당 꿀팁 &amp; 주의사항</label>'+
-              '<textarea id="g-in-tips" rows="3" placeholder="예: 해질녘 노을이 장관이며, 나무 그늘 아래가 가장 시원합니다. 쓰레기봉투 필수 지참하여 클린캠핑 해주세요!" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px"></textarea>'+
+              '<textarea id="g-in-tips" rows="3" placeholder="예: 해질녘 노을이 장관이며, 나무 그늘 아래가 가장 시원합니다. 쓰레기봉투 필수 지참하여 클린캠핑 해주세요!" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">'+esc(regDraft.tips)+'</textarea>'+
             '</div>'+
 
             // 작성자 닉네임 & 비밀번호 & 비밀글 여부 설정
@@ -4527,23 +4581,24 @@ details li{margin-bottom:8px}
               '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
                 '<div>'+
                   '<label for="g-in-author" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">작성자 닉네임 <span style="color:var(--ember)">*</span></label>'+
-                  '<input id="g-in-author" type="text" placeholder="예: 솔캠러" maxlength="15" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px" required>'+
+                  '<input id="g-in-author" type="text" value="'+esc(regDraft.author)+'" placeholder="예: 솔캠러" maxlength="15" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px" required>'+
                 '</div>'+
                 '<div>'+
                   '<label for="g-in-pwd" style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">비밀번호 (수정/삭제용) <span style="color:var(--ember)">*</span></label>'+
-                  '<input id="g-in-pwd" type="password" placeholder="비번 4자리 이상" maxlength="20" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px" required>'+
+                  '<input id="g-in-pwd" type="password" value="'+esc(regDraft.password)+'" placeholder="비번 4자리 이상" maxlength="20" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px" required>'+
                 '</div>'+
               '</div>'+
               '<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--fg)">'+
-                '<input id="g-in-isprivate" type="checkbox" checked style="width:18px;height:18px;margin-top:2px">'+
+                '<input id="g-in-isprivate" type="checkbox" '+(regDraft.isPrivate?'checked':'')+' style="width:18px;height:18px;margin-top:2px">'+
                 '<span>🔒 <b>나만의 비밀의 정원으로 등록 (비공개)</b><br><small style="font-weight:400;color:var(--muted)">목록에서 상세 위치가 보호되며, 설정한 비밀번호로 상세 위치를 열람하고 관리할 수 있습니다.</small></span>'+
               '</label>'+
             '</div>'+
 
-            // 버튼
+            // 버튼 및 서버 오류 안내 (입력 중단 없이 재시도 가능)
+            (ui.gardenRegError?'<p role="alert" style="background:#fff1f0;color:#a12622;border:1px solid #ffd0cb;border-radius:10px;padding:10px 12px;font-size:13px;margin:0 0 10px">⚠️ '+esc(ui.gardenRegError)+'</p>':'')+
             '<div style="display:flex;gap:8px">'+
-              '<button class="btn primary" type="submit" style="flex:2;font-size:15px;font-weight:900;padding:12px">🌿 비밀의 정원 등록하기</button>'+
-              '<button class="btn" type="button" data-a="garden-reg-close" style="flex:1">취소</button>'+
+              '<button class="btn primary" type="submit" '+(ui.gardenRegBusy?'disabled':'')+' style="flex:2;font-size:15px;font-weight:900;padding:12px">'+(ui.gardenRegBusy?'⏳ 등록 중…':'🌿 비밀의 정원 등록하기')+'</button>'+
+              '<button class="btn" type="button" data-a="garden-reg-close" '+(ui.gardenRegBusy?'disabled':'')+' style="flex:1">취소</button>'+
             '</div>'+
           '</form>'+
         '</div>'+
@@ -5462,19 +5517,39 @@ details li{margin-bottom:8px}
     }
 
     // === 나만의 비밀의 정원 클릭 액션들 ===
-    if(a==='garden-reg-open'){ui.gardenRegModal=true;render();return}
-    if(a==='garden-reg-close'){if(!closeFromBackdrop(b,e))return;ui.gardenRegModal=false;render();return}
-    if(a==='garden-set-cat'){ui.gardenCategory=v;render();return}
+    if(a==='garden-reg-open'){
+      if(!ui.gardenRegDraft)ui.gardenRegDraft=newGardenRegistrationDraft();
+      ui.gardenRegError='';
+      ui.gardenRegModal=true;
+      render();return;
+    }
+    if(a==='garden-reg-close'){
+      if(ui.gardenRegBusy)return;
+      if(!closeFromBackdrop(b,e))return;
+      ui.gardenRegModal=false;
+      resetGardenRegistrationForm();
+      render();return;
+    }
+    if(a==='garden-set-cat'){
+      captureGardenRegistrationDraft();
+      ui.gardenCategory=v;
+      ui.gardenRegError='';
+      render();return;
+    }
     if(a==='garden-fac-toggle'){
+      captureGardenRegistrationDraft();
       var idx=ui.gardenSelectedFacilities.indexOf(v);
       if(idx>=0)ui.gardenSelectedFacilities.splice(idx,1);
       else ui.gardenSelectedFacilities.push(v);
+      ui.gardenRegError='';
       render();return;
     }
     if(a==='garden-preset-pick'){
+      captureGardenRegistrationDraft();
       ui.gardenSelectedPhoto=v;
-      var cPhotoIn=document.getElementById('g-in-photo');
-      if(cPhotoIn)cPhotoIn.value='';
+      ui.gardenUploadedPhoto='';
+      ui.gardenCustomPhoto='';
+      ui.gardenRegError='';
       render();return;
     }
     if(a==='garden-gps-fill'){
@@ -5492,6 +5567,7 @@ details li{margin-bottom:8px}
         if(latIn)latIn.value=lat;
         if(lngIn)lngIn.value=lng;
         if(addrIn&&!addrIn.value)addrIn.value='GPS 좌표 ('+lat+', '+lng+') 부근';
+        captureGardenRegistrationDraft();
         showNotice('📍 GPS 위치 좌표가 자동으로 입력되었습니다.');
       },function(err){
         showNotice('위치 정보를 가져오지 못했습니다: '+(err.message||'브라우저 권한 허용 필요'));
@@ -5592,6 +5668,7 @@ details li{margin-bottom:8px}
       return;
     }
     if(a==='garden-remove-photo'){
+      captureGardenRegistrationDraft();
       ui.gardenUploadedPhoto = '';
       render();
       showNotice('선택한 사진이 제거되었습니다.');
@@ -6240,61 +6317,77 @@ details li{margin-bottom:8px}
 
     // === 나만의 비밀의 정원 폼 서브밋 핸들러 ===
     if(kind==='garden-register'){
-      var nameIn = document.getElementById('g-in-name');
-      var addrIn = document.getElementById('g-in-addr');
-      var authorIn = document.getElementById('g-in-author');
-      var pwdIn = document.getElementById('g-in-pwd');
-      if(!nameIn || !nameIn.value.trim()){ alert('스팟 이름을 입력해주세요.'); return; }
-      if(!addrIn || !addrIn.value.trim()){ alert('주소 및 위치를 입력해주세요.'); return; }
-      if(!authorIn || !authorIn.value.trim()){ alert('작성자 닉네임을 입력해주세요.'); return; }
-      if(!pwdIn || !pwdIn.value.trim()){ alert('비밀번호를 입력해주세요.'); return; }
+      if(ui.gardenRegBusy)return;
+      var regDraft = captureGardenRegistrationDraft();
+      var name = str(regDraft.name);
+      var address = str(regDraft.address);
+      var author = str(regDraft.author);
+      var password = str(regDraft.password);
+      if(!name){ alert('스팟 이름을 입력해주세요.'); return; }
+      if(!address){ alert('주소 및 위치를 입력해주세요.'); return; }
+      if(!author){ alert('작성자 닉네임을 입력해주세요.'); return; }
+      if(!password){ alert('비밀번호를 입력해주세요.'); return; }
 
-      var photoCustom = document.getElementById('g-in-photo') ? document.getElementById('g-in-photo').value.trim() : '';
-      var photoFinal = ui.gardenUploadedPhoto || photoCustom || ui.gardenSelectedPhoto || GARDEN_PHOTO_PRESETS[0].url;
-
+      var photoFinal = ui.gardenUploadedPhoto || str(ui.gardenCustomPhoto) || ui.gardenSelectedPhoto || GARDEN_PHOTO_PRESETS[0].url;
+      if(/^data:/i.test(photoFinal)){
+        ui.gardenRegError='사진 업로드가 끝난 뒤 다시 등록해주세요. 업로드에 실패했다면 프리셋 사진이나 이미지 URL을 선택해주세요.';
+        render();
+        return;
+      }
       var newSpotData = {
-        name: nameIn.value.trim(),
-        category: ui.gardenCategory || 'noji',
-        address: addrIn.value.trim(),
-        addressDetail: document.getElementById('g-in-detail') ? document.getElementById('g-in-detail').value.trim() : '',
-        lat: document.getElementById('g-in-lat') ? Number(document.getElementById('g-in-lat').value) || null : null,
-        lng: document.getElementById('g-in-lng') ? Number(document.getElementById('g-in-lng').value) || null : null,
-        navQuery: document.getElementById('g-in-nav') ? document.getElementById('g-in-nav').value.trim() : '',
-        facilities: ui.gardenSelectedFacilities || [],
-        groundType: document.getElementById('g-in-ground') ? document.getElementById('g-in-ground').value : '자갈/모래',
-        fee: document.getElementById('g-in-fee') ? document.getElementById('g-in-fee').value.trim() : '무료',
-        toiletStatus: document.getElementById('g-in-toilet') ? document.getElementById('g-in-toilet').value.trim() : '정보 없음',
-        entryRoad: document.getElementById('g-in-road') ? document.getElementById('g-in-road').value.trim() : '일반 승용차 진입 가능',
-        photoUrl: photoFinal,
-        tips: document.getElementById('g-in-tips') ? document.getElementById('g-in-tips').value.trim() : '',
-        author: authorIn.value.trim(),
-        password: pwdIn.value.trim(),
-        isPrivate: document.getElementById('g-in-isprivate') ? document.getElementById('g-in-isprivate').checked : true
+        name:name,
+        category:ui.gardenCategory||'noji',
+        address:address,
+        addressDetail:str(regDraft.addressDetail),
+        lat:str(regDraft.lat)&&isFinite(Number(regDraft.lat))?Number(regDraft.lat):null,
+        lng:str(regDraft.lng)&&isFinite(Number(regDraft.lng))?Number(regDraft.lng):null,
+        navQuery:str(regDraft.navQuery),
+        facilities:(ui.gardenSelectedFacilities||[]).slice(),
+        groundType:regDraft.groundType||'자갈/모래',
+        fee:str(regDraft.fee)||'무료',
+        toiletStatus:str(regDraft.toiletStatus)||'정보 없음',
+        entryRoad:str(regDraft.entryRoad)||'일반 승용차 진입 가능',
+        photoUrl:photoFinal,
+        tips:str(regDraft.tips),
+        author:author,
+        password:password,
+        isPrivate:!!regDraft.isPrivate
       };
 
+      ui.gardenRegBusy=true;
+      ui.gardenRegError='';
+      render();
       fetch('/api/secret-gardens', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(newSpotData)
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(newSpotData)
       })
-      .then(function(r){ return r.json(); })
+      .then(function(r){
+        return r.json().catch(function(){return {error:'서버 응답을 읽을 수 없습니다.'}}).then(function(d){
+          if(!r.ok||!d.success||!d.garden){
+            var error=new Error(d.error||'등록 요청을 처리하지 못했습니다.');
+            error.status=r.status;
+            throw error;
+          }
+          return d;
+        });
+      })
       .then(function(d){
-        if(d.success && d.garden){
-          ui.gardenRegModal = false;
-          ui.gardenUploadedPhoto = '';
-          ui.gardenCustomPhoto = '';
-          ui.gardenList = ui.gardenList || [];
-          ui.gardenList.unshift(d.garden);
-          if(ui.gardenUnlockedIds.indexOf(d.garden.id) < 0) ui.gardenUnlockedIds.push(d.garden.id);
-          store.set('cc.gardenUnlocked', ui.gardenUnlockedIds);
-          showNotice('🌿 새로운 비밀의 정원이 등록되었습니다!');
-          render();
-        } else {
-          alert(d.error || '등록 중 오류가 발생했습니다.');
-        }
+        ui.gardenRegModal=false;
+        ui.gardenRegBusy=false;
+        ui.gardenList=ui.gardenList||[];
+        ui.gardenList.unshift(d.garden);
+        if(ui.gardenUnlockedIds.indexOf(d.garden.id)<0)ui.gardenUnlockedIds.push(d.garden.id);
+        store.set('cc.gardenUnlocked',ui.gardenUnlockedIds);
+        resetGardenRegistrationForm();
+        showNotice('🌿 새로운 비밀의 정원이 등록되었습니다!');
       })
-      .catch(function(e){
-        alert('서버 등록에 실패했습니다.');
+      .catch(function(error){
+        ui.gardenRegBusy=false;
+        ui.gardenRegError=error&&error.status
+          ?(error.message||'등록 요청이 거절되었습니다.')
+          :'서버와 연결할 수 없습니다. 네트워크 또는 서버 저장소 설정을 확인해주세요.';
+        render();
       });
       return;
     }
@@ -6392,6 +6485,10 @@ details li{margin-bottom:8px}
     }
 
     if(kind==='garden-edit-save'){
+      if(ui.gardenEditUploadedPhoto&&/^data:/i.test(ui.gardenEditUploadedPhoto)){
+        alert('사진 업로드가 끝난 뒤 다시 저장해주세요. 업로드에 실패했다면 프리셋 사진이나 이미지 URL을 선택해주세요.');
+        return;
+      }
       var editId = f.getAttribute('data-id');
       var editSpot = (ui.gardenList || []).find(function(g){ return g.id === editId; }) || ui.gardenEditModal;
       if(!editSpot) return;
@@ -6448,6 +6545,20 @@ details li{margin-bottom:8px}
     if(kind==='gear'){if(profile.gear.indexOf(val)<0)profile.gear.push(val)}
     if(kind==='avoid'){if(profile.avoid.indexOf(val)<0)profile.avoid.push(val)}
     saveProfile();render();
+  });
+
+  document.addEventListener('input',function(e){
+    if(ui.gardenRegModal&&e.target&&e.target.form&&e.target.form.getAttribute('data-form')==='garden-register'){
+      captureGardenRegistrationDraft();
+      ui.gardenRegError='';
+    }
+  });
+
+  document.addEventListener('change',function(e){
+    if(ui.gardenRegModal&&e.target&&e.target.form&&e.target.form.getAttribute('data-form')==='garden-register'){
+      captureGardenRegistrationDraft();
+      ui.gardenRegError='';
+    }
   });
 
   document.addEventListener('input',function(e){

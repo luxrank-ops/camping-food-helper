@@ -33,19 +33,22 @@ jobs:
         with:
           node-version: 22
 
+      - name: 운영 의존성 설치
+        run: npm install --ignore-scripts --no-audit --no-fund
+
       - name: 백엔드 및 스크립트 문법 검사
         run: |
           set -e
           node --check server.js
-          for f in api/*.js lib/*.js scripts/*.mjs; do
+          while IFS= read -r -d '' f; do
             echo "checking $f"
             node --check "$f"
-          done
+          done < <(find api lib scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0)
 
       - name: 클라이언트 정적 보안 스캔 (process.env 등 서버 전용 참조 검출)
         run: npm run check:client
 
-      - name: 자동 테스트 (UI 및 Firebase 배포 설정)
+      - name: 자동 테스트 (UI·비밀 정원 API·Firebase 배포 설정)
         run: npm test
 
       - name: HTML 유효성 검사
