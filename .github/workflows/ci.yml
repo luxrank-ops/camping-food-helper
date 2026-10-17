@@ -31,10 +31,10 @@ jobs:
       - name: 서버리스 함수·lib·스크립트 문법 검사
         run: |
           set -e
-          for f in api/*.js lib/*.js scripts/*.mjs; do
+          while IFS= read -r -d '' f; do
             echo "checking $f"
             node --check "$f"
-          done
+          done < <(find api lib scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0)
 
   client-env-scan:
     name: 클라이언트 번들 정적 스캔 (process.env 등)
@@ -67,7 +67,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: UI·Firebase 배포 설정 회귀 테스트
+      - name: 운영 의존성 설치
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: UI·비밀 정원·Firebase 배포 설정 회귀 테스트
         run: npm test
 
   dependency-audit:

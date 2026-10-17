@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 무중단 헬스체크: 프론트엔드, 서버리스 함수 2개, 외부 날씨 API(Open-Meteo)를 점검한다.
+// 무중단 헬스체크: 프런트엔드, 서버리스 함수 3개, 외부 날씨 API(Open-Meteo)를 점검한다.
 //
 // 판정 규칙
 //  - 기대한 상태 코드가 아니거나, 응답이 5초(SLOW_MS)를 넘거나, 연결이 실패하면 장애.
@@ -46,6 +46,18 @@ export const CHECKS = [
     url: `${BASE_URL}/api/generate-image`,
     body: {},
     expectStatus: 400, // 빈 요청 → 400이면 정상 (이미지 생성 미호출)
+  },
+  {
+    name: '서버리스 /api/secret-gardens (Firestore 읽기)',
+    method: 'GET',
+    url: `${BASE_URL}/api/secret-gardens`,
+    expectStatus: 200,
+    validateBody: (text) => {
+      const json = JSON.parse(text);
+      return json?.authorized === false && Array.isArray(json?.gardens)
+        ? null
+        : '공개 스팟 목록 응답이 올바르지 않음';
+    },
   },
   {
     name: 'Open-Meteo 날씨 API',
