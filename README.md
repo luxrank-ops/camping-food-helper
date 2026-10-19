@@ -211,6 +211,15 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 - 응답이 5초를 넘거나 연결이 실패하면 장애로 봅니다. 한 번 더 확인한 뒤에도 실패해야 알림을 보냅니다.
 - 실패한 실행은 GitHub Actions 실패 메일도 보냅니다.
 
+**실패 원인 확인 및 저장소 503 복구**
+
+- 실패 대상·사유·첫 시도 결과는 Actions의 error annotation과 Job Summary에 남습니다. 로그 다운로드가 불가능해도 `gh run view <run-id>` 또는 Checks API의 annotations로 확인할 수 있습니다.
+- 점검 스크립트/워크플로 변경을 push하면 스케줄을 기다리지 않고 같은 운영 대상에 점검을 실행합니다. `npm test`에는 외부 네트워크를 사용하지 않는 점검 회귀 테스트도 포함됩니다.
+- `storage_not_configured`인 경우 **Vercel → camping-food-helper → Settings → Environment Variables**에서 `FIREBASE_SERVICE_ACCOUNT`를 **Production** 환경에 민감정보로 등록합니다. 값은 Firestore 접근 권한이 있는 Firebase 서비스 계정 JSON이며, 채팅/저장소/Actions 로그에 붙여넣지 않습니다.
+- JSON의 `project_id`가 없으면 `FIREBASE_PROJECT_ID`도 필요합니다. 해당 프로젝트의 Firestore 데이터베이스 및 서비스 계정 권한을 확인하고, 환경변수를 적용할 **Production 재배포**를 실행합니다. Firebase Hosting 배포용 GitHub 시크릿만으로는 Vercel 함수에 인증이 전달되지 않습니다.
+- 재배포 후 `GET /api/secret-gardens`, `GET /api/visitor-stats`가 HTTP 200 및 정상 본문을 반환하는지, 다음 `Uptime check`가 성공하는지 확인합니다. 저장소 오류를 HTTP 200이나 임시 파일 저장으로 우회하지 않습니다.
+- 2026-10-19 진단 실행 `39257368560`에서 두 저장소 API가 재시도 후에도 503을 반환했습니다. Vercel 프로젝트 환경변수에 Firebase 서비스 계정이 없는 상태를 확인했습니다. 자격증명 등록 전에는 장애가 해결된 것이 아닙니다.
+
 **텔레그램 알림 설정 (한 번만)**
 
 1. 텔레그램에서 `@BotFather`로 봇을 만들고 토큰을 받습니다.

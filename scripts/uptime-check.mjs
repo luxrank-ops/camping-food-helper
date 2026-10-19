@@ -17,6 +17,7 @@
 //  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
 import { appendFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const BASE_URL = (process.env.UPTIME_BASE_URL || 'https://camping-food-helper.vercel.app').replace(/\/+$/, '');
 const WEATHER_URL = process.env.UPTIME_WEATHER_URL
@@ -25,6 +26,23 @@ const WEATHER_URL = process.env.UPTIME_WEATHER_URL
 export const SLOW_MS = 5000;
 const REQUEST_TIMEOUT_MS = 15000;
 const RETRY_DELAY_MS = 3000;
+
+// 서버가 반환한 임의의 본문/오류 메시지는 로그에 남기지 않는다.
+// 운영자가 조치할 수 있는 공개 설정 코드만 고정 목록으로 표시한다.
+const CONFIG_PROBLEMS = {
+  storage_not_configured: 'FIREBASE_SERVICE_ACCOUNT 미설정: Vercel Production 환경변수 등록 후 재배포 필요',
+  firebase_credentials_invalid: 'FIREBASE_SERVICE_ACCOUNT 형식/필수 항목 확인 필요',
+  firebase_project_not_configured: 'FIREBASE_PROJECT_ID 또는 서비스 계정 project_id 설정 필요',
+};
+
+export function statusReason(status, expected, text) {
+  let detail = '';
+  try {
+    const code = JSON.parse(text)?.code;
+    if (Object.hasOwn(CONFIG_PROBLEMS, code)) detail = ` — ${code}: ${CONFIG_PROBLEMS[code]}`;
+  } catch { /* 비 JSON 응답은 상태 코드만 기록한다 */ }
+  return `HTTP ${status} (기대값 ${expected})${detail}`;
+}
 
 export const CHECKS = [
   {
@@ -101,7 +119,7 @@ export async function probe(check, fetchImpl = fetch) {
     const elapsedMs = Date.now() - started;
 
     if (res.status !== check.expectStatus) {
-      return { ok: false, elapsedMs, reason: `HTTP ${res.status} (기대값 ${check.expectStatus})` };
+      return { ok: false, elapsedMs, reason: statusReason(res.status, check.expectStatus, text) };
     }
     if (check.validateBody) {
       let problem = null;
@@ -207,6 +225,6 @@ async function main() {
   process.exit(1);
 }
 
-if (process.argv[1] && process.argv[1].endsWith('uptime-check.mjs')) {
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   await main();
 }
