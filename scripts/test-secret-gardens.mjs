@@ -6,9 +6,78 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSecretGardensApi, sanitizePublicSecretGardens } from '../lib/secret-gardens-api.js';
-import { createFileSecretGardenStore, resetSecretGardenStoreForTests } from '../lib/secret-gardens-store.js';
+import {
+  createFileSecretGardenStore,
+  createFirestoreSecretGardenStore,
+  resetSecretGardenStoreForTests
+} from '../lib/secret-gardens-store.js';
+import { hashPassword, verifyGardenPassword } from '../lib/garden-password.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+
+/**
+ * Firestore 시드 경로 전용 인메모리 대역.
+ * 실제 Firestore 트랜잭션과 같은 규칙(create는 문서가 있으면 실패, get은 스냅샷 반환)만 흉내 낸다.
+ * 이 대역이 없으면 시드 로직이 ReferenceError로 죽어도 잡아내지 못한다.
+ */
+function createFakeFirestore() {
+  const collections = new Map();
+  const operations = [];
+  const clone = (value) => (value === undefined ? undefined : structuredClone(value));
+  const bucket = (name) => {
+    if (!collections.has(name)) collections.set(name, new Map());
+    return collections.get(name);
+  };
+  const snapshot = (data) => ({ exists: data !== undefined, data: () => clone(data) });
+
+  function docRef(collectionName, id) {
+    return {
+      collectionName,
+      id,
+      async get() { return snapshot(bucket(collectionName).get(id)); }
+    };
+  }
+
+  return {
+    _operations: operations,
+    _doc(collectionName, id) { return bucket(collectionName).get(id); },
+    _docs(collectionName) { return [...bucket(collectionName).keys()]; },
+    collection(name) {
+      return {
+        name,
+        doc(id) { return docRef(name, id); },
+        async get() {
+          const docs = [...bucket(name).entries()].map(([id, data]) => ({ id, ...snapshot(data) }));
+          return { docs, size: docs.length, empty: docs.length === 0 };
+        }
+      };
+    },
+    async runTransaction(handler) {
+      const transaction = {
+        async get(ref) {
+          operations.push(['get', ref.collectionName, ref.id]);
+          return snapshot(bucket(ref.collectionName).get(ref.id));
+        },
+        create(ref, data) {
+          if (bucket(ref.collectionName).has(ref.id)) {
+            throw new Error(`ALREADY_EXISTS: ${ref.collectionName}/${ref.id}`);
+          }
+          operations.push(['create', ref.collectionName, ref.id]);
+          bucket(ref.collectionName).set(ref.id, clone(data));
+        },
+        set(ref, data) {
+          operations.push(['set', ref.collectionName, ref.id]);
+          bucket(ref.collectionName).set(ref.id, clone(data));
+        },
+        delete(ref) {
+          operations.push(['delete', ref.collectionName, ref.id]);
+          bucket(ref.collectionName).delete(ref.id);
+        }
+      };
+      return handler(transaction);
+    }
+  };
+}
 
 function createMemoryStore(initial = []) {
   const gardens = initial.map((garden) => ({ ...garden }));
@@ -204,5 +273,104 @@ test('로컬 JSON 저장소는 등록 내용을 디스크에 안전하게 저장
     assert.deepEqual(await store.list(), []);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('Firestore 시드: 옛 평문 비밀번호를 해시로 바꿔 저장하고 완료 마커를 남긴다', async () => {
+  const seeds = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'secret_gardens.json'), 'utf8'));
+  const db = createFakeFirestore();
+  const store = createFirestoreSecretGardenStore(db);
+
+  const gardens = await store.list();
+  assert.equal(gardens.length, seeds.length);
+  assert.deepEqual(db._docs('secretGardens').sort(), seeds.map((seed) => seed.id).sort());
+
+  const marker = db._doc('_secretGardenMeta', 'seed-v1');
+  assert.ok(marker, '시드 완료 마커가 있어야 한다');
+  assert.equal(marker.version, 1);
+
+  for (const seed of seeds) {
+    const saved = db._doc('secretGardens', seed.id);
+    // 회귀: upgradeLegacyPassword import가 빠지면 여기까지 오지 못하고 ReferenceError로 실패한다.
+    assert.equal(saved.password, undefined, `${seed.id}: 평문 비밀번호가 Firestore에 들어가면 안 된다`);
+    assert.match(String(saved.passwordHash), /^scrypt1:/, `${seed.id}: 해시로 저장되어야 한다`);
+    assert.equal(verifyGardenPassword(seed.password, saved), true, `${seed.id}: 시드 비밀번호로 계속 열려야 한다`);
+    // 비밀번호 외 시드 데이터는 손실 없이 보존된다.
+    assert.equal(saved.name, seed.name);
+    assert.equal(saved.author, seed.author);
+    assert.equal(saved.createdAt, seed.createdAt);
+  }
+
+  const createdAt = gardens.map((garden) => new Date(garden.createdAt).getTime());
+  assert.deepEqual(createdAt, [...createdAt].sort((a, b) => b - a), '목록은 최신순이어야 한다');
+});
+
+test('Firestore 시드: 반복 호출·콜드 스타트에도 중복 생성하지 않고 기존 문서를 덮어쓰지 않는다', async () => {
+  const seeds = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'secret_gardens.json'), 'utf8'));
+  const db = createFakeFirestore();
+  const edited = seeds[1];
+  const editedDoc = {
+    id: edited.id,
+    name: '사용자가 수정한 정원',
+    author: '기존작성자',
+    passwordHash: hashPassword('my-pass-1234'),
+    createdAt: edited.createdAt,
+    isPrivate: false
+  };
+  await db.runTransaction(async (transaction) => {
+    transaction.set(db.collection('secretGardens').doc(edited.id), editedDoc);
+  });
+
+  const store = createFirestoreSecretGardenStore(db);
+  await store.list();
+
+  const untouched = db._doc('secretGardens', edited.id);
+  assert.equal(untouched.name, '사용자가 수정한 정원', '이미 있는 문서는 시드가 덮어쓰면 안 된다');
+  assert.equal(verifyGardenPassword('my-pass-1234', untouched), true);
+  assert.equal(db._docs('secretGardens').length, seeds.length, '중복 문서가 생기면 안 된다');
+
+  const createCount = db._operations.filter(([operation]) => operation === 'create').length;
+  assert.equal(createCount, seeds.length, '새 스팟 3건 + 완료 마커 1건만 생성되어야 한다');
+
+  await store.list();
+  assert.equal(
+    db._operations.filter(([operation]) => operation === 'create').length,
+    createCount,
+    '같은 인스턴스는 시드를 다시 실행하지 않는다'
+  );
+
+  // 서버리스 콜드 스타트(새 인스턴스)에서도 마커가 있으면 쓰기 없이 기존 데이터를 그대로 읽는다.
+  const before = db._operations.length;
+  const coldStore = createFirestoreSecretGardenStore(db);
+  const coldList = await coldStore.list();
+  assert.equal(coldList.length, seeds.length);
+  assert.equal(
+    db._operations.slice(before).filter(([operation]) => operation === 'create').length,
+    0,
+    '마커가 있으면 시드 쓰기가 없어야 한다'
+  );
+});
+
+test('Firestore 시드 데이터는 공개 목록 API에서 인증 정보 없이 마스킹되어 나온다', async () => {
+  const db = createFakeFirestore();
+  const api = createSecretGardensApi({ store: createFirestoreSecretGardenStore(db), masterKey: '' });
+
+  const response = await callApi(api);
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.payload.authorized, false);
+  assert.equal(response.payload.gardens.length, 4);
+
+  for (const garden of response.payload.gardens) {
+    assert.equal(garden.password, undefined, `${garden.id}: 평문 비밀번호가 응답에 없어야 한다`);
+    assert.equal(garden.passwordHash, undefined, `${garden.id}: 해시가 응답에 없어야 한다`);
+  }
+  const privateGardens = response.payload.gardens.filter((garden) => garden.isPrivate);
+  assert.ok(privateGardens.length > 0, '비공개 시드 스팟이 있어야 마스킹을 검증할 수 있다');
+  for (const garden of privateGardens) {
+    assert.equal(garden.address, undefined);
+    assert.equal(garden.addressDetail, undefined);
+    assert.equal(garden.lat, undefined);
+    assert.equal(garden.lng, undefined);
+    assert.ok(garden.addressMasked, `${garden.id}: 마스킹 주소가 있어야 한다`);
   }
 });
