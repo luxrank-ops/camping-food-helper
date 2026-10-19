@@ -2,7 +2,13 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#0E2820" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F0E4" media="(prefers-color-scheme: light)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no,address=no,email=no">
 <title>오늘 캠핑. 춘학아~ 뭐해먹지?</title>
 <meta name="description" content="장비와 인원만 고르면 메뉴 추천부터 준비물 체크리스트까지 정리해 주는 캠핑 요리 도우미 웹앱">
 <meta property="og:title" content="오늘 캠핑. 춘학아~ 뭐해먹지?">
@@ -710,6 +716,305 @@ details li{margin-bottom:8px}
 .tabs button[aria-current="page"]{background:var(--chip);color:var(--cta);font-weight:900}
 .tabs button[aria-current="page"] svg{stroke-width:2.4}
 .tabs svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ──────────────────────────────────────────────────────────
+   모바일 최적화 — Samsung Galaxy S24 Ultra (3120×1440, 6.8″)
+   및 공통 모바일/좁은 화면 대응 (360~412px CSS width)
+   원칙: 엄지 닿기 쉬운 하단·중앙 배치, 44px 이상 터치,
+   세로 스크롤 최소화, 한 손 조작, 120Hz 부드러운 전환
+   ────────────────────────────────────────────────────────── */
+html{
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+  scrollbar-gutter:stable;
+  scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));
+}
+*{ -webkit-tap-highlight-color:rgba(244,115,90,.12); }
+body{
+  padding-top:calc(10px + env(safe-area-inset-top,0px));
+  padding-right:calc(14px + env(safe-area-inset-right,0px));
+  padding-bottom:calc(118px + env(safe-area-inset-bottom,0px));
+  padding-left:calc(14px + env(safe-area-inset-left,0px));
+  min-height:100dvh;
+  min-height:100svh;
+  overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+.app{ width:100%; max-width:560px; }
+
+/* 입력 줌 방지 — 16px 미만이면 Galaxy/Android에서 자동 확대됨 */
+input,select,textarea{ font-size:16px !important; }
+.addrow input,.loc-input,.camp-search-input{ font-size:16px !important; }
+
+/* 모든 가로 스크롤 영역 — 부드러운 관성 + 스냅 + 스크롤바 숨김 */
+.camp-scroll-row,.wx-hours,.chips{
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;
+}
+.camp-scroll-row::-webkit-scrollbar,.wx-hours::-webkit-scrollbar,.chips::-webkit-scrollbar{ display:none; }
+.camp-scroll-row{ scroll-snap-type:x proximity; scroll-padding-inline:14px; gap:8px; padding-bottom:8px; }
+.camp-scroll-row .chip{ scroll-snap-align:start; flex:none; }
+
+/* 카드 간격 — 좁은 화면에서 여백을 살짝 줄여 한 화면에 더 담기 */
+.card{ scroll-margin-top:12px; }
+.sec-title{ scroll-margin-top:8px; }
+
+/* 터치 피드백 — 120Hz에서도 부드럽게 (S24 Ultra 1~120Hz 가변) */
+@media (prefers-reduced-motion: no-preference){
+  .card,.camp-item-card,.garden-card,.plan-day-card{ transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+}
+@media (hover:none){
+  .btn:active{ transform:scale(.97); filter:brightness(.98); }
+  .chip:active{ transform:scale(.96); }
+}
+
+/* ── Galaxy S24 Ultra 기준 (412px) + 공통 600px 이하 모바일 ── */
+@media (max-width:600px){
+  body{ padding-inline:12px; }
+  .app{ max-width:100%; }
+  .hero{ border-radius:22px; padding:18px 18px 20px; margin-bottom:14px; }
+  .hero-top{ margin-bottom:22px; }
+  .card{ border-radius:20px; padding:16px; margin-bottom:12px; }
+  .camp-ctrls{ padding:14px; border-radius:20px; }
+  .camp-browse-hero{ border-radius:20px; padding:16px 18px; }
+  .plan-hero{ border-radius:20px; padding:18px; }
+  .dish{ padding-bottom:12px; }
+  .dish h2{ font-size:30px; margin-top:24px; }
+  .garden-map-container{ height:340px; }
+  .garden-img-wrap{ height:176px; }
+}
+
+/* ── 480px 이하 (S24 Ultra 세로·대부분 안드로이드 폰) ── */
+@media (max-width:480px){
+  body{ padding-inline:12px; padding-bottom:calc(116px + env(safe-area-inset-bottom,0px)); font-size:14.8px; }
+  .card{ padding:15px 14px; }
+  .card h2{ font-size:17px; margin-bottom:12px; }
+  .field{ gap:8px; margin-bottom:14px; }
+  .btn{ min-height:50px; padding:0 16px; font-size:14.5px; border-radius:16px; }
+  .btn.big{ min-height:54px; font-size:15.5px; border-radius:18px; }
+  .chip{ min-height:44px; padding:0 14px; font-size:13.5px; }
+  .chip.sm{ min-height:38px; padding:0 11px; font-size:12.5px; }
+  .step button{ width:42px; height:42px; font-size:20px; }
+  .step output{ min-width:56px; font-size:16px; }
+  .rec h3{ font-size:23px; }
+  .rec-facts .fact{ font-size:12px; padding:4px 10px; }
+  .rec-ings{ font-size:12.5px; padding:9px 11px; }
+  .sec-title h2{ font-size:19px; }
+  .bar h1{ font-size:24px; }
+  .bar{ margin:4px 2px 14px; }
+  .wx-temp{ font-size:36px; }
+  .wx-ico{ font-size:34px; }
+  .wx-grid{ gap:6px; }
+  .wx-cell{ padding:9px 4px; }
+  .wx-cell b{ font-size:15px; }
+  .camp-item-card{ padding:14px; border-radius:18px; }
+  .camp-item-name{ font-size:16px; }
+  .camp-modal-content{ padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px)); border-radius:22px 22px 0 0; }
+  .garden-map-container{ height:300px; border-radius:14px; }
+  .garden-card{ border-radius:18px; }
+  .garden-body{ padding:14px; }
+  .cook-box{ padding:18px 16px; border-radius:20px; }
+  .cook-step-txt{ font-size:20px; margin:12px 0 16px; }
+  .timer-clock{ font-size:32px; }
+}
+
+/* ── 412px 이하 — Galaxy S24 Ultra 실제 CSS width (384~412) ── */
+@media (max-width:412px){
+  body{ padding-inline:12px; }
+  .hero{ padding:16px 16px 18px; }
+  .home h1{ font-size:clamp(25px,7.4vw,32px) !important; }
+  .home p.sub{ font-size:13.5px; max-width:16em; }
+  .brand{ font-size:12.5px; }
+  .season{ font-size:11.5px; padding:4px 10px; }
+  .card h2{ font-size:16.5px; }
+  .lab{ font-size:11.5px; }
+  .chips{ gap:7px; }
+  .chip{ padding:0 13px; }
+  .row2{ gap:8px; }
+  .row2 .btn{ flex:1 1 130px; }
+  .ac-list{ max-height:min(46vh,300px); border-radius:18px; }
+  .ac-item{ padding:9px 11px; }
+  .picked{ padding:10px 12px; font-size:13px; }
+  .intro-title{ font-size:20px; }
+  .intro-sum{ padding:10px 12px; font-size:13px; }
+  .wx-now{ gap:10px; margin-top:12px; }
+  .wx-hours{ gap:6px; }
+  .wx-hour{ min-width:58px; padding:7px 5px; }
+  .camp-search-bar{ gap:6px; }
+  .camp-search-clear{ right:78px; }
+  .camp-item-actions{ gap:5px; grid-template-columns:minmax(0,1.35fr) auto auto; }
+  .camp-item-actions .btn{ padding:0 10px; min-height:44px; font-size:12.5px; }
+  .plan-day-card{ padding:14px; }
+  .plan-meal-card{ padding:11px; }
+  .plan-agg-card{ padding:16px; }
+  .garden-presets-grid{ gap:6px; }
+  .garden-preset-item img{ height:58px; }
+  .garden-upload-card{ padding:12px 6px; }
+  .garden-map-card{ padding:14px; }
+  .garden-meta-grid{ grid-template-columns:1fr 1fr; gap:5px; padding:9px 10px; }
+}
+
+/* ── 390px 이하 (iPhone Pro·Compact Android, S24 소형 모드) ── */
+@media (max-width:390px){
+  body{ padding-inline:10px; }
+  .card{ padding:14px 13px; margin-bottom:12px; }
+  .hero{ padding:15px 14px 18px; border-radius:20px; }
+  .home h1{ font-size:clamp(23px,7.2vw,30px) !important; }
+  .btn{ min-height:48px; font-size:14px; padding:0 14px; }
+  .btn.big{ min-height:52px; font-size:14.8px; }
+  .chip{ min-height:42px; font-size:13px; padding:0 12px; }
+  .chip.sm{ min-height:36px; font-size:12px; padding:0 10px; }
+  .rec h3{ font-size:21.5px; }
+  .sec-title h2{ font-size:18px; }
+  .dish h2{ font-size:28px; }
+  .garden-img-wrap{ height:162px; }
+  .garden-map-container{ height:280px; }
+}
+
+/* ── 360px 이하 (소형 Android: Galaxy A·구형 폰) ── */
+@media (max-width:360px){
+  body{ padding-inline:10px; font-size:14px; }
+  .card{ padding:13px 12px; border-radius:18px; }
+  .hero{ padding:14px 13px 16px; }
+  .home h1{ font-size:clamp(22px,7.5vw,28px) !important; line-height:1.2; }
+  .brand{ font-size:12px; }
+  .season{ font-size:11px; padding:4px 9px; }
+  .btn.big{ min-height:50px; font-size:14.5px; }
+  .rec h3{ font-size:20px; }
+  .garden-img-wrap{ height:150px; }
+  .garden-presets-grid{ grid-template-columns:repeat(2,1fr); }
+  .plan-agg-stats{ grid-template-columns:repeat(3,1fr); gap:6px; }
+}
+
+/* ── 하단 탭바 — 6탭이 S24 Ultra(412px)에서도 여유 있게 ── */
+@media (max-width:480px){
+  .tabs{ padding:0 6px calc(8px + env(safe-area-inset-bottom,0px)); }
+  .pill{ gap:1px; padding:4px; max-width:100%; border-radius:999px; }
+  .tabs button{ min-height:54px; gap:2px; font-size:10.5px; letter-spacing:-.4px; padding:3px 0; }
+  .tabs svg{ width:20px; height:20px; }
+}
+@media (max-width:412px){
+  .tabs button{ font-size:10px; min-height:52px; }
+  .tabs svg{ width:19px; height:19px; }
+  .pill{ gap:1px; padding:4px 3px; }
+}
+@media (max-width:360px){
+  .tabs button{ font-size:9.5px; min-height:50px; gap:1px; }
+  .tabs svg{ width:18px; height:18px; stroke-width:1.8; }
+  .tabs button[aria-current="page"] svg{ stroke-width:2.2; }
+  .pill{ padding:3px; gap:1px; }
+}
+
+/* ── 플로팅 방문자 위젯 — S24 Ultra 세로에서 탭바와 겹치지 않게 ── */
+@media (max-width:480px){
+  .visit-fab{ width:176px; right:10px; bottom:calc(86px + env(safe-area-inset-bottom,0px)); }
+  .visit-fab-card{ padding:9px 10px 10px; border-radius:18px; }
+  .visit-fab-title{ font-size:10.5px; }
+  .visit-num{ font-size:19px; }
+  .visit-note{ font-size:9.5px; }
+  .visit-fab-toggle{ width:30px; height:30px; border-radius:8px; font-size:14px; } /* 26→30 터치 개선 */
+}
+@media (max-width:390px){
+  .visit-fab{ width:164px; right:8px; bottom:calc(84px + env(safe-area-inset-bottom,0px)); }
+  .visit-fab-card{ padding:8px 9px 9px; }
+}
+@media (max-width:360px){
+  .visit-fab{ width:152px; }
+  .visit-chip{ padding:7px 11px; font-size:11.5px; }
+}
+
+/* ── 엄지 존(하단) 강화 — 추천 탭 주요 CTA를 하단 고정 바처럼 ── */
+@media (max-width:600px){
+  .card:has(.btn.primary.big.wide){ padding-bottom:14px; }
+  /* 긴 화면에서 CTA가 스크롤 끝에 숨지 않게 하단 여백·그림자 강화 */
+  .btn.primary.big.wide{ box-shadow:0 8px 20px rgba(244,115,90,.28), var(--shadow); }
+  .btn.primary.big.wide:active{ box-shadow:0 4px 12px rgba(244,115,90,.22); }
+}
+
+/* ── 모달/바텀시트 — S24 Ultra 세로 915px에 최적 (손잡이 바, 둥근 모서리) ── */
+.camp-modal-backdrop{ padding:0; }
+.camp-modal-content{
+  scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+@media (max-width:600px){
+  .camp-modal-backdrop{ align-items:flex-end; }
+  .camp-modal-content{
+    max-height:min(88dvh, 88svh);
+    max-height:min(88vh, 86dvh);
+    border-radius:24px 24px 0 0;
+    padding-top:10px;
+  }
+  .camp-modal-content::before{
+    content:""; display:block; width:36px; height:4px; border-radius:99px;
+    background:var(--line); margin:0 auto 14px; opacity:.9;
+  }
+}
+
+/* ── 가로 스크롤 카드·필터 — 가장자리 페이드 힌트 (스크롤 가능 알림) ── */
+@media (max-width:600px){
+  .camp-scroll-row{
+    mask-image:linear-gradient(to right, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+    -webkit-mask-image:linear-gradient(to right, transparent 0, black 10px, black calc(100% - 10px), transparent 100%);
+  }
+  .wx-hours{
+    mask-image:linear-gradient(to right, black calc(100% - 18px), transparent 100%);
+    -webkit-mask-image:linear-gradient(to right, black calc(100% - 18px), transparent 100%);
+  }
+}
+
+/* ── 준비물·조리 목록 — 좁은 화면에서 체크박스·금액 줄바꿈 최적 ── */
+@media (max-width:412px){
+  .item label{ gap:12px; padding:11px 0; }
+  .item input{ width:24px; height:24px; }
+  .item input:checked::after{ left:7px; top:2px; width:5px; height:11px; }
+  .item .txt b{ font-size:14px; }
+  .item .txt small{ font-size:12px; }
+  .amt{ font-size:13px; }
+  .group h3{ font-size:16px; }
+}
+
+/* ── 현장 조리 모드 — 엄지 조작 큰 버튼, 세로 화면 전용 레이아웃 ── */
+@media (max-width:480px){
+  .cook-top{ flex-wrap:wrap; gap:8px; }
+  .cook-badge{ font-size:11px; padding:3px 8px; }
+  .timer-bar{ padding:12px; border-radius:16px; }
+  .timer-display{ gap:8px; }
+}
+
+/* ── 가로 모드 (S24 Ultra 가로 915×412 등) — 높이 확보 ── */
+@media (max-height:520px) and (orientation:landscape){
+  body{ padding-top:8px; padding-bottom:calc(76px + env(safe-area-inset-bottom,0px)); }
+  .hero{ padding:14px 16px 16px; margin-bottom:10px; }
+  .hero-top{ margin-bottom:12px; }
+  .home h1{ font-size:22px; margin-bottom:6px; }
+  .home p.sub{ font-size:12.5px; }
+  .card{ padding:12px 14px; margin-bottom:10px; }
+  .tabs button{ min-height:48px; gap:1px; font-size:9.5px; }
+  .tabs svg{ width:18px; height:18px; }
+  .pill{ padding:3px; }
+  .visit-fab{ bottom:calc(68px + env(safe-area-inset-bottom,0px)); width:160px; }
+  .garden-map-container{ height:220px; }
+  .camp-modal-content{ max-height:92vh; }
+}
+
+/* ── 접촉/스타일러스 — S Pen·손가락 모두 44px 보장 ── */
+@media (pointer:coarse){
+  .chip,.btn,.loc-title-toggle,.fold-head,.wx-title-toggle,.ac-item,.camp-item-name{ min-height:44px; }
+  .visit-fab-toggle{ min-width:30px; min-height:30px; }
+}
+
+/* ── 다크모드·라이트모드 탭바 가독성 — S24 Ultra AMOLED/밝은 야외 ── */
+.tabs button{ text-shadow:0 1px 0 rgba(0,0,0,.06); }
+:root[data-theme="light"] .pill{ background:color-mix(in srgb, var(--surface) 92%, transparent); }
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]) .pill{ background:color-mix(in srgb, var(--surface) 92%, transparent); }
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -6889,6 +7194,75 @@ details li{margin-bottom:8px}
       if(ui.myLoc)loadOsmNearby();
     }
     loadSecretGardens(false);
+  })();
+
+  /* ───────── 모바일 전용 — Galaxy S24 Ultra 터치·키보드·뷰포트 보정 ───────── */
+  (function(){
+    // 100dvh 폴백: 구형 WebView에서도 정확한 뷰포트 높이를 --app-vh에 저장
+    function setVh(){
+      var vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--app-vh', vh + 'px');
+    }
+    setVh();
+    window.addEventListener('resize', setVh, {passive:true});
+    window.addEventListener('orientationchange', function(){ setTimeout(setVh, 120); });
+
+    // 키보드가 올라오면( visualViewport 높이 급감 ) 플로팅 위젯·하단 탭 숨김 완화
+    var fab = document.getElementById('visit-fab');
+    var tabs = document.getElementById('tabs');
+    var lastH = window.innerHeight;
+    function onViewportChange(){
+      var vv = window.visualViewport;
+      var curH = vv ? vv.height : window.innerHeight;
+      var keyboardOpen = curH < lastH * 0.78;
+      if(fab){
+        fab.style.display = keyboardOpen ? 'none' : '';
+      }
+      if(tabs){
+        tabs.style.transform = keyboardOpen ? 'translateY(100%)' : '';
+        tabs.style.transition = 'transform .22s ease';
+      }
+    }
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize', onViewportChange, {passive:true});
+      window.visualViewport.addEventListener('scroll', onViewportChange, {passive:true});
+    }
+
+    // 스크롤 방향에 따라 FAB 자동 숨김(내용 가리지 않기) — S24 Ultra 긴 세로에서 유용
+    var lastY = window.scrollY || 0;
+    var ticking = false;
+    window.addEventListener('scroll', function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        var y = window.scrollY || 0;
+        if(!fab || fab.style.display==='none'){ ticking=false; return; }
+        var goingDown = y > lastY + 12;
+        var goingUp = y < lastY - 12;
+        if(goingDown && y > 120){
+          fab.style.opacity = '.55';
+          fab.style.transform = 'scale(.92)';
+        } else if(goingUp){
+          fab.style.opacity = '';
+          fab.style.transform = '';
+        }
+        lastY = y;
+        ticking = false;
+      });
+    }, {passive:true});
+
+    // iOS/Android 더블탭 줌 방지 — 빠른 연속 탭을 허용하되 더블탭 확대만 차단
+    var lastTouch = 0;
+    document.addEventListener('touchend', function(e){
+      var now = Date.now();
+      if(now - lastTouch < 320) e.preventDefault();
+      lastTouch = now;
+    }, {passive:false});
+
+    // S24 Ultra 120Hz — 모션 허용 시 스크롤·전환을 더 부드럽게
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: no-preference)').matches){
+      document.documentElement.style.scrollBehavior = 'smooth';
+    }
   })();
 })();
 </script>
