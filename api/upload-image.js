@@ -1,12 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { getFirebaseStorageBucket } from '../lib/firebase-admin.js';
-
-const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
-const MIME_EXTENSIONS = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp'
-};
+import { parseImageDataUrl } from '../lib/image-upload.js';
 
 function parseBody(req) {
   if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) return req.body;
@@ -29,36 +23,24 @@ export default async function handler(req, res) {
     return errorResponse(res, 405, 'method_not_allowed', '지원하지 않는 요청 방식입니다.');
   }
 
-  const { imageBase64 } = parseBody(req);
-  if (!imageBase64 || typeof imageBase64 !== 'string') {
-    return errorResponse(res, 400, 'missing_image', '업로드할 이미지 데이터가 없습니다.');
+  let image;
+  try {
+    image = parseImageDataUrl(parseBody(req).imageBase64);
+  } catch (error) {
+    return errorResponse(res, error.statusCode || 400, error.code || 'invalid_image', error.publicMessage || error.message);
   }
-  if (imageBase64.startsWith('http://') || imageBase64.startsWith('https://')) {
-    return res.status(200).json({ success: true, url: imageBase64 });
-  }
-
-  const match = imageBase64.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/i);
-  if (!match) {
-    return errorResponse(res, 400, 'invalid_image', 'JPEG, PNG 또는 WebP 이미지 파일만 업로드할 수 있습니다.');
-  }
-
-  const mime = match[1].toLowerCase();
-  const buffer = Buffer.from(match[2], 'base64');
-  if (!buffer.length) {
-    return errorResponse(res, 400, 'invalid_image', '이미지 데이터가 비어 있습니다.');
-  }
-  if (buffer.length > MAX_IMAGE_BYTES) {
-    return errorResponse(res, 413, 'image_too_large', '사진 크기가 너무 큽니다. 3MB 이하의 사진을 선택해주세요.');
+  if (image.externalUrl) {
+    return res.status(200).json({ success: true, url: image.externalUrl });
   }
 
   try {
     const bucket = getFirebaseStorageBucket();
-    const fileName = `secret-gardens/${Date.now()}_${randomBytes(8).toString('hex')}.${MIME_EXTENSIONS[mime]}`;
+    const fileName = `secret-gardens/${Date.now()}_${randomBytes(8).toString('hex')}.${image.ext}`;
     const downloadToken = randomBytes(24).toString('hex');
-    await bucket.file(fileName).save(buffer, {
+    await bucket.file(fileName).save(image.buffer, {
       resumable: false,
       metadata: {
-        contentType: mime,
+        contentType: image.mime,
         cacheControl: 'public, max-age=31536000, immutable',
         metadata: { firebaseStorageDownloadTokens: downloadToken }
       }

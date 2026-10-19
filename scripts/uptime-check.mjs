@@ -72,9 +72,14 @@ export const CHECKS = [
     expectStatus: 200,
     validateBody: (text) => {
       const json = JSON.parse(text);
-      return json?.authorized === false && Array.isArray(json?.gardens)
-        ? null
-        : '공개 스팟 목록 응답이 올바르지 않음';
+      if (json?.authorized !== false || !Array.isArray(json?.gardens)) {
+        return '공개 스팟 목록 응답이 올바르지 않음';
+      }
+      // 공개 응답에 인증 정보가 새어 나오면 그 자체가 장애로 본다.
+      const leaked = json.gardens.some(
+        (garden) => garden && (Object.hasOwn(garden, 'password') || Object.hasOwn(garden, 'passwordHash'))
+      );
+      return leaked ? '공개 스팟 목록에 비밀번호 필드가 포함됨' : null;
     },
   },
   {

@@ -1,17 +1,18 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
+import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'url';
-import { GoogleGenAI } from '@google/genai';
 import { generateImageUrl } from './lib/generate-image.js';
+import { generateSampleJson, MAX_IMAGE_PROMPT_LENGTH } from './lib/sample.js';
+import { parseImageDataUrl } from './lib/image-upload.js';
 import { createSecretGardensApi, sanitizePublicSecretGardens } from './lib/secret-gardens-api.js';
 import { createVisitorStatsApi } from './lib/visitor-stats-api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import fs from 'fs';
-
-// 로컬 개발용 .env 로딩 (.env 파일이 있으면 우선 적용)
+// 로컬 개발용 .env 로딩 (이미 설정된 환경변수는 덮어쓰지 않는다)
 try {
   const envPath = path.join(__dirname, '.env');
   if (fs.existsSync(envPath)) {
@@ -24,7 +25,7 @@ try {
         if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
           val = val.slice(1, -1);
         }
-        if (val) process.env[key] = val;
+        if (val && process.env[key] === undefined) process.env[key] = val;
       }
     }
   }
@@ -36,6 +37,16 @@ const PORT = Number(process.env.PORT) || 3000;
 // 보안 및 성능 최적화: 서버 식별 헤더 제거
 app.disable('x-powered-by');
 
+// 기본 보안 헤더 (인라인 스크립트 중심 구조라 CSP는 별도 마이그레이션 과제로 둔다)
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'SAMEORIGIN'
+  });
+  next();
+});
+
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -46,31 +57,23 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// 이미지 업로드 API (카메라 촬영 / 갤러리 업로드)
+// 이미지 업로드 API (카메라 촬영 / 갤러리 업로드) — Vercel과 같은 검증(lib/image-upload.js)을 쓴다.
 app.post('/api/upload-image', (req, res) => {
   try {
-    const { imageBase64 } = req.body || {};
-    if (!imageBase64 || typeof imageBase64 !== 'string') {
-      return res.status(400).json({ success: false, error: '업로드할 이미지 데이터가 없습니다.' });
+    const image = parseImageDataUrl(req.body?.imageBase64);
+    if (image.externalUrl) {
+      return res.json({ success: true, url: image.externalUrl });
     }
-    const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-      if (imageBase64.startsWith('http://') || imageBase64.startsWith('https://')) {
-        return res.json({ success: true, url: imageBase64 });
-      }
-      return res.status(400).json({ success: false, error: '유효한 이미지 형식이 아닙니다.' });
-    }
-    const mime = matches[1];
-    const ext = mime.includes('png') ? 'png' : (mime.includes('webp') ? 'webp' : 'jpg');
-    const buffer = Buffer.from(matches[2], 'base64');
-    const filename = `garden_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
-    const filePath = path.join(uploadsDir, filename);
-    fs.writeFileSync(filePath, buffer);
+    const filename = `garden_${Date.now()}_${randomBytes(8).toString('hex')}.${image.ext}`;
+    fs.writeFileSync(path.join(uploadsDir, filename), image.buffer);
     return res.json({ success: true, url: `/uploads/${filename}` });
   } catch (err) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ success: false, code: err.code, error: err.publicMessage || err.message });
+    }
     console.error('Image upload error:', err);
     return res.status(500).json({ success: false, error: '이미지 저장 처리 실패' });
   }
@@ -80,6 +83,9 @@ app.post('/api/generate-image', async (req, res) => {
   const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt.trim() : '';
   if (!prompt) {
     return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
+  }
+  if (prompt.length > MAX_IMAGE_PROMPT_LENGTH) {
+    return res.status(400).json({ code: 'prompt_too_long', error: 'Prompt is too long' });
   }
 
   try {
@@ -103,53 +109,17 @@ app.post('/api/sample', async (req, res) => {
     return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
   }
 
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(503).json({ code: 'capability_disabled', error: 'GEMINI_API_KEY is not configured' });
-  }
-
   try {
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'camping-food-helper',
-        },
-      },
-    });
-
-    const models = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
-    let lastErr = null;
-    let parsed = null;
-
-    for (const model of models) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-          },
-        });
-        const text = response.text;
-        if (text) {
-          parsed = JSON.parse(text.trim());
-          break;
-        }
-      } catch (e) {
-        lastErr = e;
-        console.warn(`[Express API] Model ${model} failed, trying fallback:`, e?.message || e);
-      }
-    }
-
-    if (!parsed) {
-      console.error('[Express API] All models failed:', lastErr);
-      return res.status(502).json({ code: 'upstream_error', error: lastErr?.message });
-    }
-
-    return res.json(parsed);
+    return res.json(await generateSampleJson(prompt));
   } catch (err) {
-    console.error('[Express API] /api/sample error:', err);
-    return res.status(502).json({ code: 'upstream_error', error: err?.message });
+    if (err.code === 'capability_disabled') {
+      return res.status(503).json({ code: err.code, error: err.message });
+    }
+    if (err.code === 'prompt_too_long' || err.code === 'invalid_json') {
+      return res.status(400).json({ code: err.code, error: err.message });
+    }
+    console.error('[Express API] /api/sample error:', err?.message || err);
+    return res.status(502).json({ code: 'upstream_error', error: err?.message || 'Text generation failed' });
   }
 });
 
@@ -178,7 +148,40 @@ app.get('/data/secret_gardens.json', (req, res) => {
   }
 });
 
-app.use(express.static(__dirname));
+// 정적 파일은 허용 목록만 내려준다.
+// 예전에는 저장소 루트 전체가 공개되어 server.js, lib/*.js 같은 서버 소스도 열람할 수 있었다.
+const PUBLIC_FILES = new Set(['/', '/index.html', '/camp-kitchen.html', '/data/campgrounds.js']);
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const requestPath = req.path;
+  if (requestPath.startsWith('/api/')) return next();
+  if (PUBLIC_FILES.has(requestPath)) return next();
+  if (/^\/uploads\/[A-Za-z0-9._-]+$/.test(requestPath)) return next();
+  // 확장자가 있는 파일 경로인데 허용 목록에 없으면 소스/설정 파일로 보고 차단한다.
+  if (/\.[A-Za-z0-9]+$/.test(requestPath)) {
+    return res.status(404).json({ success: false, error: 'Not found' });
+  }
+  return next(); // 확장자 없는 경로는 SPA 폴백으로 넘긴다.
+});
+
+app.use(express.static(__dirname, {
+  dotfiles: 'deny',
+  index: false,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith(`${path.sep}data${path.sep}campgrounds.js`)) {
+      res.set('Cache-Control', 'public, max-age=86400');
+    } else if (filePath.includes(`${path.sep}uploads${path.sep}`)) {
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (filePath.endsWith('.html')) {
+      res.set('Cache-Control', 'no-cache');
+    }
+  }
+}));
+
+// 등록되지 않은 /api/* 경로는 SPA HTML이 아니라 JSON 404로 답한다.
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ success: false, code: 'route_not_found', error: '요청한 API 경로를 찾을 수 없습니다.' });
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

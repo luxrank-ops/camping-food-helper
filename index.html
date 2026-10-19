@@ -897,7 +897,7 @@ details li{margin-bottom:8px}
     planDays:store.get('cc.planDays',3),planPeople:profile.people||2,planTheme:store.get('cc.planTheme','all'),planSnack:store.get('cc.planSnack',true),planFilter:'all',mealPlan:store.get('cc.mealPlan',null),planSwapTarget:null,planBusy:false,
     gardenList:[],gardenLoaded:false,gardenBusy:false,gardenErr:'',gardenFilter:'all',gardenSearch:'',gardenFacFilter:'',gardenSort:'newest',
     gardenMasterKey:store.get('cc.gardenMasterKey',''),gardenIsMaster:!!store.get('cc.gardenMasterKey',''),
-    gardenRegModal:false,gardenRegDraft:null,gardenRegBusy:false,gardenRegError:'',gardenDetailModal:null,gardenEditModal:null,gardenAuthModal:null,
+    gardenRegModal:false,gardenRegDraft:null,gardenRegBusy:false,gardenRegError:'',gardenDetailModal:null,gardenEditModal:null,gardenEditPassword:'',gardenAuthModal:null,
     gardenCategory:'noji',gardenSelectedFacilities:GARDEN_DEFAULT_FACILITIES.slice(),
     gardenSelectedPhoto:GARDEN_PHOTO_PRESETS[0].url,gardenCustomPhoto:'',gardenUploadedPhoto:'',
     gardenMapFocusId:null,gardenHidePrivateOnMap:false,
@@ -3908,8 +3908,8 @@ details li{margin-bottom:8px}
     if(!ui.gardenMasterKey){
       ui.gardenMasterKey = store.get('cc.gardenMasterKey', '') || '';
     }
-    var masterParam = ui.gardenMasterKey ? ('?master_key=' + encodeURIComponent(ui.gardenMasterKey)) : '';
-    fetch('/api/secret-gardens' + masterParam)
+    var gardenListOpts = ui.gardenMasterKey ? {headers:{'x-master-key':ui.gardenMasterKey}} : {};
+    fetch('/api/secret-gardens', gardenListOpts)
       .then(function(r){
         if(!r.ok) throw new Error('API not available');
         return r.json();
@@ -5748,6 +5748,7 @@ details li{margin-bottom:8px}
         if(idx >= 0) ui.gardenList[idx] = d.garden;
         if(ui.gardenDetailModal && ui.gardenDetailModal.id === id) ui.gardenDetailModal = d.garden;
         ui.gardenEditModal = null;
+        ui.gardenEditPassword = '';
         ui.gardenEditUploadedPhoto = '';
         showNotice('🌿 스팟 정보가 성공적으로 수정되었습니다.');
         render();
@@ -5876,6 +5877,7 @@ details li{margin-bottom:8px}
     if(a==='garden-edit-close'){
       if(!closeFromBackdrop(b,e))return;
       ui.gardenEditModal = null;
+      ui.gardenEditPassword = '';
       ui.gardenEditUploadedPhoto = '';
       render();
       return;
@@ -6736,6 +6738,7 @@ details li{margin-bottom:8px}
 
             if(authAction === 'edit'){
               ui.gardenEditModal = d.garden;
+              ui.gardenEditPassword = authPwd;
               ui.gardenEditUploadedPhoto = '';
               render();
             } else {
@@ -6802,7 +6805,7 @@ details li{margin-bottom:8px}
         updatedFields.newPassword = edNewPwdIn.value.trim();
       }
 
-      var authKey = ui.gardenMasterKey || editSpot.password || '';
+      var authKey = ui.gardenEditPassword || ui.gardenMasterKey || '';
       executeEditGarden(editId, updatedFields, authKey);
       return;
     }

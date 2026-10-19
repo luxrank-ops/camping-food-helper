@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// 이 앱의 Firestore 접근은 서버(firebase-admin 서비스 계정) 전용이다.
+// 브라우저 웹 SDK로 직접 읽거나 쓰는 경로는 없으므로, 클라이언트 접근은 전부 차단한다.
+// Admin SDK는 보안 규칙의 적용을 받지 않으므로 /api/* 동작에는 영향이 없다.
+//
+// 적용 방법(최초 1회): firebase deploy --only firestore:rules
+// (GitHub Actions의 Hosting 배포 워크플로는 규칙을 배포하지 않는다.)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

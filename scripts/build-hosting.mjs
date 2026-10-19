@@ -1,9 +1,14 @@
 // Firebase Hosting 배포용 정적 번들(dist/) 생성 스크립트.
 // 서버 전용 파일(server.js, api/, .env 등)이나 민감 정보(비밀번호 평문 등)가
 // 정적 호스팅에 노출되지 않도록 필요한 클라이언트 자산만 정제하여 dist/ 폴더로 복사한다.
+//
+// 비밀의 정원 정제는 API와 같은 sanitizePublicSecretGardens()를 사용한다.
+// (예전에는 여기서 별도로 마스킹했는데, 비공개 스팟의 전체 주소(address)가 그대로 남아
+//  정적 JSON을 직접 열면 상세 위치가 보이는 문제가 있었다.)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sanitizePublicSecretGardens } from '../lib/secret-gardens-api.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -24,25 +29,11 @@ if (fs.existsSync(campgroundsSrc)) {
   fs.copyFileSync(campgroundsSrc, path.join(DIST_DATA, 'campgrounds.js'));
 }
 
-// 4. 비밀의 정원 초기 데이터 정제 복사 (비밀번호 및 비공개 상세주소 마스킹)
+// 4. 비밀의 정원 초기 데이터 정제 복사 (비밀번호 및 비공개 상세 위치 제거 — API와 동일 규칙)
 const gardensSrc = path.join(ROOT, 'data', 'secret_gardens.json');
 if (fs.existsSync(gardensSrc)) {
   const raw = JSON.parse(fs.readFileSync(gardensSrc, 'utf8'));
-  const sanitized = (Array.isArray(raw) ? raw : []).map((spot) => {
-    const copy = { ...spot };
-    delete copy.password;
-    delete copy.secretCode;
-    if (copy.isPrivate) {
-      const parts = (copy.address || '').split(' ');
-      copy.addressMasked = parts.slice(0, 2).join(' ') + ' (비공개 스팟)';
-      copy.addressDetail = '🔒 잠금 해제 후 상세 진입로와 위치가 표시됩니다.';
-      copy.tips = '🔒 비공개 스팟입니다. 비밀번호를 입력해 열람하세요.';
-      copy.navQuery = parts.slice(0, 2).join(' ');
-      if (typeof copy.lat === 'number') copy.lat = Math.round(copy.lat * 100) / 100;
-      if (typeof copy.lng === 'number') copy.lng = Math.round(copy.lng * 100) / 100;
-    }
-    return copy;
-  });
+  const sanitized = sanitizePublicSecretGardens(Array.isArray(raw) ? raw : []);
   fs.writeFileSync(path.join(DIST_DATA, 'secret_gardens.json'), JSON.stringify(sanitized, null, 2), 'utf8');
 }
 
