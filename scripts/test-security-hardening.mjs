@@ -17,6 +17,7 @@ import {
   verifyGardenPassword
 } from '../lib/garden-password.js';
 import { parseImageDataUrl } from '../lib/image-upload.js';
+import { publicStorageErrorCode } from '../lib/firebase-admin.js';
 import { generateSampleJson, parseJsonResponse } from '../lib/sample.js';
 import { CHECKS, probe } from './uptime-check.mjs';
 
@@ -235,4 +236,24 @@ test('헬스체크: 공개 목록에 비밀번호 필드가 있으면 장애로 
   assert.equal((await probe(gardens, async () => new Response(leaked, { status: 200 }))).ok, false);
   const clean = JSON.stringify({ authorized: false, gardens: [{ id: '1' }] });
   assert.equal((await probe(gardens, async () => new Response(clean, { status: 200 }))).ok, true);
+});
+
+test('저장소 오류 진단: Firestore 설정 문제는 공개 코드로 분류되고 원본은 노출되지 않는다', async () => {
+  assert.equal(publicStorageErrorCode(new Error('5 NOT_FOUND: The database (default) does not exist')), 'firestore_database_missing');
+  assert.equal(publicStorageErrorCode({ code: 'permission-denied', message: 'Missing or insufficient permissions' }), 'firestore_permission_denied');
+  assert.equal(publicStorageErrorCode(new Error('error:1408: invalid_grant getting access token')), 'firebase_credentials_invalid');
+  assert.equal(publicStorageErrorCode(new Error('socket hang up')), null);
+
+  const unavailable = async () => {
+    const error = new Error('7 PERMISSION_DENIED: service account ... PRIVATE_DETAIL');
+    error.code = 'permission-denied';
+    throw error;
+  };
+  const api = createSecretGardensApi({
+    store: { list: unavailable, get: unavailable, insert: unavailable, update: unavailable, remove: unavailable }
+  });
+  const response = await callApi(api);
+  assert.equal(response.statusCode, 503);
+  assert.equal(response.payload.code, 'firestore_permission_denied');
+  assert.ok(!JSON.stringify(response.payload).includes('PRIVATE_DETAIL'));
 });

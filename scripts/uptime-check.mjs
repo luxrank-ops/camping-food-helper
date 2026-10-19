@@ -31,8 +31,10 @@ const RETRY_DELAY_MS = 3000;
 // 운영자가 조치할 수 있는 공개 설정 코드만 고정 목록으로 표시한다.
 const CONFIG_PROBLEMS = {
   storage_not_configured: 'FIREBASE_SERVICE_ACCOUNT 미설정: Vercel Production 환경변수 등록 후 재배포 필요',
-  firebase_credentials_invalid: 'FIREBASE_SERVICE_ACCOUNT 형식/필수 항목 확인 필요',
+  firebase_credentials_invalid: 'FIREBASE_SERVICE_ACCOUNT 형식/필수 항목/키 유효성 확인 필요',
   firebase_project_not_configured: 'FIREBASE_PROJECT_ID 또는 서비스 계정 project_id 설정 필요',
+  firestore_database_missing: 'Firestore 데이터베이스가 없음: Firebase 콘솔에서 기본 Firestore 데이터베이스 생성 필요',
+  firestore_permission_denied: 'Firestore 권한 거부: 서비스 계정에 대상 프로젝트의 Firestore 권한(예: Cloud Datastore User/Editor) 부여 필요',
 };
 
 export function statusReason(status, expected, text) {
