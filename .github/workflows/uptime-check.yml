@@ -4,6 +4,11 @@
 name: Uptime check
 
 on:
+  # 점검 코드 변경 시에도 실행하여 스케줄을 기다리지 않고 검증한다.
+  push:
+    paths:
+      - .github/workflows/uptime-check.yml
+      - scripts/uptime-check.mjs
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
@@ -13,7 +18,7 @@ permissions:
 
 # 이전 점검이 아직 돌고 있으면 겹쳐서 실행하지 않는다
 concurrency:
-  group: uptime-check
+  group: uptime-check-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
