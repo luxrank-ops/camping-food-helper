@@ -60,6 +60,18 @@ export const CHECKS = [
     },
   },
   {
+    name: '서버리스 /api/visitor-stats (방문자 카운터 읽기)',
+    method: 'GET',
+    url: `${BASE_URL}/api/visitor-stats`,
+    expectStatus: 200,
+    validateBody: (text) => {
+      const json = JSON.parse(text);
+      return json?.success === true && Number.isFinite(json?.total) && Number.isFinite(json?.today)
+        ? null
+        : '오늘·누적 방문자 수 응답이 올바르지 않음';
+    },
+  },
+  {
     name: 'Open-Meteo 날씨 API',
     method: 'GET',
     url: WEATHER_URL,
