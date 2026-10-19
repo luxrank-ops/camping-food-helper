@@ -96,6 +96,42 @@
 - Vercel 빌드는 `dist/`의 정제된 정적 자산만 배포하므로 공개 JSON에 비밀번호나 비공개 상세 주소가 포함되지 않습니다. 사진 포함 여부와 관계없이 비밀글 상세 주소는 서버에서 비공개 처리합니다.
 - `index.html`과 `camp-kitchen.html`은 같은 앱 진입점이며, 두 파일 모두 같은 수정이 반영됩니다. Firebase Hosting 워크플로는 현재 정적 파일만 배포하므로, 등록 API가 필요한 운영 앱은 Vercel 배포 주소를 사용해야 합니다.
 
+## 방문자 카운터 · 플로팅 위젯 (2026-10-19 추가)
+
+모든 화면 오른쪽 아래에 **오늘 방문자 · 누적 방문자**가 떠 있는 플로팅 위젯입니다. 하단 알약 탭바를 가리지 않도록 탭바 위에 배치했고, 탭 이동·모달 열기와 무관하게 계속 보입니다(화면을 통째로 다시 그리는 `#app` 밖에 따로 두어 상태가 유지됩니다).
+
+- **표시**: `오늘 방문자`(형광 라임) · `누적 방문자`(본문 색) 두 줄과, 숫자가 어디 기준인지 알려 주는 배지(`전체` / `이 기기`). 숫자가 바뀔 때는 짧게 카운트업 애니메이션이 돕니다(움직임 최소화 설정이면 바로 표시).
+- **접기·펼치기**: 위젯 오른쪽 `−` 버튼을 누르면 `👣 오늘 3 · 누적 42` 알약 하나로 접힙니다. 알약을 누르면 다시 펼쳐지고, 상태는 기기에 저장됩니다(`cc.visitFabOpen`).
+- **위치 옮기기**: 제목 왼쪽 점 손잡이(⠿)를 잡고 끌면 화면 안에서 자유롭게 옮길 수 있고, 화면 크기가 바뀌어도 보이지 않는 위치로 튀지 않도록 다시 계산됩니다(`cc.visitFabPos`).
+- **드래그와 클릭 구분**: 5px 미만 움직임은 드래그로 보지 않아 접기 버튼·알약 클릭과 충돌하지 않습니다.
+
+### 세는 기준
+
+| 구분 | 기준 |
+|---|---|
+| "오늘" | 한국 시간(KST, UTC+9) 날짜. 서버 타임존이 UTC여도 기준이 같습니다 |
+| 방문 1회 | 브라우저(기기)당 하루 1회. `localStorage`의 `cc.visitLogged`로 같은 날 재방문은 다시 세지 않습니다 |
+| 부풀리기 방지 | 서버가 같은 아이피+방문자 아이디의 60초 이내 반복 요청과 아이피당 하루 24회를 넘긴 요청은 `counted:false`로 무시합니다(인메모리 베스트 에포트) |
+| 자정 통과 | 페이지를 계속 열어 두어도 1분마다 날짜를 확인해 새 날 방문으로 다시 셉니다 |
+
+### API · 저장소
+
+```
+GET  /api/visitor-stats   → { success, date, today, total, counted:false }   (읽기만, 카운트 증가 없음)
+POST /api/visitor-stats   → { success, date, today, total, counted:true }    (이번 방문 카운트)
+```
+
+- 로컬 `npm run dev`와 Vercel 서버리스가 **같은 로직·저장소 선택 규칙**을 씁니다(`lib/visitor-stats-api.js`, `lib/visitor-stats-store.js`). 비밀의 정원과 같은 방식입니다.
+- **운영(Vercel)**: Firebase Firestore 문서 하나(`_visitorStats/global`)에 `total`과 일자별 카운트를 저장합니다. 동시 방문이 서로 덮어쓰지 않도록 트랜잭션으로 읽고, 문서가 계속 커지지 않게 최근 400일만 남깁니다. **새로운 시크릿은 필요 없고**, 비밀의 정원이 쓰는 `FIREBASE_SERVICE_ACCOUNT`·`FIREBASE_PROJECT_ID`를 그대로 사용합니다.
+- **로컬 개발**: `data/visitor_stats.json`에 저장합니다(실행 중에 쌓이는 값이므로 `.gitignore`에 넣어 커밋되지 않습니다).
+- **Firestore 미설정 운영 환경**: 성공한 것처럼 속이지 않고 HTTP 503과 원인을 반환합니다.
+- **클라이언트 폴백**: Firebase Hosting처럼 정적만 배포된 곳에서는 `/api/*`가 `index.html`로 rewrite되어 카운터를 읽을 수 없습니다. 이때 위젯은 **이 기기 기준**으로 세고 배지를 `이 기기`(주황)로 바꿔 전체 방문자인 것처럼 보이지 않게 합니다. 오늘 서버에서 받아 둔 숫자가 있으면 오프라인이어도 그 값을 캐시로 보여 줍니다.
+- 헬스체크(`.github/workflows/uptime-check.yml`)에 `GET /api/visitor-stats`(HTTP 200 + `today`·`total` 숫자)를 추가했습니다.
+
+### 회귀 테스트 (`scripts/test-visitor-stats.mjs`)
+
+KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503·라우트 등록·위젯 마크업 검사와 함께, `index.html`의 위젯 블록을 잘라 최소 DOM 스텁으로 실행하는 **동작 테스트**를 넣었습니다(서버 카운트 성공 / 같은 날 읽기만 / 정적 호스팅·오프라인 폴백 / 캐시 표시 / 접기·펼치기). `npm test`에 포함되어 CI와 배포 워크플로에서 함께 돕니다.
+
 ## 자동화 · 품질 검증
 
 푸시와 PR마다 GitHub Actions가 검사를 돌리고, Vercel 배포는 `main` 머지 시 자동으로 실행됩니다. Firebase Hosting 배포·재실행 방법은 아래 배포 절을 참고하세요.
@@ -107,7 +143,7 @@
 | 백엔드 문법 검사 | `server.js`, `api/`, `lib/`, `scripts/` 문법 (`node --check`) | `node --check server.js` |
 | 클라이언트 정적 스캔 | `index.html`, `camp-kitchen.html`, `data/*.js`에서 `process.env`, `require(`, `module.exports`, `__dirname` 같은 서버 전용 참조 검출. 주석은 무시합니다. | `npm run check:client` |
 | HTML 유효성 | `html-validate`로 구조 오류 검사 | `npx html-validate@8.29.0 index.html camp-kitchen.html` |
-| 자동 테스트 | UI 회귀 테스트 5개 + 비밀의 정원 API·저장소 테스트 + Firebase 배포 설정·워크플로 회귀 테스트 | `npm test` |
+| 자동 테스트 | UI 회귀 테스트 + 비밀의 정원 API·저장소 테스트 + 방문자 카운터(API·위젯 동작) 테스트 + Firebase 배포 설정·워크플로 회귀 테스트 | `npm test` |
 | 의존성 취약점 | `npm audit --omit=dev --audit-level=high` (high 이상이면 실패) | — |
 
 - 클라이언트 코드는 브라우저에 `process`가 없습니다. `process.env`를 쓰면 앱 전체가 멈추므로, 키 유무는 서버가 판단해서 503으로 알려주도록 되어 있습니다.
@@ -169,6 +205,7 @@
 | https://camping-food-helper.vercel.app/ | HTTP 200 |
 | `POST /api/sample`, `POST /api/generate-image` | 빈 요청에 HTTP 400 (프롬프트 없음 → Gemini를 호출하지 않아 쿼터를 쓰지 않음) |
 | `GET /api/secret-gardens` | HTTP 200 + 공개 스팟 배열 (Firestore와 Vercel API 함수 점검) |
+| `GET /api/visitor-stats` | HTTP 200 + `today`·`total` 숫자 (방문자 카운터 저장소 점검) |
 | Open-Meteo 날씨 API | HTTP 200 + 현재 기온 값 존재 |
 
 - 응답이 5초를 넘거나 연결이 실패하면 장애로 봅니다. 한 번 더 확인한 뒤에도 실패해야 알림을 보냅니다.

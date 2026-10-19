@@ -9,3 +9,6 @@ bun.lockb
 .firebase/
 dist/
 uploads/
+# 로컬 개발에서 실행 중 쌓이는 방문자 카운트 (운영은 Firestore)
+data/visitor_stats.json
+data/*.tmp

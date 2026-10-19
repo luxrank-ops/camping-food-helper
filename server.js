@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { generateImageUrl } from './lib/generate-image.js';
 import { createSecretGardensApi, sanitizePublicSecretGardens } from './lib/secret-gardens-api.js';
+import { createVisitorStatsApi } from './lib/visitor-stats-api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -159,6 +160,11 @@ app.all('/api/secret-gardens/verify', (req, res) => secretGardensApi(req, res, [
 app.all('/api/secret-gardens/:id/like', (req, res) => secretGardensApi(req, res, [req.params.id, 'like']));
 app.all('/api/secret-gardens/:id', (req, res) => secretGardensApi(req, res, [req.params.id]));
 app.all('/api/secret-gardens', (req, res) => secretGardensApi(req, res, []));
+
+// === 방문자 카운터 API (오늘 방문자 · 누적 방문자) ===
+// Express 로컬 서버와 Vercel 서버리스 함수(api/visitor-stats.js)가 같은 로직·저장소를 사용한다.
+const visitorStatsApi = createVisitorStatsApi();
+app.all('/api/visitor-stats', (req, res) => visitorStatsApi(req, res));
 
 // 정적 폴백 데이터에서는 비밀번호와 비공개 상세 위치를 절대 노출하지 않는다.
 app.get('/data/secret_gardens.json', (req, res) => {
