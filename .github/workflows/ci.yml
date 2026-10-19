@@ -23,25 +23,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - name: server.js 문법 검사
-        run: node --check server.js
-      - name: 서버리스 함수·lib·스크립트 문법 검사
-        run: |
-          set -e
-          while IFS= read -r -d '' f; do
-            echo "checking $f"
-            node --check "$f"
-          done < <(find api lib scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0)
+      - name: 서버 코드 전체 문법 검사 (로컬 npm run lint와 같은 스크립트)
+        run: node scripts/check-syntax.mjs
 
   client-env-scan:
     name: 클라이언트 번들 정적 스캔 (process.env 등)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: 브라우저로 내려가는 코드에 서버 전용 참조가 있는지 검사
@@ -52,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: html-validate 실행
@@ -64,11 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: 운영 의존성 설치
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: UI·비밀 정원·Firebase 배포 설정 회귀 테스트
         run: npm test
 
@@ -77,10 +70,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - name: lockfile 생성 (저장소에는 lockfile이 없으므로 임시로만 만든다)
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: 운영 의존성 설치 (package-lock.json 고정)
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: high 이상 취약점이 있으면 실패
         run: npm audit --omit=dev --audit-level=high

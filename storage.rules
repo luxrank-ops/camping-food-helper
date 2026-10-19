@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// 사진 업로드/다운로드는 서버(firebase-admin)가 다운로드 토큰 URL로 처리한다.
+// Storage 웹 SDK로 직접 접근하는 경로는 없으므로 클라이언트 접근은 전부 차단한다.
+// (다운로드 토큰 URL의 읽기는 토큰 검사 경로이며, 이 규칙과 별개로 동작한다.)
+//
+// 적용 방법(최초 1회): firebase deploy --only storage
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -29,21 +29,15 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Node.js 22 설정
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
       - name: 운영 의존성 설치
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: 백엔드 및 스크립트 문법 검사
-        run: |
-          set -e
-          node --check server.js
-          while IFS= read -r -d '' f; do
-            echo "checking $f"
-            node --check "$f"
-          done < <(find api lib scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0)
+        run: node scripts/check-syntax.mjs
 
       - name: 클라이언트 정적 보안 스캔 (process.env 등 서버 전용 참조 검출)
         run: npm run check:client

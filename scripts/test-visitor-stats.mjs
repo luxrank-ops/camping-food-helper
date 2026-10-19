@@ -191,7 +191,7 @@ test('Vercel·Express 양쪽에서 같은 방문자 카운터 API를 쓴다', ()
   assert.match(server, /app\.all\('\/api\/visitor-stats', \(req, res\) => visitorStatsApi\(req, res\)\)/);
   // 정적 파일 폴백보다 먼저 등록되어야 API가 index.html을 돌려주지 않는다
   assert.ok(
-    server.indexOf("app.all('/api/visitor-stats'") < server.indexOf('app.use(express.static(__dirname))'),
+    server.indexOf("app.all('/api/visitor-stats'") < server.indexOf('app.use(express.static(__dirname'),
     '방문자 카운터 라우트는 정적 파일 처리보다 먼저 등록되어야 한다'
   );
 });

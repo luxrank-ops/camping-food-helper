@@ -132,6 +132,19 @@ POST /api/visitor-stats   → { success, date, today, total, counted:true }    (
 
 KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503·라우트 등록·위젯 마크업 검사와 함께, `index.html`의 위젯 블록을 잘라 최소 DOM 스텁으로 실행하는 **동작 테스트**를 넣었습니다(서버 카운트 성공 / 같은 날 읽기만 / 정적 호스팅·오프라인 폴백 / 캐시 표시 / 접기·펼치기). `npm test`에 포함되어 CI와 배포 워크플로에서 함께 돕니다.
 
+## 앱 점검 · 보안 강화 (2026-10-19)
+
+저장소 전체(프런트·서버·서버리스·CI·배포·운영 환경변수)를 점검하고 코드로 고칠 수 있는 부분을 처리했습니다. 상세 결과와 운영자 조치 목록은 `점검_보고서_2026-10-19.md`를 참고하세요.
+
+- **비밀번호 평문 저장 제거**: 비밀의 정원 비밀번호는 이제 scrypt 해시로만 저장되고, 어떤 API 응답에도 비밀번호/해시가 포함되지 않습니다. 기존 평문 비밀번호는 작성자 확인·수정 때 해시로 자동 교체됩니다.
+- **마스터 키 하드코딩 제거**: 코드에 있던 기본 마스터 키를 없앴습니다. 마스터 인증은 서버 환경변수 `MASTER_KEY`가 있을 때만 동작하며, 쿼리스트링이 아니라 `x-master-key` 헤더로만 전달합니다. **운영에서 마스터 기능을 쓰려면 Vercel Production에 `MASTER_KEY`를 등록하세요**(미등록 시 작성자 비밀번호만 동작합니다).
+- **비공개 주소 누출 수정**: 정적 배포 번들(`dist/data/secret_gardens.json`)에 비공개 스팟의 전체 주소가 남던 문제를 API와 같은 정제 규칙으로 고쳤습니다.
+- **비밀번호 확인 남용 방지**: 확인 실패 10회(10분)를 넘으면 잠시 잠기고, 등록·좋아요에도 요청 횟수 제한을 두었습니다. 새 비밀번호는 4자 이상이어야 합니다.
+- **업로드·AI 호출 정리**: 사진 업로드는 파일 시그니처까지 검증하고(SVG 등 차단), `/api/sample` 중복 구현을 `lib/sample.js`로 합치며 프롬프트 길이 상한을 두었습니다.
+- **Express 정적 서빙 축소**: 저장소 전체를 내려주던 `express.static`을 허용 목록 방식으로 바꾸어 서버 소스가 열람되지 않게 했습니다. Vercel/Firebase/Express 공통 보안 헤더를 추가했습니다.
+- **Firestore/Storage 규칙 추가**: 클라이언트 직접 접근을 전부 차단하는 `firestore.rules`·`storage.rules`를 추가했습니다(적용: `firebase deploy --only firestore:rules,storage` 최초 1회).
+- **재현 가능한 빌드**: `package-lock.json`을 고정하고 CI를 `npm ci`로 전환했습니다. `npm run lint`가 서버 코드 전체 문법을 검사합니다.
+
 ## 자동화 · 품질 검증
 
 푸시와 PR마다 GitHub Actions가 검사를 돌리고, Vercel 배포는 `main` 머지 시 자동으로 실행됩니다. Firebase Hosting 배포·재실행 방법은 아래 배포 절을 참고하세요.
@@ -218,7 +231,7 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 - `storage_not_configured`인 경우 **Vercel → camping-food-helper → Settings → Environment Variables**에서 `FIREBASE_SERVICE_ACCOUNT`를 **Production** 환경에 민감정보로 등록합니다. 값은 Firestore 접근 권한이 있는 Firebase 서비스 계정 JSON이며, 채팅/저장소/Actions 로그에 붙여넣지 않습니다.
 - JSON의 `project_id`가 없으면 `FIREBASE_PROJECT_ID`도 필요합니다. 해당 프로젝트의 Firestore 데이터베이스 및 서비스 계정 권한을 확인하고, 환경변수를 적용할 **Production 재배포**를 실행합니다. Firebase Hosting 배포용 GitHub 시크릿만으로는 Vercel 함수에 인증이 전달되지 않습니다.
 - 재배포 후 `GET /api/secret-gardens`, `GET /api/visitor-stats`가 HTTP 200 및 정상 본문을 반환하는지, 다음 `Uptime check`가 성공하는지 확인합니다. 저장소 오류를 HTTP 200이나 임시 파일 저장으로 우회하지 않습니다.
-- 2026-10-19 진단 실행 `39257368560`에서 두 저장소 API가 재시도 후에도 503을 반환했습니다. Vercel 프로젝트 환경변수에 Firebase 서비스 계정이 없는 상태를 확인했습니다. 자격증명 등록 전에는 장애가 해결된 것이 아닙니다.
+- 2026-10-19 진단 실행 `39257368560`에서 두 저장소 API가 재시도 후에도 503을 반환했습니다. 같은 날 Vercel Production에 `FIREBASE_SERVICE_ACCOUNT`가 등록되고 재배포된 것을 확인했습니다. 등록 이후 `GET /api/secret-gardens`·`GET /api/visitor-stats`가 HTTP 200을 반환하는지 다음 `Uptime check` 결과로 최종 확인하세요. (자세한 점검 내역: `점검_보고서_2026-10-19.md`)
 
 **텔레그램 알림 설정 (한 번만)**
 
@@ -230,5 +243,5 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 
 ## 참고
 
-- 웹앱의 AI 추천 기능은 Claude의 아티팩트 환경에서만 동작합니다. 이 저장소의 파일을 다른 곳에서 열면 화면은 보이지만 추천 버튼은 쓸 수 없습니다.
-- 이 저장소는 백업과 버전 기록용입니다. 실제로 쓰는 앱은 Claude에 게시된 아티팩트입니다.
+- 정식 운영 주소는 Vercel 배포본입니다(위 '바로 접속 주소' 참고). AI 추천·비밀의 정원·방문자 카운터 같은 서버 기능은 Vercel 서버리스 함수(`/api/*`)에서 제공됩니다.
+- 파일을 로컬에서 그냥 열거나(`file://`) Firebase Hosting/GitHub Pages 같은 정적 전용 호스팅에서 열면 화면은 보이지만 `/api/*` 기능은 동작하지 않습니다. 로컬 실행은 `npm ci` 후 `npm run dev`(기본 `http://localhost:3000`)를 사용하세요.

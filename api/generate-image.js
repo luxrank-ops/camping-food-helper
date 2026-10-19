@@ -1,4 +1,5 @@
 import { generateImageUrl } from '../lib/generate-image.js';
+import { MAX_IMAGE_PROMPT_LENGTH } from '../lib/sample.js';
 
 // Vercel 서버리스용 이미지 생성 엔드포인트.
 export default async function handler(req, res) {
@@ -14,6 +15,9 @@ export default async function handler(req, res) {
   const prompt = typeof body?.prompt === 'string' ? body.prompt.trim() : '';
   if (!prompt) {
     return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
+  }
+  if (prompt.length > MAX_IMAGE_PROMPT_LENGTH) {
+    return res.status(400).json({ code: 'prompt_too_long', error: 'Prompt is too long' });
   }
 
   try {
