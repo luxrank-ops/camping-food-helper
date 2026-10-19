@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 무중단 헬스체크: 프런트엔드, 서버리스 함수 3개, 외부 날씨 API(Open-Meteo)를 점검한다.
+// 무중단 헬스체크: 프런트엔드, 서버리스 함수 4개, 외부 날씨 API(Open-Meteo)를 점검한다.
 //
 // 판정 규칙
 //  - 기대한 상태 코드가 아니거나, 응답이 5초(SLOW_MS)를 넘거나, 연결이 실패하면 장애.
@@ -176,11 +176,18 @@ function writeSummary(results) {
   ].join('\n'));
 }
 
+// 로그 다운로드가 제한된 환경에서도 Checks API로 실패 원인을 확인할 수 있다.
+export function failureAnnotation(result) {
+  const escape = (value) => String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+  return `::error::${escape(`${result.name}: ${result.reason} (${result.elapsedMs}ms)${result.retried ? ` [첫 시도: ${result.firstReason}]` : ''}`)}`;
+}
+
 async function main() {
   const results = [];
   for (const check of CHECKS) {
     const r = await checkWithRetry(check);
     results.push({ name: check.name, ...r });
+    if (!r.ok) console.error(failureAnnotation({ name: check.name, ...r }));
     console.log(`${r.ok ? 'OK  ' : 'FAIL'} ${check.name} — ${r.reason} (${r.elapsedMs}ms)${r.retried ? ' [재확인 후 결과]' : ''}`);
   }
   writeSummary(results);
