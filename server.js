@@ -8,6 +8,7 @@ import { generateSampleJson, MAX_IMAGE_PROMPT_LENGTH } from './lib/sample.js';
 import { parseImageDataUrl } from './lib/image-upload.js';
 import { createSecretGardensApi, sanitizePublicSecretGardens } from './lib/secret-gardens-api.js';
 import { createVisitorStatsApi } from './lib/visitor-stats-api.js';
+import { createGuestbookApi } from './lib/guestbook-api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -135,6 +136,11 @@ app.all('/api/secret-gardens', (req, res) => secretGardensApi(req, res, []));
 // Express 로컬 서버와 Vercel 서버리스 함수(api/visitor-stats.js)가 같은 로직·저장소를 사용한다.
 const visitorStatsApi = createVisitorStatsApi();
 app.all('/api/visitor-stats', (req, res) => visitorStatsApi(req, res));
+
+// === 방명록 게시판 API ===
+const guestbookApi = createGuestbookApi();
+app.all('/api/guestbook/:id', (req, res) => guestbookApi(req, res, [req.params.id]));
+app.all('/api/guestbook', (req, res) => guestbookApi(req, res, []));
 
 // 정적 폴백 데이터에서는 비밀번호와 비공개 상세 위치를 절대 노출하지 않는다.
 app.get('/data/secret_gardens.json', (req, res) => {

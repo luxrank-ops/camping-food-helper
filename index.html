@@ -711,7 +711,7 @@ details li{margin-bottom:8px}
 
 /* 하단 알약 탭바 (6탭) */
 .tabs{position:fixed;left:0;right:0;bottom:0;padding:0 8px calc(10px + env(safe-area-inset-bottom,0px));pointer-events:none;z-index:50}
-.pill{pointer-events:auto;max-width:550px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid var(--line);border-radius:999px;padding:5px;box-shadow:var(--shadow-up)}
+.pill{pointer-events:auto;max-width:550px;margin:0 auto;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid var(--line);border-radius:999px;padding:5px;box-shadow:var(--shadow-up)}
 .tabs button{appearance:none;border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 11px/1.1 var(--font-body);min-height:56px;border-radius:999px;cursor:pointer;padding:4px 0;letter-spacing:-0.3px}
 .tabs button[aria-current="page"]{background:var(--chip);color:var(--cta);font-weight:900}
 .tabs button[aria-current="page"] svg{stroke-width:2.4}
@@ -1026,6 +1026,45 @@ input,select,textarea{ font-size:16px !important; }
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]) .pill{ background:color-mix(in srgb, var(--surface) 92%, transparent); }
 }
+/* 방명록 — 캠프 노트와 우편 엽서에서 가져온 따뜻한 게시판 */
+.guestbook-hero{background:linear-gradient(135deg,#173d30 0%,#2a6048 58%,#936343 150%)}
+.guestbook-hero .scene{opacity:.58}
+.guestbook-compose{padding:20px}
+.guestbook-section-head,.guestbook-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.guestbook-section-head{margin-bottom:10px}
+.guestbook-section-head h2,.guestbook-list-head h2{font-size:21px;font-weight:900;letter-spacing:-.03em}
+.guestbook-eyebrow{font-size:10px;letter-spacing:.15em;font-weight:900;color:var(--muted);margin:0 0 4px}
+.guestbook-stamp{font-size:11px;font-weight:900;color:var(--brand);background:var(--chip);border-radius:999px;padding:7px 10px;white-space:nowrap}
+.guestbook-form{display:grid;gap:12px}
+.guestbook-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.guestbook-field{display:grid;gap:6px;font-size:12px;font-weight:900;color:var(--muted)}
+.guestbook-field input,.guestbook-field textarea{width:100%;min-width:0;border:1px solid var(--line);border-radius:13px;background:var(--bg);color:var(--fg);font:500 14px/1.55 var(--font-body);padding:12px 13px;outline:none}
+.guestbook-field input{min-height:46px}
+.guestbook-field textarea{min-height:96px;resize:vertical}
+.guestbook-field input::placeholder,.guestbook-field textarea::placeholder{color:var(--muted);opacity:.72}
+.guestbook-count{font-size:11px;color:var(--muted);font-weight:500;text-align:right}
+.guestbook-list-head{margin:24px 2px 11px}
+.guestbook-list-head h2 span{font-size:13px;color:var(--muted);vertical-align:2px;margin-left:4px}
+.guestbook-list-head .btn.sm{min-height:38px;padding:0 12px;border-radius:13px;font-size:12px}
+.guestbook-post{position:relative;padding:18px 18px 17px;overflow:hidden}
+.guestbook-post::before{content:"";position:absolute;top:0;left:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--pop),var(--brand))}
+.guestbook-post-top{display:flex;align-items:center;gap:10px}
+.guestbook-avatar{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:14px;background:var(--chip);color:var(--brand);font:400 23px/1 var(--font-display);box-shadow:inset 0 0 0 1px var(--line)}
+.guestbook-author{display:grid;gap:2px;min-width:0}
+.guestbook-author strong{font-size:14px;font-weight:900}
+.guestbook-author time{font-size:11px;color:var(--muted)}
+.guestbook-index{margin-left:auto;color:var(--muted);opacity:.68;font:700 10px/1 var(--font-body);letter-spacing:.08em;white-space:nowrap}
+.guestbook-message{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.75;margin:15px 0 6px;padding:13px 14px;border-radius:13px;background:color-mix(in srgb,var(--chip) 62%,transparent)}
+.guestbook-delete-link{appearance:none;border:0;background:none;color:var(--muted);font:500 11px var(--font-body);text-decoration:underline;text-underline-offset:3px;padding:7px 0;cursor:pointer}
+.guestbook-delete-form{display:grid;gap:10px;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:14px;margin-top:10px}
+.guestbook-delete-actions{display:flex;justify-content:flex-end;gap:8px}
+.guestbook-delete-confirm{background:var(--soft);border-color:var(--ember);color:var(--ember)}
+.guestbook-empty{text-align:center;padding:34px 20px}
+.guestbook-empty-icon{font-size:30px;display:block;margin-bottom:10px}
+.guestbook-empty h3{font-size:16px;font-weight:900;margin-bottom:5px}
+.guestbook-empty p{margin:0;color:var(--muted);font-size:13px}
+.guestbook-footnote{text-align:center;color:var(--muted);font-size:11px;margin:18px 0 0}
+@media(max-width:380px){.guestbook-fields{grid-template-columns:1fr}.guestbook-compose{padding:16px}.guestbook-index{font-size:9px}}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -1056,6 +1095,7 @@ input,select,textarea{ font-size:16px !important; }
   <button type="button" data-a="tab" data-v="garden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/><path d="M12 14v4"/></svg>비밀정원</button>
   <button type="button" data-a="tab" data-v="list"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg>준비물</button>
   <button type="button" data-a="tab" data-v="me"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20L12 4l9 16H3z"/><path d="M12 20v-7"/></svg>내 정보</button>
+  <button type="button" data-a="tab" data-v="guestbook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 8 8 0 0 1-3.4-.8L4 20l1.5-4.2A7.5 7.5 0 1 1 20 11.5z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>방명록</button>
 </div></nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1209,7 +1249,7 @@ input,select,textarea{ font-size:16px !important; }
   var logs=store.get('cc.logs',[]);
 
   var ui={
-    tab:'rec',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
+    tab:'rec',guestbookPosts:[],guestbookLoaded:false,guestbookBusy:false,guestbookError:'',guestbookDeleteId:'',guestbookNickname:store.get('cc.guestbookNickname',''),guestbookMessage:'',guestbookPassword:'',guestbookDeletePassword:'',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
     recs:[],seen:[],busy:null,busyName:'',err:'',confirmClear:false,aiOk:null,dishText:'',
     filter:'all',cookMode:false,cookStep:0,timerSec:180,timerRunning:false,wakeLockOn:false,
     ttsSpeaking:false,ttsAuto:store.get('cc.ttsAuto',false),
@@ -5349,6 +5389,7 @@ input,select,textarea{ font-size:16px !important; }
     if(ui.tab==='plan')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(135deg,#0c3629 0%,#185b46 100%)">'+SCENE+'<div class="hero-top"><span class="brand">장박 주간 식단 플래너</span>'+s+'</div><h1>2박 3일+ 장박,<br><em>끼니 고민 끝!</em></h1><p class="sub">인원과 일정에 맞춘 끼니별 식단표와 전체 식재료·장비 자동 취합</p></section>';
     if(ui.tab==='camp')return '<section class="hero home" style="padding-bottom:18px">'+SCENE+'<div class="hero-top"><span class="brand">전국 캠핑장 찾기</span>'+s+'</div><h1>전국 4,000+<br><em>어디로 떠날까?</em></h1><p class="sub">전국 캠핑장 탐색부터 날씨 맞춤 요리까지 한 번에 연결돼요.</p></section>';
     if(ui.tab==='garden')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(135deg,#0c2e1f 0%,#195237 100%)">'+SCENE+'<div class="hero-top"><span class="brand">나만의 비밀의 정원</span>'+s+'</div><h1>노지 · 차박 · 비밀 캠장<br><em>나만의 아지트 등록</em></h1><p class="sub">화장실, 개수대, 전기, 진입로까지 디테일하게 기록하고 관리하는 비밀 스팟</p></section>';
+    if(ui.tab==='guestbook')return '<section class="hero home guestbook-hero">'+SCENE+'<div class="hero-top"><span class="brand">CAMPING COMMUNITY</span>'+s+'</div><h1>캠핑의 추억을<br><em>남겨 주세요.</em></h1><p class="sub">다녀온 캠핑장, 맛있었던 메뉴, 다음 캠핑의 기대까지 함께 나눠요.</p></section>';
     return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+s+'</header>';
   }
   function banner(){
@@ -5870,6 +5911,50 @@ input,select,textarea{ font-size:16px !important; }
     return h;
   }
 
+  function guestbookView(){
+    var posts=Array.isArray(ui.guestbookPosts)?ui.guestbookPosts:[];
+    var h='<section class="card guestbook-compose"><div class="guestbook-section-head"><div><p class="guestbook-eyebrow">THE CAMPSITE WALL</p><h2>오늘의 한마디</h2></div><span class="guestbook-stamp">✎ 기록하기</span></div>'+
+      '<p class="hint">캠핑 이야기와 인사를 남겨주세요. 삭제 비밀번호는 글을 지울 때만 사용하며 공개되지 않아요.</p>'+
+      '<form data-form="guestbook-create" class="guestbook-form"><div class="guestbook-fields"><label class="guestbook-field">닉네임<input name="nickname" maxlength="16" required placeholder="예: 숲속의감자" value="'+esc(ui.guestbookNickname)+'"></label><label class="guestbook-field">삭제 비밀번호<input name="password" type="password" minlength="4" maxlength="64" required autocomplete="new-password" placeholder="4자 이상"></label></div>'+
+      '<label class="guestbook-field">캠핑 한마디<textarea name="message" maxlength="300" required rows="3" placeholder="이번 캠핑에서 가장 좋았던 순간은…">'+esc(ui.guestbookMessage)+'</textarea><span class="guestbook-count">300자 이내 · 따뜻한 인사를 나눠요</span></label>'+
+      '<button class="btn primary wide" type="submit" '+(ui.guestbookBusy?'disabled':'')+'>'+(ui.guestbookBusy?'남기는 중…':'🌿 방명록 남기기')+'</button></form></section>';
+    h+='<div class="guestbook-list-head"><div><p class="guestbook-eyebrow">NOTES FROM CAMPERS</p><h2>캠퍼들의 이야기 <span>'+posts.length+'</span></h2></div><button type="button" class="btn sm" data-a="guestbook-refresh" '+(ui.guestbookBusy?'disabled':'')+'>↻ 새로고침</button></div>';
+    if(ui.guestbookError)h+='<div class="err" role="alert">'+esc(ui.guestbookError)+' <button class="link" type="button" data-a="guestbook-refresh">다시 시도</button></div>';
+    if(ui.guestbookBusy&&!ui.guestbookLoaded)h+='<section class="card guestbook-empty"><span class="guestbook-empty-icon">🏕️</span><h3>캠퍼들의 이야기를 불러오는 중</h3><p>잠시만 기다려 주세요.</p></section>';
+    else if(!posts.length)h+='<section class="card guestbook-empty"><span class="guestbook-empty-icon">📖</span><h3>아직 첫 번째 이야기가 없어요</h3><p>여행의 기억을 가장 먼저 남겨주세요.</p></section>';
+    posts.forEach(function(post,index){
+      var date=new Date(post.createdAt);var dateText=Number.isNaN(date.getTime())?'방금 전':date.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+      h+='<article class="card guestbook-post"><div class="guestbook-post-top"><div class="guestbook-avatar" aria-hidden="true">'+esc((post.nickname||'?').slice(0,1))+'</div><div class="guestbook-author"><strong>'+esc(post.nickname)+'</strong><time datetime="'+esc(post.createdAt)+'">'+esc(dateText)+'</time></div><span class="guestbook-index">NOTE '+String(posts.length-index).padStart(2,'0')+'</span></div><p class="guestbook-message">'+esc(post.message)+'</p>';
+      if(ui.guestbookDeleteId===post.id){h+='<form data-form="guestbook-delete" data-id="'+esc(post.id)+'" class="guestbook-delete-form"><label class="guestbook-field">삭제 비밀번호<input name="password" type="password" required autocomplete="current-password" placeholder="작성할 때 입력한 비밀번호"></label><div class="guestbook-delete-actions"><button class="btn sm" type="button" data-a="guestbook-delete-cancel">취소</button><button class="btn sm guestbook-delete-confirm" type="submit">삭제 확인</button></div></form>'}
+      else h+='<button class="guestbook-delete-link" type="button" data-a="guestbook-delete-open" data-id="'+esc(post.id)+'" aria-label="'+esc(post.nickname)+'님의 방명록 삭제">삭제</button>';
+      h+='</article>';
+    });
+    h+='<p class="guestbook-footnote">🧡 서로의 캠핑을 존중하는 따뜻한 글을 부탁드려요.</p>';
+    return h;
+  }
+
+  async function loadGuestbook(){
+    ui.guestbookBusy=true;ui.guestbookError='';render();
+    try{var response=await fetch('/api/guestbook',{headers:{Accept:'application/json'}});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'방명록을 불러오지 못했습니다.');ui.guestbookPosts=Array.isArray(data.posts)?data.posts:[];ui.guestbookLoaded=true;}
+    catch(error){ui.guestbookError=error.message||'연결이 불안정해요. 다시 시도해주세요.';}
+    finally{ui.guestbookBusy=false;render();}
+  }
+
+  async function submitGuestbook(form){
+    var body={nickname:str(form.elements.nickname.value),message:str(form.elements.message.value),password:form.elements.password.value};
+    ui.guestbookNickname=body.nickname;ui.guestbookMessage=body.message;store.set('cc.guestbookNickname',body.nickname);ui.guestbookBusy=true;ui.guestbookError='';render();
+    try{var response=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 저장하지 못했습니다.');ui.guestbookPosts.unshift(data.post);ui.guestbookMessage='';ui.guestbookPassword='';showNotice('방명록을 남겼어요. 캠핑의 좋은 기억을 함께 나눠요!');}
+    catch(error){ui.guestbookError=error.message||'글을 저장하지 못했습니다.';}
+    finally{ui.guestbookBusy=false;render();}
+  }
+
+  async function deleteGuestbook(form){
+    var id=form.getAttribute('data-id');var password=form.elements.password.value;ui.guestbookBusy=true;render();
+    try{var response=await fetch('/api/guestbook/'+encodeURIComponent(id),{method:'DELETE',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({password:password})});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 삭제하지 못했습니다.');ui.guestbookPosts=ui.guestbookPosts.filter(function(post){return post.id!==id});ui.guestbookDeleteId='';showNotice('방명록을 삭제했어요.');}
+    catch(error){ui.guestbookError=error.message||'글을 삭제하지 못했습니다.';}
+    finally{ui.guestbookBusy=false;render();}
+  }
+
   function lightboxModalHtml(){
     if(!ui.lightbox || !ui.lightbox.url) return '';
     return '<div class="modal-dim" data-a="close-lightbox" style="position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">'+
@@ -5955,7 +6040,7 @@ input,select,textarea{ font-size:16px !important; }
 
   function render(){
     document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-current',b.getAttribute('data-v')===ui.tab?'page':'false')});
-    document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='plan'?planView():(ui.tab==='camp'?campView():(ui.tab==='garden'?gardenView():(ui.tab==='list'?listView():meView())))))+campDetailModalHtml()+planSwapModalHtml()+gardenModalsHtml()+lightboxModalHtml();
+    document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='plan'?planView():(ui.tab==='camp'?campView():(ui.tab==='garden'?gardenView():(ui.tab==='list'?listView():(ui.tab==='guestbook'?guestbookView():meView()))))))+campDetailModalHtml()+planSwapModalHtml()+gardenModalsHtml()+lightboxModalHtml();
     if(ui.wxOpen)updateSuggest();
     if(ui.tab==='garden'){
       setTimeout(initOrUpdateGardenMap, 60);
@@ -6257,8 +6342,13 @@ input,select,textarea{ font-size:16px !important; }
       if(v==='garden'&&!ui.gardenLoaded)loadSecretGardens(false);
       window.scrollTo(0,0);
       render();
+      if(v==='guestbook'&&!ui.guestbookLoaded)loadGuestbook();
       return;
     }
+
+    if(a==='guestbook-refresh'){loadGuestbook();return}
+    if(a==='guestbook-delete-open'){ui.guestbookDeleteId=b.getAttribute('data-id')||'';ui.guestbookError='';render();return}
+    if(a==='guestbook-delete-cancel'){ui.guestbookDeleteId='';render();return}
 
     // 방문자 카운터 플로팅 위젯 접기·펼치기
     if(a==='visit-fab-toggle'){setVisitFabOpen(!visit.open);return}
@@ -7031,6 +7121,8 @@ input,select,textarea{ font-size:16px !important; }
     if(!f)return;
     e.preventDefault();
     var kind=f.getAttribute('data-form');
+    if(kind==='guestbook-create'){if(ui.guestbookBusy)return;submitGuestbook(f);return}
+    if(kind==='guestbook-delete'){if(ui.guestbookBusy)return;deleteGuestbook(f);return}
     var input=f.querySelector('input');
     var val=str(input&&input.value);
     if(kind==='log'){

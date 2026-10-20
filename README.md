@@ -4,7 +4,15 @@
 
 - **바로 접속 주소 (Vercel)**: https://camping-food-helper.vercel.app/
 - `캠핑음식앱_기획안.md`: 개인용 앱 기획안 (v0.4)
-- `camp-kitchen.html` / `index.html`: 1단계 웹앱 (인원·장비 입력 → 맞춤 메뉴 추천 → 준비물 체크리스트, 요리 직접 지정)
+- `camp-kitchen.html` / `index.html`: 캠핑 요리 도우미 웹앱 (인원·장비 입력 → 맞춤 메뉴 추천 → 준비물 체크리스트, 요리 직접 지정)
+
+## 캠핑 방명록
+
+하단 **방명록** 탭에서 캠핑 이야기를 닉네임과 함께 공유할 수 있습니다. 글은 최대 300자이며, 작성 시 지정한 비밀번호로 본인 글을 삭제할 수 있어요. 비밀번호는 scrypt 해시로만 저장되고 공개 API 응답에는 포함되지 않습니다. 게시물 생성은 IP 기준으로 제한합니다.
+
+- 로컬 개발(`npm run dev`): `data/guestbook_posts.json`에 저장됩니다(저장소에서 제외).
+- Vercel: `FIREBASE_SERVICE_ACCOUNT`가 설정되면 Firestore의 `guestbookPosts` 컬렉션을 사용합니다. 운영 환경에 Firestore가 설정되지 않으면 방명록 API는 503 오류를 반환합니다.
+- API: `GET/POST /api/guestbook`, `DELETE /api/guestbook/:id`
 
 ## UI 디자인 쇼케이스 (2026-10-16 추가)
 
