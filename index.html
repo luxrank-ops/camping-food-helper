@@ -213,7 +213,7 @@ details li{margin-bottom:8px}
 .loc-row{display:flex;gap:8px;align-items:stretch}
 .loc-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
 .loc-row .btn{min-height:48px;border-radius:16px;white-space:nowrap}
-.ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-up);max-height:min(56vh,360px);overflow-y:auto}
+.ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-up);max-height:min(56vh,360px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .ac-list[hidden]{display:none}
 .ac-list::-webkit-scrollbar{width:8px}
 .ac-sec{padding:8px 12px 4px;font-size:11px;font-weight:900;color:var(--muted);letter-spacing:.04em}
@@ -317,7 +317,7 @@ details li{margin-bottom:8px}
 .fav-btn{border:0;background:none;cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:transform .12s}
 .fav-btn:active{transform:scale(1.2)}
 .camp-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;display:flex;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(3px)}
-.camp-modal-content{background:var(--surface);color:var(--fg);width:100%;max-width:540px;max-height:86vh;overflow-y:auto;border-radius:26px 26px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow-up);animation:slideUp .2s ease-out}
+.camp-modal-content{background:var(--surface);color:var(--fg);width:100%;max-width:540px;max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:26px 26px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow-up);animation:slideUp .2s ease-out}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 
 /* 장박 주간 식단표 스타일 */
@@ -729,14 +729,20 @@ html{
   scrollbar-gutter:auto;
   scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));
   max-width:100%; overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:auto;
 }
 *{ -webkit-tap-highlight-color:rgba(244,115,90,.12); }
+button,a,input,select,textarea,label,[role="button"],[data-a]{ touch-action:manipulation; }
 body{
   padding:calc(10px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(118px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));
   min-height:100dvh;
   min-height:100svh;
   max-width:100%; overflow-x:hidden;
-  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:auto;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   text-rendering:optimizeLegibility;
@@ -3983,7 +3989,7 @@ input,select,textarea{ font-size:16px !important; }
           '<button class="btn primary" type="submit" style="min-height:38px;padding:0 14px;white-space:nowrap">직접 등록</button>'+
         '</form>'+
         '<div style="font-size:13px;font-weight:900;color:var(--fg);margin-bottom:8px">추천 캠핑 요리 목록에서 선택</div>'+
-        '<div style="display:grid;gap:8px;max-height:55vh;overflow-y:auto;padding-right:2px">';
+        '<div style="display:grid;gap:8px;max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px">';
 
     pool.forEach(function(r){
       var isCurrent=(r.name===m.dish);
@@ -4793,7 +4799,7 @@ input,select,textarea{ font-size:16px !important; }
     if(ui.gardenRegModal){
       var regDraft=ui.gardenRegDraft||newGardenRegistrationDraft();
       h += '<div class="camp-modal-backdrop" data-a="garden-reg-close">'+
-        '<div class="camp-modal-content" style="max-width:540px;max-height:88vh;overflow-y:auto">'+
+        '<div class="camp-modal-content" style="max-width:540px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
             '<div>'+
               '<h3 style="font-family:var(--font-display);font-size:22px;margin:0">🌿 나만의 비밀의 정원 등록</h3>'+
@@ -4975,7 +4981,7 @@ input,select,textarea{ font-size:16px !important; }
       var dateStr = spot.createdAt ? spot.createdAt.slice(0,10) : '';
 
       h += '<div class="camp-modal-backdrop" data-a="garden-detail-close">'+
-        '<div class="camp-modal-content" style="max-width:540px;max-height:90vh;overflow-y:auto;padding:0">'+
+        '<div class="camp-modal-content" style="max-width:540px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0">'+
           // 사진 헤더
           '<div style="position:relative;width:100%;height:220px;background:#000;cursor:zoom-in" data-a="open-lightbox" data-img="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(spot.name)+'" title="사진 크게 보기">'+
             '<img src="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" alt="'+esc(spot.name)+'" style="width:100%;height:100%;object-fit:cover">'+
@@ -5110,7 +5116,7 @@ input,select,textarea{ font-size:16px !important; }
       var curFacs = es.facilities || [];
 
       h += '<div class="camp-modal-backdrop" data-a="garden-edit-close">'+
-        '<div class="camp-modal-content" style="max-width:540px;max-height:92vh;overflow-y:auto">'+
+        '<div class="camp-modal-content" style="max-width:540px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)">'+
             '<div>'+
               '<h2 style="font-size:20px;font-weight:900;margin:0 0 2px">✏️ 스팟 정보 수정</h2>'+
@@ -5172,7 +5178,7 @@ input,select,textarea{ font-size:16px !important; }
             // 구비 시설물 체크박스
             '<div style="margin-bottom:14px">'+
               '<label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">구비 시설물 선택</label>'+
-              '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:160px;overflow-y:auto;background:var(--soft);padding:10px;border-radius:10px;border:1px solid var(--line)">'+
+              '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:160px;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--soft);padding:10px;border-radius:10px;border:1px solid var(--line)">'+
                 GARDEN_FACILITY_OPTIONS.map(function(opt){
                   var checked = curFacs.indexOf(opt.id) >= 0;
                   return '<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer">'+
@@ -7256,13 +7262,7 @@ input,select,textarea{ font-size:16px !important; }
       });
     }, {passive:true});
 
-    // iOS/Android 더블탭 줌 방지 — 빠른 연속 탭을 허용하되 더블탭 확대만 차단
-    var lastTouch = 0;
-    document.addEventListener('touchend', function(e){
-      var now = Date.now();
-      if(now - lastTouch < 320) e.preventDefault();
-      lastTouch = now;
-    }, {passive:false});
+
 
     // S24 Ultra 120Hz — 모션 허용 시 스크롤·전환을 더 부드럽게
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: no-preference)').matches){
