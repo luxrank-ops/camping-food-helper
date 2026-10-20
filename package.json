@@ -12,7 +12,7 @@
     "build": "node scripts/check-syntax.mjs && node scripts/build-hosting.mjs",
     "build:hosting": "node scripts/build-hosting.mjs",
     "lint": "node scripts/check-syntax.mjs && node scripts/check-client-env.mjs",
-    "test": "node --test scripts/test-ui.mjs scripts/test-secret-gardens.mjs scripts/test-firebase-config.mjs scripts/test-visitor-stats.mjs scripts/test-uptime-check.mjs scripts/test-security-hardening.mjs",
+    "test": "node --test scripts/test-ui.mjs scripts/test-secret-gardens.mjs scripts/test-firebase-config.mjs scripts/test-visitor-stats.mjs scripts/test-uptime-check.mjs scripts/test-security-hardening.mjs scripts/test-guestbook.mjs",
     "check:firebase": "node scripts/check-firebase-config.mjs",
     "check:client": "node scripts/check-client-env.mjs",
     "check:uptime": "node scripts/uptime-check.mjs"
