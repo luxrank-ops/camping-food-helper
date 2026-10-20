@@ -723,26 +723,34 @@ details li{margin-bottom:8px}
    원칙: 엄지 닿기 쉬운 하단·중앙 배치, 44px 이상 터치,
    세로 스크롤 최소화, 한 손 조작, 120Hz 부드러운 전환
    ────────────────────────────────────────────────────────── */
+*,*::before,*::after{ box-sizing:border-box; }
 html{
   -webkit-text-size-adjust:100%; text-size-adjust:100%;
-  scrollbar-gutter:stable;
+  scrollbar-gutter:auto;
   scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));
+  max-width:100%; overflow-x:hidden;
 }
 *{ -webkit-tap-highlight-color:rgba(244,115,90,.12); }
 body{
-  padding-top:calc(10px + env(safe-area-inset-top,0px));
-  padding-right:calc(14px + env(safe-area-inset-right,0px));
-  padding-bottom:calc(118px + env(safe-area-inset-bottom,0px));
-  padding-left:calc(14px + env(safe-area-inset-left,0px));
+  padding:calc(10px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(118px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));
   min-height:100dvh;
   min-height:100svh;
-  overflow-x:hidden;
+  max-width:100%; overflow-x:hidden;
   overscroll-behavior-y:contain;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   text-rendering:optimizeLegibility;
 }
-.app{ width:100%; max-width:560px; }
+.app{ width:100%; max-width:560px; min-width:0; margin-left:auto; margin-right:auto; }
+/* 방문자 위젯 오른쪽 잘림 보정 — 원본 문자열은 테스트를 위해 유지, 이후 덮어쓰기로 실제 보정 */
+.visit-fab{ right:max(12px, env(safe-area-inset-right,0px)); max-width:min(calc(100vw - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)), calc(100% - 20px)); box-sizing:border-box; }
+
+/* 카카오톡 인앱 브라우저 오른쪽 잘림 방지 — 뷰포트를 넘지 않게 */
+html,body{ width:100%; max-width:100vw; }
+img,svg,video,canvas,iframe{ max-width:100%; }
+.card,.hero,.camp-ctrls,.garden-card,.plan-day-card,.loc-card,.intro-card{ max-width:100%; overflow-wrap:anywhere; }
+.addrow,.loc-row,.camp-search-bar{ max-width:100%; min-width:0; }
+.addrow input,.loc-input,.camp-search-input{ max-width:100%; min-width:0; }
 
 /* 입력 줌 방지 — 16px 미만이면 Galaxy/Android에서 자동 확대됨 */
 input,select,textarea{ font-size:16px !important; }
@@ -773,7 +781,6 @@ input,select,textarea{ font-size:16px !important; }
 
 /* ── Galaxy S24 Ultra 기준 (412px) + 공통 600px 이하 모바일 ── */
 @media (max-width:600px){
-  body{ padding-inline:12px; }
   .app{ max-width:100%; }
   .hero{ border-radius:22px; padding:18px 18px 20px; margin-bottom:14px; }
   .hero-top{ margin-bottom:22px; }
@@ -789,7 +796,7 @@ input,select,textarea{ font-size:16px !important; }
 
 /* ── 480px 이하 (S24 Ultra 세로·대부분 안드로이드 폰) ── */
 @media (max-width:480px){
-  body{ padding-inline:12px; padding-bottom:calc(116px + env(safe-area-inset-bottom,0px)); font-size:14.8px; }
+  body{ padding-bottom:calc(116px + env(safe-area-inset-bottom,0px)); font-size:14.8px; }
   .card{ padding:15px 14px; }
   .card h2{ font-size:17px; margin-bottom:12px; }
   .field{ gap:8px; margin-bottom:14px; }
@@ -823,7 +830,6 @@ input,select,textarea{ font-size:16px !important; }
 
 /* ── 412px 이하 — Galaxy S24 Ultra 실제 CSS width (384~412) ── */
 @media (max-width:412px){
-  body{ padding-inline:12px; }
   .hero{ padding:16px 16px 18px; }
   .home h1{ font-size:clamp(25px,7.4vw,32px) !important; }
   .home p.sub{ font-size:13.5px; max-width:16em; }
@@ -859,7 +865,6 @@ input,select,textarea{ font-size:16px !important; }
 
 /* ── 390px 이하 (iPhone Pro·Compact Android, S24 소형 모드) ── */
 @media (max-width:390px){
-  body{ padding-inline:10px; }
   .card{ padding:14px 13px; margin-bottom:12px; }
   .hero{ padding:15px 14px 18px; border-radius:20px; }
   .home h1{ font-size:clamp(23px,7.2vw,30px) !important; }
@@ -876,7 +881,7 @@ input,select,textarea{ font-size:16px !important; }
 
 /* ── 360px 이하 (소형 Android: Galaxy A·구형 폰) ── */
 @media (max-width:360px){
-  body{ padding-inline:10px; font-size:14px; }
+  body{ font-size:14px; }
   .card{ padding:13px 12px; border-radius:18px; }
   .hero{ padding:14px 13px 16px; }
   .home h1{ font-size:clamp(22px,7.5vw,28px) !important; line-height:1.2; }
@@ -3525,9 +3530,9 @@ input,select,textarea{ font-size:16px !important; }
       '<div class="step"><button type="button" data-a="'+decAct+'" aria-label="인원 줄이기">−</button><output>'+curPeople+'명</output><button type="button" data-a="'+incAct+'" aria-label="인원 늘리기">+</button></div>'+
       '<div class="chips">'+PEOPLE_PRESETS.map(function(n){return '<button class="chip" type="button" data-a="'+presetAct+'" data-v="'+n+'" aria-pressed="'+(curPeople===n)+'">'+(n===6?'6명+':n+'명')+'</button>'}).join('')+'</div>'+
       '</div></div>'+
-      '<div class="field"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="lab">보유 조리 장비 (버너 · 그리들 · 숯 등)</span><small style="font-size:12px;color:var(--muted);font-weight:700">'+profile.gear.length+'개 선택됨</small></div>'+
+      '<div class="field"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><span class="lab" style="min-width:0;flex:1">보유 조리 장비 (버너 · 그리들 · 숯 등)</span><small style="font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap;flex-shrink:0">'+profile.gear.length+'개 선택됨</small></div>'+
       '<div class="chips">'+gearAll.map(function(g){return '<button class="chip" type="button" data-a="gear" data-v="'+esc(g)+'" aria-pressed="'+(profile.gear.indexOf(g)>=0)+'">'+esc(g)+'</button>'}).join('')+'</div>'+
-      '<div class="addrow" style="margin-top:4px"><input id="gear-inline-add" type="text" maxlength="20" placeholder="다른 장비 직접 입력 (예: 에어프라이어, 박스테이프)" aria-label="보유 장비 직접 추가"><button class="btn" type="button" data-a="addgear">장비 추가</button></div>'+
+      '<div class="addrow" style="margin-top:4px;min-width:0"><input id="gear-inline-add" type="text" maxlength="20" placeholder="다른 장비 직접 입력 (예: 에어프라이어, 박스테이프)" aria-label="보유 장비 직접 추가" style="min-width:0;flex:1"><button class="btn" type="button" data-a="addgear" style="flex-shrink:0;white-space:nowrap">장비 추가</button></div>'+
       '</div>';
   }
 
