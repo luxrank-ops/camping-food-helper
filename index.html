@@ -1119,6 +1119,14 @@ input,select,textarea{ font-size:16px !important; }
     }
   ];
 
+  // 편집 모달용 시설 옵션 평탄화 목록. 등록 화면과 저장 형식(라벨 문자열)을 그대로 맞춘다.
+  var GARDEN_FACILITY_OPTIONS=[];
+  GARDEN_FACILITIES.forEach(function(catObj){
+    catObj.items.forEach(function(item){
+      GARDEN_FACILITY_OPTIONS.push({id:item,label:item,cat:catObj.cat});
+    });
+  });
+
   var GARDEN_PHOTO_PRESETS=[
     {label:'계곡 자갈 노지',url:'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80'},
     {label:'울창한 솔숲 힐링',url:'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80'},
@@ -1208,7 +1216,7 @@ input,select,textarea{ font-size:16px !important; }
     modText:'',logStars:5,logNote:'',
     wxQ:'',wxSug:[],wxPick:[],wxOpen:false,wxIdx:-1,wxBusy:false,wx:null,wxKey:'',wxLoc:null,
     wxErr:'',wxStale:false,myLoc:null,locBusy:false,osmCamps:[],osmBusy:false,osmErr:false,places:[],placesQ:'',notice:'',
-    favCamps:store.get('cc.favCamps',[]),campSearch:'',campSido:'전체',campSg:'전체',campKind:'전체',campTheme:'전체',campSort:'dist',campOnlyFav:false,campPage:1,campDetail:null,campDetailWx:null,campDetailWxBusy:false,
+    favCamps:store.get('cc.favCamps',[]),campSearch:'',campSido:'전체',campSg:'전체',campKind:'전체',campTheme:'전체',campSort:'',campOnlyFav:false,campPage:1,campDetail:null,campDetailWx:null,campDetailWxBusy:false,
     campIntro:store.get('cc.campIntro',{})||{},introBusyName:'',introErrName:'',introErrMsg:'',
     planDays:store.get('cc.planDays',3),planPeople:profile.people||2,planTheme:store.get('cc.planTheme','all'),planSnack:store.get('cc.planSnack',true),planFilter:'all',mealPlan:store.get('cc.mealPlan',null),planSwapTarget:null,planBusy:false,
     gardenList:[],gardenLoaded:false,gardenBusy:false,gardenErr:'',gardenFilter:'all',gardenSearch:'',gardenFacFilter:'',gardenSort:'newest',
@@ -1714,6 +1722,46 @@ input,select,textarea{ font-size:16px !important; }
     }finally{ui.busy=null;ctl=null;render()}
   }
 
+  // "1인분/2개" 같은 표기도 안전하게 비율 배분한다(분수는 소수로 계산).
+  function scaleAmountText(text,ratio){
+    if(text==null||text==='')return text;
+    return String(text).replace(/(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?/g,function(m,num,den){
+      var val=den?Number(num)/Number(den):Number(num);
+      if(!isFinite(val))return m;
+      val=val*ratio;
+      return String(val>=10?Math.round(val):Math.round(val*10)/10);
+    });
+  }
+
+  // 인원 변경 시 '재료 이름'이 아니라 '수량(amount)'만 원본 기준으로 다시 계산한다.
+  // baseAmount/baseSummary를 보관해 2→3→4명으로 여러 번 바꿔도 반올림 오차가 누적되지 않는다.
+  function rescaleListPeople(newP){
+    if(!list||!Array.isArray(list.items))return;
+    var oldP=list.people||2;
+    newP=clampPeople(Number(newP)||oldP);
+    if(newP===oldP)return;
+    if(list.basePeople==null){
+      list.basePeople=oldP;
+      list.baseSummary=list.summary||'';
+    }
+    list.items.forEach(function(it){
+      if(it.group==='재료'&&it.amount!=null&&it.amount!==''&&it.baseAmount==null)it.baseAmount=String(it.amount);
+    });
+    var ratio=newP/(list.basePeople||oldP);
+    list.items.forEach(function(it){
+      if(it.group==='재료'&&it.baseAmount!=null)it.amount=scaleAmountText(it.baseAmount,ratio);
+    });
+    list.people=newP;
+    ui.people=newP;
+    var baseSum=list.baseSummary||'';
+    list.summary=/\d+\s*명 기준/.test(baseSum)
+      ? baseSum.replace(/\d+\s*명 기준/,newP+'명 기준')
+      : (newP+'명 기준으로 수량을 조정한 준비물이에요.');
+    store.set('cc.list',list);
+    showNotice('👥 인원수를 '+newP+'명으로 변경하여 식재료 분량을 실시간 재계산했어요.');
+    render();
+  }
+
   function applyLocalModify(curList,text){
     if(!curList)return;
     var t=str(text);
@@ -1731,13 +1779,13 @@ input,select,textarea{ font-size:16px !important; }
       curList.people=newP;
       ui.people=newP;
       curList.items.forEach(function(item){
-        if(item.group==='재료'&&item.amount){
-          item.amount=String(item.amount).replace(/([0-9.]+)/g,function(num){
-            return String(Math.round(Number(num)*ratio*10)/10);
-          });
-        }
+        if(item.group==='재료'&&item.amount)item.amount=scaleAmountText(item.amount,ratio);
       });
       curList.summary=newP+'명 기준으로 수량을 조정한 준비물이에요.';
+      // 이후 인원 재조정이 이중으로 곱해지지 않도록 기준값을 갱신한다.
+      curList.basePeople=newP;
+      curList.baseSummary=curList.summary;
+      curList.items.forEach(function(item){if(item.amount!=null)item.baseAmount=String(item.amount)});
       showNotice(newP+'명 기준으로 재료 수량을 즉시 변경했어요!');
       return;
     }
@@ -2128,7 +2176,9 @@ input,select,textarea{ font-size:16px !important; }
     if(nq.length<1)return 0;
     if(name.indexOf(nq)===0)return 100;
     if(name.indexOf(nq)>0)return 80;
-    if(initials(name).indexOf(initials(nq))===0)return 55;
+    // 초성 검색은 입력이 순수 초성일 때만 적용한다.
+    // (예: '자라'의 초성 'ㅈㄹ'이 '지리산'의 초성 'ㅈㄹㅅ…'에 걸려 엉뚱한 결과가 섞이던 문제)
+    if(/^[ㄱ-ㅎ]+$/.test(nq)&&initials(name).indexOf(nq)===0)return 55;
     if(String(c.sg||'').indexOf(nq)>=0||String(c.sido||'').indexOf(nq)>=0)return 45;
     if(String(c.region||'').indexOf(nq)>=0)return 35;
     return 0;
@@ -2562,7 +2612,7 @@ input,select,textarea{ font-size:16px !important; }
     h+='<section class="camp-ctrls">'+
       '<div class="camp-search-bar">'+
         '<input id="camp-browse-search" class="camp-search-input" type="text" placeholder="캠핑장 이름, 시군구 검색 (예: 자라섬, 가평, ㅈㄹㅅ)" value="'+esc(ui.campSearch||'')+'" aria-label="전국 캠핑장 검색">'+
-        (ui.campSearch?'<button class="camp-search-clear" type="button" data-a="camp-search-clear" aria-label="검색어 지우기">✕</button>':'')+
+        '<button class="camp-search-clear" type="button" data-a="camp-search-clear" aria-label="검색어 지우기"'+(ui.campSearch?'':' hidden')+'>✕</button>'+
         '<button class="btn sm" type="button" data-a="camp-search-btn" style="min-height:48px;border-radius:16px">검색</button>'+
       '</div>'+
 
@@ -3545,10 +3595,10 @@ input,select,textarea{ font-size:16px !important; }
   /* ---------- 장박 주간 식단 플래너 & 식재료·장비 취합 ---------- */
   var PLAN_PERIODS=[
     {nights:1,days:2,label:'1박 2일',tag:'주말 1박 (5끼)'},
-    {nights:2,days:3,label:'2박 3일',tag:'대표 장박 (8끼)',popular:true},
-    {nights:3,days:4,label:'3박 4일',tag:'힐링 장박 (11끼)'},
-    {nights:4,days:5,label:'4박 5일',tag:'장기 캠핑 (14끼)'},
-    {nights:6,days:7,label:'일주일 (7일)',tag:'주간 완전정복 (20끼)'}
+    {nights:2,days:3,label:'2박 3일',tag:'대표 장박 (9끼)',popular:true},
+    {nights:3,days:4,label:'3박 4일',tag:'힐링 장박 (13끼)'},
+    {nights:4,days:5,label:'4박 5일',tag:'장기 캠핑 (17끼)'},
+    {nights:6,days:7,label:'일주일 (7일)',tag:'주간 완전정복 (25끼)'}
   ];
 
   var PLAN_THEMES=[
@@ -3559,6 +3609,21 @@ input,select,textarea{ font-size:16px !important; }
     {id:'family',label:'가족·아이동반 👨‍👩‍👧',desc:'맵지 않고 달콤고소한 온 가족 맞춤형 식단'}
   ];
 
+  // 실제 슬롯 구성(첫날 점심·저녁[·불멍], 중간날 아침·점심·저녁[·불멍], 마지막날 아침·점심)과
+  // 항상 일치하는 끼니 수를 계산한다. (기간 태그에 적힌 끼니 수가 실제와 달랐던 문제)
+  function planMealCount(days,snackEnabled){
+    var n=0;
+    for(var d=1;d<=days;d++){
+      if(d===1)n+=2+(snackEnabled?1:0);
+      else if(d===days)n+=2;
+      else n+=3+(snackEnabled?1:0);
+    }
+    return n;
+  }
+  function planTagLabel(days,snackEnabled){
+    return getPlanPeriod(days).tag.replace(/\d+\s*끼/,planMealCount(days,snackEnabled)+'끼');
+  }
+
   function getPlanPeriod(days){
     for(var i=0;i<PLAN_PERIODS.length;i++){
       if(PLAN_PERIODS[i].days===days)return PLAN_PERIODS[i];
@@ -3566,9 +3631,9 @@ input,select,textarea{ font-size:16px !important; }
     return PLAN_PERIODS[1];
   }
 
-  function getEligibleRecipesForMeal(mealName,theme,avoidArr,userGear){
+  function getEligibleRecipesForMeal(mealName,theme,avoidArr,userGear,allowAnyMeal){
     return CAMP_RECIPES.filter(function(r){
-      if(r.meals.indexOf(mealName)<0)return false;
+      if(!allowAnyMeal&&r.meals.indexOf(mealName)<0)return false;
       var fullText=r.name+' '+(r.base||[]).map(function(b){return b.n}).join(' ');
       for(var i=0;i<avoidArr.length;i++){
         if(avoidArr[i]&&fullText.indexOf(avoidArr[i])>=0)return false;
@@ -3595,7 +3660,7 @@ input,select,textarea{ font-size:16px !important; }
 
   function buildMultiDayPlan(days,people,theme,snackEnabled,avoidArr,userGear){
     var period=getPlanPeriod(days);
-    var usedNames={};
+    var usedCount={};
     var dayPlans=[];
 
     for(var d=1;d<=days;d++){
@@ -3620,15 +3685,28 @@ input,select,textarea{ font-size:16px !important; }
 
       slots.forEach(function(slot){
         var pool=getEligibleRecipesForMeal(slot.mealName,theme,avoidArr,userGear);
-        var chosen=null;
-        for(var i=0;i<pool.length;i++){
-          if(!usedNames[pool[i].name]){chosen=pool[i];break}
+        // 같은 요리가 반복되지 않도록 '아직 안 쓴 요리'를 우선 고르고,
+        // 해당 끼니 풀이 바닥나면 다른 끼니 요리까지 넓혀서 찾는다.
+        // 그래도 부족할 때만 가장 적게 쓴 요리로 최소 반복한다.
+        var pickFrom=function(arr,requireUnused){
+          var best=null,bestCount=Infinity;
+          for(var i=0;i<arr.length;i++){
+            var cnt=usedCount[arr[i].name]||0;
+            if(requireUnused&&cnt>0)continue;
+            if(cnt>=bestCount)continue;
+            bestCount=cnt;best=arr[i];
+            if(cnt===0)break;
+          }
+          return best;
+        };
+        var chosen=pickFrom(pool,true);
+        if(!chosen){
+          var widePool=getEligibleRecipesForMeal(slot.mealName,theme,avoidArr,userGear,true);
+          chosen=pickFrom(widePool,true);
         }
-        if(!chosen&&pool.length){
-          chosen=pool[Math.floor(Math.random()*pool.length)];
-        }
+        if(!chosen)chosen=pickFrom(pool,false);
         if(chosen){
-          usedNames[chosen.name]=true;
+          usedCount[chosen.name]=(usedCount[chosen.name]||0)+1;
           dayMeals.push({
             slotKey:slot.key,
             mealLabel:slot.label,
@@ -3670,7 +3748,7 @@ input,select,textarea{ font-size:16px !important; }
       people:people,
       periodDays:days,
       label:period.label,
-      tag:period.tag,
+      tag:planTagLabel(days,snackEnabled),
       theme:theme,
       snack:snackEnabled,
       createdAt:Date.now()
@@ -4042,7 +4120,7 @@ input,select,textarea{ font-size:16px !important; }
             '</button>';
           }).join('')+
         '</div>'+
-        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+esc(getPlanPeriod(ui.planDays).tag)+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+esc(planTagLabel(ui.planDays,ui.planSnack!==false))+'</div>'+
       '</div>'+
       '<div class="field"><span class="lab">식사 인원수</span>'+
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
@@ -4589,6 +4667,127 @@ input,select,textarea{ font-size:16px !important; }
   }
 
 
+  // 검색/필터 결과 요약 + 카드 목록만 따로 그린다(검색어 입력 시 입력창을 유지하기 위해).
+  function gardenResultsHtml(){
+    var allSpots=ui.gardenList||[];
+    var filtered=getFilteredGardens();
+    var privateCount=allSpots.filter(function(g){return g.isPrivate}).length;
+    var r='';
+      // 6. 결과 요약 바 & 정렬 탭
+      r += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)">'+
+        '<div>'+
+          '<span>등록된 비밀 스팟 <b>'+filtered.length+'</b>곳'+(ui.gardenFilter!=='all'||ui.gardenSearch||ui.gardenFacFilter?' (필터 적용 중)':'')+'</span>'+
+          (ui.gardenFilter!=='all'||ui.gardenSearch||ui.gardenFacFilter ?
+            '<button class="link" type="button" data-a="garden-filter-reset" style="font-size:12px;margin-left:8px">조건 초기화 ↺</button>' : '')+
+        '</div>'+
+        '<div style="display:flex;gap:4px;align-items:center">'+
+          '<span style="font-size:12px">정렬:</span>'+
+          '<button class="chip sm '+(ui.gardenSort==='newest'?'active':'')+'" type="button" data-a="garden-sort" data-v="newest" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='newest'?';background:var(--brand);color:#fff':'')+'">최신순</button>'+
+          '<button class="chip sm '+(ui.gardenSort==='likes'?'active':'')+'" type="button" data-a="garden-sort" data-v="likes" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='likes'?';background:var(--brand);color:#fff':'')+'">❤️ 찜순</button>'+
+          '<button class="chip sm '+(ui.gardenSort==='name'?'active':'')+'" type="button" data-a="garden-sort" data-v="name" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='name'?';background:var(--brand);color:#fff':'')+'">이름순</button>'+
+        '</div>'+
+      '</div>';
+
+      // 7. 스팟 카드 목록
+      if(ui.gardenBusy && !allSpots.length){
+        return r + loadingCard('비밀의 정원 데이터를 불러오고 있어요…');
+      }
+
+      if(!filtered.length){
+        r += '<div class="card" style="text-align:center;padding:36px 20px">'+
+          '<p style="font-size:38px;margin:0 0 10px">⛺</p>'+
+          '<h3 style="font-size:18px;margin:0 0 6px">검색 결과가 없습니다</h3>'+
+          '<p class="hint" style="margin:0 0 16px">조건을 변경하시거나, 새로운 비밀 노지&amp;캠핑장을 직접 등록해 보세요!</p>'+
+          '<button class="btn primary" type="button" data-a="garden-reg-open">🌿 나만의 비밀 정원 첫 등록하기</button>'+
+        '</div>';
+      } else {
+        filtered.forEach(function(g){
+          var unlocked = isSpotUnlocked(g);
+          var catInfo = GARDEN_CATEGORIES[g.category] || {label:'노지', icon:'🏞️'};
+          var dateStr = g.createdAt ? g.createdAt.slice(0,10) : '';
+
+          r += '<article class="garden-card" id="spot-'+esc(g.id)+'">'+
+            '<div class="garden-img-wrap" data-a="open-lightbox" data-img="'+esc(g.photoUrl || GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(g.name)+'" style="cursor:zoom-in" title="사진 크게 보기">'+
+              '<img class="garden-img" src="'+esc(g.photoUrl || GARDEN_PHOTO_PRESETS[0].url)+'" alt="'+esc(g.name)+'" loading="lazy" onerror="this.src=\''+GARDEN_PHOTO_PRESETS[0].url+'\'">'+
+              '<div class="garden-badges-overlay">'+
+                '<div style="display:flex;gap:5px">'+
+                  '<span class="garden-badge cat">'+catInfo.icon+' '+catInfo.label+'</span>'+
+                  (g.isPrivate ? 
+                    '<span class="garden-badge private">🔒 비밀의 정원</span>' : 
+                    '<span class="garden-badge public">🌐 공개 스팟</span>')+
+                '</div>'+
+                '<span class="garden-badge fee">'+(g.fee==='무료'?'💰 무료':esc(g.fee||'무료'))+'</span>'+
+              '</div>'+
+            '</div>'+
+            '<div class="garden-body">'+
+              '<div class="garden-title-row">'+
+                '<h3 class="garden-title">'+esc(g.name)+'</h3>'+
+              '</div>';
+
+          // 위치 정보 (잠금 상태에 따른 마스킹 처리)
+          if(unlocked){
+            r += '<div class="garden-loc">📍 <b>'+esc(g.address || '상세 주소 없음')+'</b></div>'+
+              (g.addressDetail ? '<p style="font-size:12.5px;color:var(--brand);background:var(--chip);padding:6px 10px;border-radius:8px;margin:0 0 10px;line-height:1.4">🚗 <b>진입 꿀팁:</b> '+esc(g.addressDetail)+'</p>' : '');
+          } else {
+            r += '<div class="garden-loc">📍 '+esc(g.addressMasked || '비공개 노지')+'</div>'+
+              '<div class="garden-lock-box">'+
+                '<div style="font-size:14px;font-weight:900;color:var(--ember);margin-bottom:4px">🔒 작성자 비공개 스팟</div>'+
+                '<p style="font-size:12px;color:var(--muted);margin:0 0 8px">비밀번호를 입력하면 상세 위치와 진입로가 공개됩니다.</p>'+
+                '<button class="btn sm pop" type="button" data-a="garden-unlock-open" data-id="'+esc(g.id)+'" style="font-weight:900">비밀번호 입력하여 열람 🔓</button>'+
+              '</div>';
+          }
+
+          // 시설물 태그 칩 (선택된 편의시설 목록)
+          if(g.facilities && g.facilities.length){
+            r += '<div class="garden-fac-list">';
+            var facSlice = g.facilities.slice(0, 6);
+            facSlice.forEach(function(f){
+              r += '<span class="garden-fac-chip">✓ '+esc(f)+'</span>';
+            });
+            if(g.facilities.length > 6){
+              r += '<span class="garden-fac-chip" style="background:none;color:var(--muted)">+'+(g.facilities.length - 6)+'개 더</span>';
+            }
+            r += '</div>';
+          }
+
+          // 바닥, 화장실, 진입 도로 메타 정보
+          r += '<div class="garden-meta-grid">'+
+            '<div class="garden-meta-item"><span>🌾 바닥:</span><b>'+esc(g.groundType||'자갈/흙')+'</b></div>'+
+            '<div class="garden-meta-item"><span>🚻 화장실:</span><b>'+esc(g.toiletStatus||'정보 없음')+'</b></div>'+
+            '<div class="garden-meta-item"><span>🚙 진입로:</span><b>'+esc(g.entryRoad||'일반 승용차')+'</b></div>'+
+            '<div class="garden-meta-item"><span>💰 이용료:</span><b>'+esc(g.fee||'무료')+'</b></div>'+
+          '</div>';
+
+          // 꿀팁 미리보기 (잠금 해제 시)
+          if(unlocked && g.tips){
+            r += '<p style="font-size:12.5px;color:var(--fg);margin:8px 0;line-height:1.4;background:var(--soft);padding:8px 10px;border-radius:8px">💡 <b>캠퍼 팁:</b> '+esc(g.tips)+'</p>';
+          }
+
+          // 작성자 및 등록일 바
+          r += '<div class="garden-author-bar">'+
+            '<span>👤 작성자: <b>'+esc(g.author)+'</b> · '+esc(dateStr)+'</span>'+
+            '<span style="display:flex;align-items:center;gap:8px">👁️ '+(g.views||0)+' · ❤️ '+(g.likes||0)+'</span>'+
+          '</div>';
+
+          // 하단 액션 버튼 (편집 및 삭제 포함)
+          r += '<div class="garden-actions">'+
+            '<button class="garden-btn-mini primary" type="button" data-a="garden-detail-open" data-id="'+esc(g.id)+'">🔍 상세 보기</button>'+
+            '<button class="garden-btn-mini" type="button" data-a="garden-like" data-id="'+esc(g.id)+'">❤️ 추천 '+(g.likes||0)+'</button>'+
+            '<button class="garden-btn-mini" type="button" data-a="garden-map-focus" data-id="'+esc(g.id)+'">🗺️ 지도</button>'+
+            (unlocked ? 
+              '<button class="garden-btn-mini" type="button" data-a="garden-copy-addr" data-v="'+esc(g.address)+'">📋 주소 복사</button>' : '')+
+            '<button class="garden-btn-mini" type="button" data-a="garden-edit-open" data-id="'+esc(g.id)+'" style="margin-left:auto;color:var(--brand);font-weight:700">✏️ 편집</button>'+
+            '<button class="garden-btn-mini" type="button" data-a="garden-delete-open" data-id="'+esc(g.id)+'" style="color:var(--ember)">🗑️ 삭제</button>'+
+          '</div>';
+
+          r += '</div></article>';
+        });
+      }
+
+
+    return r;
+  }
+
   function gardenView(){
     if(!ui.gardenLoaded && !ui.gardenBusy){
       loadSecretGardens(false);
@@ -4614,7 +4813,7 @@ input,select,textarea{ font-size:16px !important; }
     h += '<div class="camp-search-bar" style="margin-bottom:12px">'+
       '<span class="camp-search-icon" aria-hidden="true">🔍</span>'+
       '<input id="garden-search-input" type="search" placeholder="지역(홍천, 영월 등), 스팟명, 편의시설(차박, 계곡, 화장실) 검색…" value="'+esc(ui.gardenSearch)+'" aria-label="비밀의 정원 검색">'+
-      (ui.gardenSearch?'<button class="camp-search-clear" type="button" data-a="garden-search-clear" aria-label="검색어 지우기">✕</button>':'')+
+      '<button class="camp-search-clear" type="button" data-a="garden-search-clear" aria-label="검색어 지우기"'+(ui.gardenSearch?'':' hidden')+'>✕</button>'+
     '</div>';
 
     // 4. 카테고리 필터 칩스
@@ -4653,116 +4852,7 @@ input,select,textarea{ font-size:16px !important; }
       }).join('')+
     '</div>';
 
-    // 6. 결과 요약 바 & 정렬 탭
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)">'+
-      '<div>'+
-        '<span>등록된 비밀 스팟 <b>'+filtered.length+'</b>곳'+(ui.gardenFilter!=='all'||ui.gardenSearch||ui.gardenFacFilter?' (필터 적용 중)':'')+'</span>'+
-        (ui.gardenFilter!=='all'||ui.gardenSearch||ui.gardenFacFilter ?
-          '<button class="link" type="button" data-a="garden-filter-reset" style="font-size:12px;margin-left:8px">조건 초기화 ↺</button>' : '')+
-      '</div>'+
-      '<div style="display:flex;gap:4px;align-items:center">'+
-        '<span style="font-size:12px">정렬:</span>'+
-        '<button class="chip sm '+(ui.gardenSort==='newest'?'active':'')+'" type="button" data-a="garden-sort" data-v="newest" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='newest'?';background:var(--brand);color:#fff':'')+'">최신순</button>'+
-        '<button class="chip sm '+(ui.gardenSort==='likes'?'active':'')+'" type="button" data-a="garden-sort" data-v="likes" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='likes'?';background:var(--brand);color:#fff':'')+'">❤️ 찜순</button>'+
-        '<button class="chip sm '+(ui.gardenSort==='name'?'active':'')+'" type="button" data-a="garden-sort" data-v="name" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='name'?';background:var(--brand);color:#fff':'')+'">이름순</button>'+
-      '</div>'+
-    '</div>';
-
-    // 7. 스팟 카드 목록
-    if(ui.gardenBusy && !allSpots.length){
-      return h + loadingCard('비밀의 정원 데이터를 불러오고 있어요…');
-    }
-
-    if(!filtered.length){
-      h += '<div class="card" style="text-align:center;padding:36px 20px">'+
-        '<p style="font-size:38px;margin:0 0 10px">⛺</p>'+
-        '<h3 style="font-size:18px;margin:0 0 6px">검색 결과가 없습니다</h3>'+
-        '<p class="hint" style="margin:0 0 16px">조건을 변경하시거나, 새로운 비밀 노지&amp;캠핑장을 직접 등록해 보세요!</p>'+
-        '<button class="btn primary" type="button" data-a="garden-reg-open">🌿 나만의 비밀 정원 첫 등록하기</button>'+
-      '</div>';
-    } else {
-      filtered.forEach(function(g){
-        var unlocked = isSpotUnlocked(g);
-        var catInfo = GARDEN_CATEGORIES[g.category] || {label:'노지', icon:'🏞️'};
-        var dateStr = g.createdAt ? g.createdAt.slice(0,10) : '';
-
-        h += '<article class="garden-card" id="spot-'+esc(g.id)+'">'+
-          '<div class="garden-img-wrap" data-a="open-lightbox" data-img="'+esc(g.photoUrl || GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(g.name)+'" style="cursor:zoom-in" title="사진 크게 보기">'+
-            '<img class="garden-img" src="'+esc(g.photoUrl || GARDEN_PHOTO_PRESETS[0].url)+'" alt="'+esc(g.name)+'" loading="lazy" onerror="this.src=\''+GARDEN_PHOTO_PRESETS[0].url+'\'">'+
-            '<div class="garden-badges-overlay">'+
-              '<div style="display:flex;gap:5px">'+
-                '<span class="garden-badge cat">'+catInfo.icon+' '+catInfo.label+'</span>'+
-                (g.isPrivate ? 
-                  '<span class="garden-badge private">🔒 비밀의 정원</span>' : 
-                  '<span class="garden-badge public">🌐 공개 스팟</span>')+
-              '</div>'+
-              '<span class="garden-badge fee">'+(g.fee==='무료'?'💰 무료':esc(g.fee||'무료'))+'</span>'+
-            '</div>'+
-          '</div>'+
-          '<div class="garden-body">'+
-            '<div class="garden-title-row">'+
-              '<h3 class="garden-title">'+esc(g.name)+'</h3>'+
-            '</div>';
-
-        // 위치 정보 (잠금 상태에 따른 마스킹 처리)
-        if(unlocked){
-          h += '<div class="garden-loc">📍 <b>'+esc(g.address || '상세 주소 없음')+'</b></div>'+
-            (g.addressDetail ? '<p style="font-size:12.5px;color:var(--brand);background:var(--chip);padding:6px 10px;border-radius:8px;margin:0 0 10px;line-height:1.4">🚗 <b>진입 꿀팁:</b> '+esc(g.addressDetail)+'</p>' : '');
-        } else {
-          h += '<div class="garden-loc">📍 '+esc(g.addressMasked || '비공개 노지')+'</div>'+
-            '<div class="garden-lock-box">'+
-              '<div style="font-size:14px;font-weight:900;color:var(--ember);margin-bottom:4px">🔒 작성자 비공개 스팟</div>'+
-              '<p style="font-size:12px;color:var(--muted);margin:0 0 8px">비밀번호를 입력하면 상세 위치와 진입로가 공개됩니다.</p>'+
-              '<button class="btn sm pop" type="button" data-a="garden-unlock-open" data-id="'+esc(g.id)+'" style="font-weight:900">비밀번호 입력하여 열람 🔓</button>'+
-            '</div>';
-        }
-
-        // 시설물 태그 칩 (선택된 편의시설 목록)
-        if(g.facilities && g.facilities.length){
-          h += '<div class="garden-fac-list">';
-          var facSlice = g.facilities.slice(0, 6);
-          facSlice.forEach(function(f){
-            h += '<span class="garden-fac-chip">✓ '+esc(f)+'</span>';
-          });
-          if(g.facilities.length > 6){
-            h += '<span class="garden-fac-chip" style="background:none;color:var(--muted)">+'+(g.facilities.length - 6)+'개 더</span>';
-          }
-          h += '</div>';
-        }
-
-        // 바닥, 화장실, 진입 도로 메타 정보
-        h += '<div class="garden-meta-grid">'+
-          '<div class="garden-meta-item"><span>🌾 바닥:</span><b>'+esc(g.groundType||'자갈/흙')+'</b></div>'+
-          '<div class="garden-meta-item"><span>🚻 화장실:</span><b>'+esc(g.toiletStatus||'정보 없음')+'</b></div>'+
-          '<div class="garden-meta-item"><span>🚙 진입로:</span><b>'+esc(g.entryRoad||'일반 승용차')+'</b></div>'+
-          '<div class="garden-meta-item"><span>💰 이용료:</span><b>'+esc(g.fee||'무료')+'</b></div>'+
-        '</div>';
-
-        // 꿀팁 미리보기 (잠금 해제 시)
-        if(unlocked && g.tips){
-          h += '<p style="font-size:12.5px;color:var(--fg);margin:8px 0;line-height:1.4;background:var(--soft);padding:8px 10px;border-radius:8px">💡 <b>캠퍼 팁:</b> '+esc(g.tips)+'</p>';
-        }
-
-        // 작성자 및 등록일 바
-        h += '<div class="garden-author-bar">'+
-          '<span>👤 작성자: <b>'+esc(g.author)+'</b> · '+esc(dateStr)+'</span>'+
-          '<span style="display:flex;align-items:center;gap:8px">👁️ '+(g.views||0)+' · ❤️ '+(g.likes||0)+'</span>'+
-        '</div>';
-
-        // 하단 액션 버튼 (편집 및 삭제 포함)
-        h += '<div class="garden-actions">'+
-          '<button class="garden-btn-mini primary" type="button" data-a="garden-detail-open" data-id="'+esc(g.id)+'">🔍 상세 보기</button>'+
-          '<button class="garden-btn-mini" type="button" data-a="garden-like" data-id="'+esc(g.id)+'">❤️ 추천 '+(g.likes||0)+'</button>'+
-          '<button class="garden-btn-mini" type="button" data-a="garden-map-focus" data-id="'+esc(g.id)+'">🗺️ 지도</button>'+
-          (unlocked ? 
-            '<button class="garden-btn-mini" type="button" data-a="garden-copy-addr" data-v="'+esc(g.address)+'">📋 주소 복사</button>' : '')+
-          '<button class="garden-btn-mini" type="button" data-a="garden-edit-open" data-id="'+esc(g.id)+'" style="margin-left:auto;color:var(--brand);font-weight:700">✏️ 편집</button>'+
-          '<button class="garden-btn-mini" type="button" data-a="garden-delete-open" data-id="'+esc(g.id)+'" style="color:var(--ember)">🗑️ 삭제</button>'+
-        '</div>';
-
-        h += '</div></article>';
-      });
-    }
+    h += '<div id="garden-results">'+gardenResultsHtml()+'</div>';
 
     // 8. 하단 인터랙티브 지도 카드 (한눈에 보는 노지&캠장 지도)
     h += '<section class="garden-map-card" id="garden-map-card">'+
@@ -5791,6 +5881,78 @@ input,select,textarea{ font-size:16px !important; }
     '</div>';
   }
 
+  // 저장소(또는 가져온 백업)의 형식이 예전 버전/손상되어도 화면이 비지 않도록 방어적으로 정규화한다.
+  function normalizePersistedState(){
+    var isArr=function(a){return Array.isArray(a)};
+    var isObj=function(o){return !!o&&typeof o==='object'&&!isArr(o)};
+    if(!isObj(profile))profile={};
+    if(!isArr(profile.gear))profile.gear=['버너','그리들','숯·화로대','코펠'];
+    profile.gear=profile.gear.filter(function(x){return typeof x==='string'&&x});
+    if(!isArr(profile.avoid))profile.avoid=[];
+    profile.avoid=profile.avoid.filter(function(x){return typeof x==='string'&&x});
+    profile.people=clampPeople(Number(profile.people)||2);
+    if(profile.camp!=null&&!isObj(profile.camp))profile.camp=null;
+    if(typeof profile.wxAware!=='boolean')profile.wxAware=true;
+
+    if(list!=null&&!isObj(list))list=null;
+    if(list){
+      if(!isArr(list.items))list.items=[];
+      list.items=list.items.filter(function(it){return isObj(it)}).map(function(it){
+        return {
+          id:str(it.id)||('i'+Math.random().toString(36).slice(2,8)),
+          group:(it.group==='장비'||it.group==='소모품')?it.group:'재료',
+          text:str(it.text),
+          amount:it.amount==null?'':String(it.amount),
+          price:it.price==null?'':String(it.price),
+          alt:str(it.alt),
+          tag:str(it.tag),
+          checked:!!it.checked
+        };
+      });
+      ['steps','prepTips','tips'].forEach(function(k){
+        list[k]=isArr(list[k])?list[k].filter(function(x){return typeof x==='string'}).map(str):[];
+      });
+      list.people=clampPeople(Number(list.people)||2);
+      if(list.summary!=null)list.summary=str(list.summary);
+      if(list.dish==null)list.dish='캠핑 요리';
+      if(!isArr(list.dishes))list.dishes=list.dish?[list.dish]:[];
+    }
+    if(!isArr(recent))recent=[];
+    recent=recent.filter(isObj);
+    if(!isArr(logs))logs=[];
+    logs=logs.filter(isObj).map(function(l){
+      return {dish:str(l.dish)||'캠핑 요리',people:clampPeople(Number(l.people)||2),stars:clampNum(l.stars,1,5),note:str(l.note),date:str(l.date)};
+    });
+    if(!isArr(ui.favCamps))ui.favCamps=[];
+    ui.favCamps=ui.favCamps.filter(function(x){return typeof x==='string'});
+    if(!isArr(ui.gardenUnlockedIds))ui.gardenUnlockedIds=[];
+    if(!isArr(ui.gardenList))ui.gardenList=[];
+    if(!isObj(ui.campIntro))ui.campIntro={};
+    if(ui.mealPlan!=null&&(!isObj(ui.mealPlan)||!isArr(ui.mealPlan.days)))ui.mealPlan=null;
+    if(ui.mealPlan){
+      ui.mealPlan.days=ui.mealPlan.days.filter(isObj);
+      ui.mealPlan.days.forEach(function(d){
+        if(!isArr(d.meals))d.meals=[];
+        d.meals=d.meals.filter(function(m){return isObj(m)&&m.dish});
+      });
+      ui.mealPlan.people=clampPeople(Number(ui.mealPlan.people)||2);
+      if(!isArr(ui.mealPlan.equipment))ui.mealPlan.equipment=[];
+      if(!isArr(ui.mealPlan.supplies))ui.mealPlan.supplies=[];
+      if(!isArr(ui.mealPlan.ingredients))ui.mealPlan.ingredients=[];
+    }
+    ui.people=clampPeople(Number(ui.people)||2);
+    ui.planPeople=clampPeople(Number(ui.planPeople)||2);
+    // 기간은 목록에 있는 값만 허용한다(예전 저장값·직접 수정으로 6일 같은 값이 들어오면
+    // 라벨과 실제 끼니 수가 어긋나므로 가장 가까운 기간으로 맞춘다).
+    var validDays=PLAN_PERIODS.map(function(p){return p.days});
+    if(validDays.indexOf(Number(ui.planDays))<0)ui.planDays=3;
+    ui.planSnack=ui.planSnack!==false;
+    if(ui.mealPlan&&validDays.indexOf(Number(ui.mealPlan.periodDays))<0){
+      var planDays=ui.mealPlan.days.length;
+      if(validDays.indexOf(planDays)>=0)ui.mealPlan.periodDays=planDays;
+    }
+  }
+
   function render(){
     document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-current',b.getAttribute('data-v')===ui.tab?'page':'false')});
     document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='plan'?planView():(ui.tab==='camp'?campView():(ui.tab==='garden'?gardenView():(ui.tab==='list'?listView():meView())))))+campDetailModalHtml()+planSwapModalHtml()+gardenModalsHtml()+lightboxModalHtml();
@@ -6459,24 +6621,7 @@ input,select,textarea{ font-size:16px !important; }
       if(!list)return;
       var oldP = list.people || 2;
       var newP = (a==='scale-people-to') ? Number(v) : (v==='inc' ? Math.min(20, oldP + 1) : Math.max(1, oldP - 1));
-      if(newP !== oldP && newP > 0){
-        var ratio = newP / oldP;
-        list.people = newP;
-        if(list.items && Array.isArray(list.items)){
-          list.items.forEach(function(it){
-            if(it.text){
-              it.text = it.text.replace(/(\d+(?:\.\d+)?)\s*(g|ml|kg|개|봉|줄|스푼|큰술|마리|캔|장)/gi, function(match, num, unit){
-                var val = parseFloat(num) * ratio;
-                var formatted = val >= 10 ? Math.round(val) : Math.round(val * 10) / 10;
-                return formatted + unit;
-              });
-            }
-          });
-        }
-        store.set('cc.list', list);
-        showNotice('👥 인원수를 ' + newP + '명으로 변경하여 식재료 분량을 실시간 재계산했어요.');
-        render();
-      }
+      rescaleListPeople(newP);
       return;
     }
     if(a==='copy-checklist'){
@@ -6773,6 +6918,8 @@ input,select,textarea{ font-size:16px !important; }
     if(!e.target||e.target.id!=='camp-browse-search')return;
     ui.campSearch=e.target.value;
     ui.campPage=1;
+    var clearBtn=e.target.parentNode?e.target.parentNode.querySelector('.camp-search-clear'):null;
+    if(clearBtn)clearBtn.hidden=!e.target.value;
     var listBox=document.getElementById('camp-list-box');
     var statLine=document.getElementById('camp-stat-line');
     if(listBox)listBox.innerHTML=renderCampCards();
@@ -6853,6 +7000,7 @@ input,select,textarea{ font-size:16px !important; }
           if(Array.isArray(parsed.logs)){logs=parsed.logs;store.set('cc.logs',logs)}
           if(Array.isArray(parsed.favCamps)){ui.favCamps=parsed.favCamps;store.set('cc.favCamps',ui.favCamps)}
           if(Array.isArray(parsed.gardenUnlockedIds)){ui.gardenUnlockedIds=parsed.gardenUnlockedIds;store.set('cc.gardenUnlocked',ui.gardenUnlockedIds)}
+          normalizePersistedState();
           showNotice('🎉 백업 데이터를 성공적으로 복원했습니다!');
           render();
         }catch(err){
@@ -7152,10 +7300,19 @@ input,select,textarea{ font-size:16px !important; }
   document.addEventListener('input',function(e){
     if(e.target && e.target.id === 'garden-search-input'){
       ui.gardenSearch = e.target.value;
-      render();
+      var box=document.getElementById('garden-results');
+      if(box){
+        // 결과 영역만 갱신해 입력창(포커스·한글 조합)을 그대로 유지한다.
+        box.innerHTML=gardenResultsHtml();
+        var clearBtn=e.target.parentNode?e.target.parentNode.querySelector('.camp-search-clear'):null;
+        if(clearBtn)clearBtn.hidden=!e.target.value;
+      }else{
+        render();
+      }
     }
   });
 
+  normalizePersistedState();
   render();
   initVisitorCounter();
   (async function(){
