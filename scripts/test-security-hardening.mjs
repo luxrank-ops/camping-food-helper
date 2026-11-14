@@ -230,14 +230,12 @@ test('Express: 정적 파일 허용 목록 가드와 /api JSON 404가 있다', (
   assert.match(server, /X-Content-Type-Options/);
 });
 
-test('헬스체크: 로그인 없이 부른 비밀의 정원 API 는 401 로 차단되어야 한다', async () => {
+test('헬스체크: 게스트 공개 목록에 비밀번호 필드가 있으면 장애로 판정한다', async () => {
   const gardens = CHECKS.find((c) => c.url.endsWith('/api/secret-gardens'));
-  assert.equal(gardens.expectStatus, 401);
-  const gated = JSON.stringify({ success: false, code: 'auth_required' });
-  assert.equal((await probe(gardens, async () => new Response(gated, { status: 401 }))).ok, true);
-  // 인증 없이 목록이 새어 나오면 장애로 본다.
-  const leaked = JSON.stringify({ code: 'auth_required', gardens: [{ id: '1' }] });
-  assert.equal((await probe(gardens, async () => new Response(leaked, { status: 401 }))).ok, false);
+  const leaked = JSON.stringify({ authorized: false, gardens: [{ id: '1', password: 'x' }] });
+  assert.equal((await probe(gardens, async () => new Response(leaked, { status: 200 }))).ok, false);
+  const clean = JSON.stringify({ authorized: false, gardens: [{ id: '1' }] });
+  assert.equal((await probe(gardens, async () => new Response(clean, { status: 200 }))).ok, true);
 });
 
 test('저장소 오류 진단: Firestore 설정 문제는 공개 코드로 분류되고 원본은 노출되지 않는다', async () => {

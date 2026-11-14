@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// 무중단 헬스체크: 프런트엔드, 헬스체크 API, 로그인 게이트, 외부 날씨 API(Open-Meteo)를 점검한다.
+// 무중단 헬스체크: 프런트엔드, 헬스체크 API, 게스트 API, 회원 API 가드, 외부 날씨 API(Open-Meteo)를 점검한다.
 //
 // 판정 규칙
 //  - 기대한 상태 코드가 아니거나, 응답이 5초(SLOW_MS)를 넘거나, 연결이 실패하면 장애.
 //  - 장애로 보이면 3초 뒤 한 번 더 확인한다(일시적인 콜드 스타트 오탐 방지).
 //  - /api/health 는 Firestore 연결까지 확인하는 공개 엔드포인트다(개인 데이터 없음).
-//  - /api/sample · /api/generate-image 는 이제 로그인이 필요하므로, 토큰 없는 빈 요청이
-//    401 auth_required 로 답하면 정상이다(함수가 살아 있고 인증 가드가 켜져 있다는 뜻).
-//    Gemini는 호출되지 않아 API 쿼터를 쓰지 않는다.
-//  - 로그인 없이 호출한 /api/secret-gardens 도 401 이어야 한다(인증 없이 개인 스팟이 새지 않는지 확인).
+//  - 게스트도 앱을 쓸 수 있으므로 /api/sample · /api/generate-image 는 토큰 없는 빈 요청에
+//    400(프롬프트 없음)을 돌려주는 것이 정상이다. Gemini는 호출되지 않아 쿼터를 쓰지 않는다.
+//  - /api/secret-gardens 는 게스트에게도 공개 목록을 주되, 비밀번호 필드가 새면 장애로 본다.
+//  - /api/auth/me 는 토큰 없이 부르면 401 auth_required 여야 한다(회원 API 가드 확인).
 //
 // 알림
 //  - 장애가 있으면 TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID로 텔레그램 메시지를 보낸다.
@@ -69,38 +69,42 @@ export const CHECKS = [
     },
   },
   {
-    name: '로그인 게이트 /api/sample (비로그인 차단)',
+    name: '게스트 API /api/sample',
     method: 'POST',
     url: `${BASE_URL}/api/sample`,
     body: {},
-    expectStatus: 401, // 토큰 없는 요청은 401 auth_required — 정상 (Gemini 미호출)
-    validateBody: (text) => {
-      const json = JSON.parse(text);
-      return json?.code === 'auth_required' ? null : '비로그인 요청이 인증 오류로 차단되지 않음';
-    },
+    expectStatus: 400, // 빈 요청 → 400이면 정상 (Gemini 미호출, 게스트도 호출 가능)
   },
   {
-    name: '로그인 게이트 /api/generate-image (비로그인 차단)',
+    name: '게스트 API /api/generate-image',
     method: 'POST',
     url: `${BASE_URL}/api/generate-image`,
     body: {},
-    expectStatus: 401,
+    expectStatus: 400, // 빈 요청 → 400이면 정상 (이미지 생성 미호출)
+  },
+  {
+    name: '게스트 API /api/secret-gardens (Firestore 읽기)',
+    method: 'GET',
+    url: `${BASE_URL}/api/secret-gardens`,
+    expectStatus: 200,
     validateBody: (text) => {
       const json = JSON.parse(text);
-      return json?.code === 'auth_required' ? null : '비로그인 요청이 인증 오류로 차단되지 않음';
+      if (!Array.isArray(json?.gardens)) return '스팟 목록 응답이 올바르지 않음';
+      // 공개 응답에 인증 정보가 새어 나오면 그 자체가 장애로 본다.
+      const leaked = json.gardens.some(
+        (garden) => garden && (Object.hasOwn(garden, 'password') || Object.hasOwn(garden, 'passwordHash'))
+      );
+      return leaked ? '공개 스팟 목록에 비밀번호 필드가 포함됨' : null;
     },
   },
   {
-    name: '로그인 게이트 /api/secret-gardens (비로그인 차단)',
+    name: '회원 API 가드 /api/auth/me (비로그인 401)',
     method: 'GET',
-    url: `${BASE_URL}/api/secret-gardens`,
+    url: `${BASE_URL}/api/auth/me`,
     expectStatus: 401,
     validateBody: (text) => {
       const json = JSON.parse(text);
-      if (json?.code !== 'auth_required') return '비로그인 요청이 인증 오류로 차단되지 않음';
-      // 인증 없이 비밀 스팟이 새어 나오면 그 자체가 장애로 본다.
-      const leaked = Array.isArray(json?.gardens) && json.gardens.length > 0;
-      return leaked ? '비로그인 응답에 스팟 목록이 포함됨' : null;
+      return json?.code === 'auth_required' ? null : '토큰 없는 회원 API 요청이 401 auth_required가 아님';
     },
   },
   {

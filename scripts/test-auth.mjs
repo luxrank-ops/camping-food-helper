@@ -19,13 +19,15 @@ import { signToken, verifyToken, describeSecret } from '../lib/auth/token.js';
 import { createAuthService, validateEmail, validatePassword, validateNickname } from '../lib/auth/service.js';
 import { createMemoryUsersStore, createFileUsersStore, normalizeEmail, uidForEmail } from '../lib/auth/users-store.js';
 import { checkQuota, quotaState } from '../lib/auth/quota.js';
-import { requireUser, withUserAuth } from '../lib/auth/guard.js';
+import { requireUser, withUserAuth, optionalUser, withOptionalUser } from '../lib/auth/guard.js';
+import { checkGuestQuota, recordGuestUsage, resetGuestQuotaForTests } from '../lib/auth/guest-limit.js';
 import { createAuthApi } from '../lib/auth-api.js';
 import { createBillingApi } from '../lib/billing-api.js';
 import { applySubscriptionEvent, subscriptionPatch } from '../lib/billing/apply-subscription.js';
 import { billingAvailability } from '../lib/billing/provider.js';
 import {
   buildEntitlements,
+  GUEST_LIMITS,
   kstDayKey,
   normalizeUsage,
   planCatalog,
@@ -402,14 +404,16 @@ test('헬스체크: 로그인 게이트(401)와 헬스 API 응답을 장애로 �
   assert.equal((await probe(health, async () => new Response('{"ok":false,"storage":"unconfigured"}', { status: 200 }))).ok, false);
   assert.equal((await probe(health, async () => new Response('{}', { status: 200 }))).ok, false);
 
+  // 게스트도 쓸 수 있는 API 는 빈 요청 400 / 공개 목록 200 이 정상이다.
   const sample = CHECKS.find((c) => c.url.endsWith('/api/sample'));
-  assert.equal(sample.expectStatus, 401);
-  assert.equal((await probe(sample, async () => new Response('{"code":"auth_required"}', { status: 401 }))).ok, true);
-  assert.equal((await probe(sample, async () => new Response('{"code":"invalid_json"}', { status: 200 }))).ok, false);
+  assert.equal(sample.expectStatus, 400);
+  assert.equal((await probe(sample, async () => new Response('{"code":"invalid_json"}', { status: 400 }))).ok, true);
+  assert.equal((await probe(sample, async () => new Response('{"code":"auth_required"}', { status: 401 }))).ok, false);
 
-  const gardens = CHECKS.find((c) => c.url.endsWith('/api/secret-gardens'));
-  assert.equal((await probe(gardens, async () => new Response('{"code":"auth_required"}', { status: 401 }))).ok, true);
-  assert.equal((await probe(gardens, async () => new Response('{"code":"auth_required","gardens":[{"id":"1"}]}', { status: 401 }))).ok, false);
+  // 회원 전용 API(/api/auth/me)는 토큰 없이 401 이어야 한다.
+  const me = CHECKS.find((c) => c.url.endsWith('/api/auth/me'));
+  assert.equal((await probe(me, async () => new Response('{"code":"auth_required"}', { status: 401 }))).ok, true);
+  assert.equal((await probe(me, async () => new Response('{"success":true}', { status: 200 }))).ok, false);
 });
 
 test('캐치올 경로: Vercel 함수 하나로 여러 경로를 처리해도 segments 가 정확하다', () => {
@@ -436,5 +440,86 @@ test('캐치올 경로: 쿼리 파라미터가 없어도 요청 URL에서 경로
   // 쿼리 파라미터가 있으면 그 값을 우선한다(런타임이 디코딩해 준 값).
   assert.deepEqual(requestSegments({ url: '/api/auth/login', query: { route: ['login'] } }, { prefix: '/api/auth', queryKey: 'route' }), ['login']);
   assert.deepEqual(requestSegments({ url: '/api/auth', query: {} }, { prefix: '/api/auth', queryKey: 'route' }), []);
+});
+
+// ── 게스트 모드 ─────────────────────────────────────────
+test('게스트 모드: 토큰이 없으면 게스트로 통과하고 만료 토큰도 게스트로 처리한다', async () => {
+  const { service } = makeService();
+  const signup = await service.signup({ email: 'camp@test.com', password: 'abcd1234', nickname: '춘학' });
+
+  const guest = await optionalUser({ headers: {} }, { service });
+  assert.equal(guest.ok, true);
+  assert.equal(guest.guest, true);
+  assert.equal(guest.user, null);
+
+  const member = await optionalUser({ headers: { authorization: `Bearer ${signup.token}` } }, { service });
+  assert.equal(member.guest, false);
+  assert.equal(member.user.email, 'camp@test.com');
+
+  const expired = await optionalUser({ headers: { authorization: 'Bearer broken.token.value' } }, { service });
+  assert.equal(expired.ok, true);
+  assert.equal(expired.guest, true);
+  assert.equal(expired.expired, true);
+
+  // 게스트 허용 핸들러: 비로그인도 200, 로그인하면 req.user 가 채워진다
+  const handler = withOptionalUser(async (req, res) => res.status(200).json({ uid: req.user ? req.user.uid : null, guest: req.authGuest }), { service });
+  const asGuest = await api(handler);
+  assert.equal(asGuest.statusCode, 200);
+  assert.equal(asGuest.payload.uid, null);
+  assert.equal(asGuest.payload.guest, true);
+
+  const asMember = await api(handler, { headers: { authorization: `Bearer ${signup.token}` } });
+  assert.equal(asMember.payload.uid, signup.user.uid);
+  assert.equal(asMember.payload.guest, false);
+
+  // 로그인 필수 API 는 그대로 401
+  const required = withUserAuth(async (req, res) => res.status(200).json({ ok: true }), { service });
+  assert.equal((await api(required)).statusCode, 401);
+});
+
+test('게스트 한도: 아이피별 하루 한도를 넘으면 guest_quota_exceeded 로 막는다', () => {
+  resetGuestQuotaForTests();
+  assert.equal(GUEST_LIMITS.aiPerDay > 0, true);
+
+  for (let i = 0; i < GUEST_LIMITS.aiPerDay; i += 1) {
+    assert.equal(checkGuestQuota('1.2.3.4', 'ai').ok, true);
+    recordGuestUsage('1.2.3.4', 'ai');
+  }
+  const blocked = checkGuestQuota('1.2.3.4', 'ai');
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.code, 'guest_quota_exceeded');
+  assert.match(blocked.message, /로그인하면/);
+
+  // 다른 아이피는 아직 쓸 수 있다
+  assert.equal(checkGuestQuota('5.6.7.8', 'ai').ok, true);
+  // 이미지 한도는 따로 센다
+  assert.equal(checkGuestQuota('1.2.3.4', 'image').ok, true);
+  resetGuestQuotaForTests();
+});
+
+test('계정 데이터: 허용된 내 정보·일지 항목만 저장되고 다시 불러온다', async () => {
+  const { store, service } = makeService();
+  const signup = await service.signup({ email: 'camp@test.com', password: 'abcd1234', nickname: '춘학' });
+  const user = await store.get(signup.user.uid);
+
+  const saved = await service.saveAppData(user, {
+    data: {
+      'cc.profile': { people: 4, gear: ['버너'] },
+      'cc.logs': [{ dish: '부대찌개', stars: 5 }],
+      'cc.authToken': 'should-not-store',
+      evil: 'x'
+    }
+  });
+  assert.deepEqual(Object.keys(saved.data).sort(), ['cc.logs', 'cc.profile']);
+  assert.equal(Object.hasOwn(saved.data, 'cc.authToken'), false);
+
+  const loaded = await service.getAppData(await store.get(signup.user.uid));
+  assert.deepEqual(loaded.data['cc.profile'], { people: 4, gear: ['버너'] });
+  assert.ok(loaded.updatedAt);
+
+  // 128KB 초과는 거부
+  const huge = { 'cc.logs': 'x'.repeat(140 * 1024) };
+  await assert.rejects(() => service.saveAppData(user, { data: huge }), (err) => err.statusCode === 413);
+  await assert.rejects(() => service.saveAppData(user, { data: [] }), (err) => err.statusCode === 400);
 });
 

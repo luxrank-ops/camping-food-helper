@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { getFirebaseStorageBucket } from '../lib/firebase-admin.js';
 import { parseImageDataUrl } from '../lib/image-upload.js';
-import { withUserAuth } from '../lib/auth/guard.js';
+import { withOptionalUser } from '../lib/auth/guard.js';
 
 function parseBody(req) {
   if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) return req.body;
@@ -59,5 +59,5 @@ async function uploadImageHandler(req, res) {
   }
 }
 
-// 사진 업로드는 로그인한 회원만 쓸 수 있다(저장 공간 남용 방지).
-export default withUserAuth(uploadImageHandler);
+// 사진 업로드는 게스트도 쓸 수 있다(형식·크기 검증은 lib/image-upload.js).
+export default withOptionalUser(uploadImageHandler);

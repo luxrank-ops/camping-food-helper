@@ -12,7 +12,8 @@ import { createGuestbookApi } from './lib/guestbook-api.js';
 import { createAuthApi } from './lib/auth-api.js';
 import { createBillingApi } from './lib/billing-api.js';
 import { createHealthApi } from './lib/health-api.js';
-import { expressUserAuth } from './lib/auth/guard.js';
+import { expressOptionalUser, clientIp } from './lib/auth/guard.js';
+import { checkGuestQuota, recordGuestUsage } from './lib/auth/guest-limit.js';
 import { getAuthService } from './lib/auth/service.js';
 import { checkQuota, recordUsage } from './lib/auth/quota.js';
 
@@ -78,9 +79,10 @@ app.all('/api/auth/*', (req, res) => authApi(req, res, [req.params[0]]));
 const billingApi = createBillingApi();
 app.all('/api/billing/*', (req, res) => billingApi(req, res, [req.params[0]]));
 
-// === 로그인 필수 구역 ===
-// 비로그인 호출은 401 { code: 'auth_required' } 로 막는다(Vercel 서버리스의 withUserAuth 와 같은 규칙).
-app.use('/api', expressUserAuth());
+// === 나머지 /api/* ===
+// 게스트도 호출할 수 있다. 토큰이 오면 req.user(플랜·사용량)를 붙이고, 없으면 게스트로 통과시킨다.
+// (회원 본인 정보·결제 세션은 각 핸들러가 lib/auth/service.js 의 authenticate 로 직접 확인한다.)
+app.use('/api', expressOptionalUser());
 
 // 이미지 업로드 API (카메라 촬영 / 갤러리 업로드) — Vercel과 같은 검증(lib/image-upload.js)을 쓴다.
 app.post('/api/upload-image', (req, res) => {
@@ -110,14 +112,15 @@ app.post('/api/generate-image', async (req, res) => {
     return res.status(400).json({ code: 'prompt_too_long', error: 'Prompt is too long' });
   }
 
-  const quota = checkQuota(req.user, 'image');
+  const quota = req.user ? checkQuota(req.user, 'image') : checkGuestQuota(clientIp(req), 'image');
   if (!quota.ok) {
-    return res.status(429).json({ success: false, code: quota.code, plan: quota.plan, limit: quota.limit, used: quota.used, error: quota.message });
+    return res.status(429).json({ success: false, code: quota.code, plan: quota.plan || 'guest', limit: quota.limit, used: quota.used, error: quota.message });
   }
 
   try {
     const imageUrl = await generateImageUrl(prompt);
-    await recordUsage(getAuthService().store, req.user, 'image');
+    if (req.user) await recordUsage(getAuthService().store, req.user, 'image');
+    else recordGuestUsage(clientIp(req), 'image');
     return res.json({ imageUrl });
   } catch (err) {
     if (err.code === 'capability_disabled') {
@@ -137,14 +140,15 @@ app.post('/api/sample', async (req, res) => {
     return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
   }
 
-  const quota = checkQuota(req.user, 'ai');
+  const quota = req.user ? checkQuota(req.user, 'ai') : checkGuestQuota(clientIp(req), 'ai');
   if (!quota.ok) {
-    return res.status(429).json({ success: false, code: quota.code, plan: quota.plan, limit: quota.limit, used: quota.used, error: quota.message });
+    return res.status(429).json({ success: false, code: quota.code, plan: quota.plan || 'guest', limit: quota.limit, used: quota.used, error: quota.message });
   }
 
   try {
     const payload = await generateSampleJson(prompt);
-    await recordUsage(getAuthService().store, req.user, 'ai');
+    if (req.user) await recordUsage(getAuthService().store, req.user, 'ai');
+    else recordGuestUsage(clientIp(req), 'ai');
     return res.json(payload);
   } catch (err) {
     if (err.code === 'capability_disabled') {
