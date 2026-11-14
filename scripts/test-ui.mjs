@@ -83,3 +83,22 @@ test('모바일 제목 개선: 글자 크기·줄바꿈 조정과 배경 그림 
   assert.ok(opacity > 0 && opacity < 0.95, '배경 그림이 기본보다 흐려야 한다');
   assert.equal(html, kitchen, 'index.html과 camp-kitchen.html은 같은 내용이어야 한다');
 });
+
+test('앱 홍보: 내 정보 탭의 [📢 홍보글 복사] 버튼이 홍보 문구와 workers.dev 주소를 복사한다', () => {
+  // 버튼은 '내 정보·일지' 화면(meView)의 마지막 카드에 있다
+  const meStart = html.indexOf('function meView(){');
+  const meEnd = html.indexOf('function guestbookView(){', meStart);
+  assert.ok(meStart > -1 && meEnd > meStart, '내 정보 화면을 찾아야 한다');
+  const me = html.slice(meStart, meEnd);
+  assert.match(me, /data-a="promo-copy"/, '홍보글 복사 버튼이 내 정보 화면에 있어야 한다');
+  assert.match(me, /📢 홍보글 복사/, '버튼 라벨은 무엇을 복사하는지 분명해야 한다');
+  // 복사 문구·주소
+  assert.match(html, /var PROMO_URL='https:\/\/camping-food-helper\.luxrank\.workers\.dev'/, '복사할 주소는 새 Cloudflare Workers 주소여야 한다');
+  assert.match(html, /캠핑 갈 때마다 "이번엔 뭐 해 먹지\? 뭐 챙겨야 하지\?" 고민되시죠\?/, '홍보 문구 첫 줄이 들어 있어야 한다');
+  assert.match(html, /전국 4,018개 캠핑장 검색부터 숨은 스팟 공유\(비밀의 정원\)까지!/, '홍보 문구 본문이 들어 있어야 한다');
+  // 복사 방식·피드백
+  assert.match(html, /navigator\.clipboard&&navigator\.clipboard\.writeText/, 'Clipboard API를 써야 한다');
+  assert.match(html, /document\.execCommand\('copy'\)/, 'Clipboard API가 막히는 환경을 위한 textarea fallback이 있어야 한다');
+  assert.match(html, /홍보글이 복사됐어요!/, '복사 후 안내 문구가 있어야 한다');
+  assert.equal(html, kitchen, 'index.html과 camp-kitchen.html은 같은 내용이어야 한다');
+});

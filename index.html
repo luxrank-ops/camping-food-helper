@@ -6425,6 +6425,13 @@ body.auth-locked{padding-block:14px 40px}
       '</div>'+
       '<p class="hint" style="margin:10px 0 0">폰을 바꾸거나 브라우저 캐시를 비우기 전에 내 장비·일지·준비물을 파일로 보관할 수 있어요.</p>'+
     '</section>';
+
+    // 앱 홍보 — 누르면 홍보 문구 + 주소가 클립보드에 함께 복사된다(카톡·밴드에 그대로 붙여넣기).
+    h+='<section class="card"><h2>📢 앱 홍보하기</h2>'+
+      '<p class="hint" style="margin:0 0 12px">캠핑 가는 친구들에게 알려 주세요. 버튼을 누르면 홍보 문구와 주소가 함께 복사돼요.</p>'+
+      '<button class="btn primary wide" type="button" data-a="promo-copy">📢 홍보글 복사</button>'+
+      '<p class="hint" id="promo-copy-status" role="status" aria-live="polite" style="margin:10px 0 0"></p>'+
+    '</section>';
     return h;
   }
 
@@ -6578,6 +6585,76 @@ body.auth-locked{padding-block:14px 40px}
       document.execCommand('copy');
       document.body.removeChild(ta);
     }
+  }
+
+  /* ── 앱 홍보 문구 (내 정보 탭 '📢 홍보글 복사') ──────────────────────────
+     주소가 바뀌면 PROMO_URL 한 곳만 고치면 된다. 홍보글은 이 앱을 만든 사람이
+     카톡·밴드에 그대로 붙여넣는 1인칭 소개 문구다. */
+  var PROMO_URL='https://camping-food-helper.luxrank.workers.dev';
+  var PROMO_TEXT=[
+    '캠핑 갈 때마다 "이번엔 뭐 해 먹지? 뭐 챙겨야 하지?" 고민되시죠? 🤔',
+    '',
+    '로그인 없이 무료로 바로 쓰는 [캠핑 푸드 헬퍼] 만들어 봤어요!',
+    '✔ 인원·일정 고르면 AI가 캠핑 식단표 + 장보기 목록 + 준비물 한 번에 추천',
+    '✔ 전국 4,018개 캠핑장 검색부터 숨은 스팟 공유(비밀의 정원)까지!',
+    '',
+    '주말 캠핑·차박 가실 때 가볍게 써 보세요 👇',
+    PROMO_URL
+  ].join('\n');
+
+  // 복사: Clipboard API → (막히면) textarea + execCommand 순. 성공 여부를 돌려준다.
+  function copyTextSafe(text){
+    return new Promise(function(resolve){
+      function fallback(){
+        try{
+          var ta=document.createElement('textarea');
+          ta.value=text;
+          ta.setAttribute('readonly','');
+          ta.style.position='fixed';ta.style.top='0';ta.style.left='-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          ta.setSelectionRange(0,text.length);
+          var ok=document.execCommand('copy');
+          document.body.removeChild(ta);
+          resolve(!!ok);
+        }catch(err){resolve(false)}
+      }
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){resolve(true)},fallback);
+      }else fallback();
+    });
+  }
+
+  // 복사가 막힌 브라우저(구형 WebView 등)에서는 문구를 그대로 띄워 길게 눌러 복사하게 한다.
+  function showPromoFallback(box){
+    if(!box||box.getAttribute('data-fallback')==='1')return;
+    box.setAttribute('data-fallback','1');
+    var ta=document.createElement('textarea');
+    ta.value=PROMO_TEXT;
+    ta.setAttribute('readonly','');
+    ta.rows=7;
+    ta.style.cssText='width:100%;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.5;background:var(--surface);color:var(--fg)';
+    box.appendChild(ta);
+    try{ta.focus();ta.select()}catch(err){}
+  }
+
+  function copyPromo(b){
+    var statusEl=document.getElementById('promo-copy-status');
+    copyTextSafe(PROMO_TEXT).then(function(ok){
+      var live=document.querySelector('[data-a="promo-copy"]')||b;
+      if(ok){
+        live.textContent='✅ 홍보글이 복사됐어요!';
+        if(statusEl)statusEl.textContent='카카오톡·밴드에 그대로 붙여넣으시면 됩니다.';
+      }else{
+        live.textContent='복사가 안 됐어요 · 다시 눌러 주세요';
+        if(statusEl)statusEl.textContent='브라우저가 복사를 막았어요. 아래 문구를 길게 눌러 직접 복사해 주세요.';
+        showPromoFallback(statusEl);
+      }
+      setTimeout(function(){
+        var now=document.querySelector('[data-a="promo-copy"]');
+        if(now)now.textContent='📢 홍보글 복사';
+      },3000);
+    });
   }
 
   /* ============================================================
@@ -6869,6 +6946,8 @@ body.auth-locked{padding-block:14px 40px}
       if(v==='guestbook'&&!ui.guestbookLoaded)loadGuestbook();
       return;
     }
+
+    if(a==='promo-copy'){copyPromo(b);return}
 
     if(a==='guestbook-refresh'){loadGuestbook();return}
     if(a==='guestbook-delete-open'){ui.guestbookDeleteId=b.getAttribute('data-id')||'';ui.guestbookError='';render();return}
