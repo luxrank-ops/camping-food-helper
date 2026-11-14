@@ -9,6 +9,12 @@ import { parseImageDataUrl } from './lib/image-upload.js';
 import { createSecretGardensApi, sanitizePublicSecretGardens } from './lib/secret-gardens-api.js';
 import { createVisitorStatsApi } from './lib/visitor-stats-api.js';
 import { createGuestbookApi } from './lib/guestbook-api.js';
+import { createAuthApi } from './lib/auth-api.js';
+import { createBillingApi } from './lib/billing-api.js';
+import { createHealthApi } from './lib/health-api.js';
+import { expressUserAuth } from './lib/auth/guard.js';
+import { getAuthService } from './lib/auth/service.js';
+import { checkQuota, recordUsage } from './lib/auth/quota.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,6 +67,21 @@ if (!fs.existsSync(dataDir)) {
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// === 공개 경로: 헬스체크 · 회원가입/로그인 · 결제 상태 ===
+// 아래 세 가지만 로그인 없이 열려 있고, 나머지 /api/* 는 모두 로그인이 필요하다.
+const healthApi = createHealthApi();
+app.all('/api/health', (req, res) => healthApi(req, res));
+
+const authApi = createAuthApi();
+app.all('/api/auth/*', (req, res) => authApi(req, res, [req.params[0]]));
+
+const billingApi = createBillingApi();
+app.all('/api/billing/*', (req, res) => billingApi(req, res, [req.params[0]]));
+
+// === 로그인 필수 구역 ===
+// 비로그인 호출은 401 { code: 'auth_required' } 로 막는다(Vercel 서버리스의 withUserAuth 와 같은 규칙).
+app.use('/api', expressUserAuth());
+
 // 이미지 업로드 API (카메라 촬영 / 갤러리 업로드) — Vercel과 같은 검증(lib/image-upload.js)을 쓴다.
 app.post('/api/upload-image', (req, res) => {
   try {
@@ -89,8 +110,14 @@ app.post('/api/generate-image', async (req, res) => {
     return res.status(400).json({ code: 'prompt_too_long', error: 'Prompt is too long' });
   }
 
+  const quota = checkQuota(req.user, 'image');
+  if (!quota.ok) {
+    return res.status(429).json({ success: false, code: quota.code, plan: quota.plan, limit: quota.limit, used: quota.used, error: quota.message });
+  }
+
   try {
     const imageUrl = await generateImageUrl(prompt);
+    await recordUsage(getAuthService().store, req.user, 'image');
     return res.json({ imageUrl });
   } catch (err) {
     if (err.code === 'capability_disabled') {
@@ -110,8 +137,15 @@ app.post('/api/sample', async (req, res) => {
     return res.status(400).json({ code: 'invalid_json', error: 'Missing prompt' });
   }
 
+  const quota = checkQuota(req.user, 'ai');
+  if (!quota.ok) {
+    return res.status(429).json({ success: false, code: quota.code, plan: quota.plan, limit: quota.limit, used: quota.used, error: quota.message });
+  }
+
   try {
-    return res.json(await generateSampleJson(prompt));
+    const payload = await generateSampleJson(prompt);
+    await recordUsage(getAuthService().store, req.user, 'ai');
+    return res.json(payload);
   } catch (err) {
     if (err.code === 'capability_disabled') {
       return res.status(503).json({ code: err.code, error: err.message });

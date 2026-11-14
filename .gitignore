@@ -13,3 +13,5 @@ uploads/
 data/visitor_stats.json
 data/guestbook_posts.json
 data/*.tmp
+# 로컬 개발 회원 저장 파일 (운영은 Firestore users/{uid})
+data/users.local.json

@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-// 무중단 헬스체크: 프런트엔드, 서버리스 함수 4개, 외부 날씨 API(Open-Meteo)를 점검한다.
+// 무중단 헬스체크: 프런트엔드, 헬스체크 API, 로그인 게이트, 외부 날씨 API(Open-Meteo)를 점검한다.
 //
 // 판정 규칙
 //  - 기대한 상태 코드가 아니거나, 응답이 5초(SLOW_MS)를 넘거나, 연결이 실패하면 장애.
 //  - 장애로 보이면 3초 뒤 한 번 더 확인한다(일시적인 콜드 스타트 오탐 방지).
-//  - 서버리스 POST 엔드포인트는 빈 요청({})을 보낸다. 서버는 프롬프트가 없다며 400을 돌려주므로
-//    함수가 살아 있고 요청 처리까지 도달한다는 뜻이다. Gemini는 호출되지 않아 API 쿼터를 쓰지 않는다.
+//  - /api/health 는 Firestore 연결까지 확인하는 공개 엔드포인트다(개인 데이터 없음).
+//  - /api/sample · /api/generate-image 는 이제 로그인이 필요하므로, 토큰 없는 빈 요청이
+//    401 auth_required 로 답하면 정상이다(함수가 살아 있고 인증 가드가 켜져 있다는 뜻).
+//    Gemini는 호출되지 않아 API 쿼터를 쓰지 않는다.
+//  - 로그인 없이 호출한 /api/secret-gardens 도 401 이어야 한다(인증 없이 개인 스팟이 새지 않는지 확인).
 //
 // 알림
 //  - 장애가 있으면 TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID로 텔레그램 메시지를 보낸다.
@@ -54,46 +57,50 @@ export const CHECKS = [
     expectStatus: 200,
   },
   {
-    name: '서버리스 /api/sample',
-    method: 'POST',
-    url: `${BASE_URL}/api/sample`,
-    body: {},
-    expectStatus: 400, // 빈 요청 → 400이면 정상 (Gemini 미호출)
-  },
-  {
-    name: '서버리스 /api/generate-image',
-    method: 'POST',
-    url: `${BASE_URL}/api/generate-image`,
-    body: {},
-    expectStatus: 400, // 빈 요청 → 400이면 정상 (이미지 생성 미호출)
-  },
-  {
-    name: '서버리스 /api/secret-gardens (Firestore 읽기)',
+    name: '헬스체크 /api/health (Firestore 연결)',
     method: 'GET',
-    url: `${BASE_URL}/api/secret-gardens`,
+    url: `${BASE_URL}/api/health`,
     expectStatus: 200,
     validateBody: (text) => {
       const json = JSON.parse(text);
-      if (json?.authorized !== false || !Array.isArray(json?.gardens)) {
-        return '공개 스팟 목록 응답이 올바르지 않음';
-      }
-      // 공개 응답에 인증 정보가 새어 나오면 그 자체가 장애로 본다.
-      const leaked = json.gardens.some(
-        (garden) => garden && (Object.hasOwn(garden, 'password') || Object.hasOwn(garden, 'passwordHash'))
-      );
-      return leaked ? '공개 스팟 목록에 비밀번호 필드가 포함됨' : null;
+      if (json?.ok !== true) return '헬스체크 응답이 ok:true가 아님';
+      if (!['firestore', 'local'].includes(json?.storage)) return '저장소 상태가 올바르지 않음';
+      return null;
     },
   },
   {
-    name: '서버리스 /api/visitor-stats (방문자 카운터 읽기)',
-    method: 'GET',
-    url: `${BASE_URL}/api/visitor-stats`,
-    expectStatus: 200,
+    name: '로그인 게이트 /api/sample (비로그인 차단)',
+    method: 'POST',
+    url: `${BASE_URL}/api/sample`,
+    body: {},
+    expectStatus: 401, // 토큰 없는 요청은 401 auth_required — 정상 (Gemini 미호출)
     validateBody: (text) => {
       const json = JSON.parse(text);
-      return json?.success === true && Number.isFinite(json?.total) && Number.isFinite(json?.today)
-        ? null
-        : '오늘·누적 방문자 수 응답이 올바르지 않음';
+      return json?.code === 'auth_required' ? null : '비로그인 요청이 인증 오류로 차단되지 않음';
+    },
+  },
+  {
+    name: '로그인 게이트 /api/generate-image (비로그인 차단)',
+    method: 'POST',
+    url: `${BASE_URL}/api/generate-image`,
+    body: {},
+    expectStatus: 401,
+    validateBody: (text) => {
+      const json = JSON.parse(text);
+      return json?.code === 'auth_required' ? null : '비로그인 요청이 인증 오류로 차단되지 않음';
+    },
+  },
+  {
+    name: '로그인 게이트 /api/secret-gardens (비로그인 차단)',
+    method: 'GET',
+    url: `${BASE_URL}/api/secret-gardens`,
+    expectStatus: 401,
+    validateBody: (text) => {
+      const json = JSON.parse(text);
+      if (json?.code !== 'auth_required') return '비로그인 요청이 인증 오류로 차단되지 않음';
+      // 인증 없이 비밀 스팟이 새어 나오면 그 자체가 장애로 본다.
+      const leaked = Array.isArray(json?.gardens) && json.gardens.length > 0;
+      return leaked ? '비로그인 응답에 스팟 목록이 포함됨' : null;
     },
   },
   {
