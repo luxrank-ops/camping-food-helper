@@ -27,6 +27,7 @@
 - **결제 연결 자리**: `lib/billing/provider.js`(어댑터 계약) + `lib/billing/apply-subscription.js`(웹훅 → 회원 문서). 사업자 키를 넣기 전에는 `POST /api/billing/checkout` 이 `503 billing_not_configured` 로 답하고 화면에는 '준비 중' 안내만 보입니다.
 - **화면**: 상단 `FREE`/`PRO` 배지, [내 정보]의 내 플랜 카드(사용량·PRO 구독 시작·구독 관리), 계정 설정(닉네임·비밀번호 변경·로그아웃).
 - **공개 경로**: `GET /api/health`(헬스체크), `POST /api/auth/signup`·`login`, `GET /api/auth/plans`, `GET /api/billing/status`, `POST /api/billing/webhook`(사업자 서명 검증).
+- **서버리스 함수 11개**: Vercel Hobby 플랜의 함수 수 제한(배포당 12개) 때문에 `/api/auth/*`·`/api/billing/*`·`/api/secret-gardens/*` 는 캐치올 파일 하나씩으로 묶었습니다. 엔드포인트 추가는 `lib/auth-api.js` 같은 라우터에 경로를 더하는 방식으로 합니다.
 - **회귀 테스트**: `scripts/test-auth.mjs` — 토큰 위조/만료, 중복 가입, 로그인 실패 제한, 한도 초과, 플랜 다운그레이드, 웹훅 반영.
 - **로컬 개발**: `FIREBASE_SERVICE_ACCOUNT` 가 없으면 회원 정보는 `data/users.local.json`(저장소 제외)에 저장되어 `npm run dev` 로 가입·로그인까지 시험할 수 있습니다.
 

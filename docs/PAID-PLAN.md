@@ -8,7 +8,7 @@
 | 계층 | 파일 | 역할 |
 |---|---|---|
 | 로그인 화면·게이트 | `index.html`(= `camp-kitchen.html`) 인라인 스크립트의 `AUTH` 블록 | 비로그인 시 앱 대신 로그인/회원가입 폼만 표시, 모든 `/api/*` 호출에 `Authorization: Bearer` 첨부 |
-| 인증 API | `lib/auth-api.js`, `api/auth/*` | 가입·로그인·내 정보·닉네임·비밀번호·로그아웃·탈퇴 |
+| 인증 API | `lib/auth-api.js`, `api/auth/[...route].js` | 가입·로그인·내 정보·닉네임·비밀번호·로그아웃·탈퇴 |
 | 인증 로직 | `lib/auth/service.js` | 입력 검증, scrypt 비밀번호, 로그인 실패 제한(10분 10회) |
 | 세션 토큰 | `lib/auth/token.js` | HS256 서명 JWT(30일). 키는 `AUTH_SECRET` 또는 서비스 계정에서 유도 |
 | 회원 저장소 | `lib/auth/users-store.js` | 운영 Firestore `users/{uid}` · 로컬 `data/users.local.json` |
@@ -17,9 +17,10 @@
 | 요금제·권한 정의 | `lib/plans.js` | **무료/프로 한도·기능 플래그의 유일한 정의** |
 | 결제 어댑터 자리 | `lib/billing/provider.js` | 토스페이먼츠·Stripe 어댑터 계약(현재 미연결) |
 | 구독 상태 반영 | `lib/billing/apply-subscription.js` | 웹훅 이벤트 → `users/{uid}` 패치 매핑 |
-| 결제 API | `lib/billing-api.js`, `api/billing/*` | `status` · `checkout` · `portal` · `webhook` |
+| 결제 API | `lib/billing-api.js`, `api/billing/[...route].js` | `status` · `checkout` · `portal` · `webhook` |
 | 공개 헬스체크 | `lib/health-api.js`, `api/health.js` | Firestore 연결 확인(개인 데이터 없음) |
 | 보안 규칙 | `firestore.rules` | 모든 컬렉션 클라이언트 직접 접근 차단(서버 전용) |
+| 경로 해석 | `lib/route-segments.js` | 캐치올 함수 경로 → 라우터 segments (Vercel 함수 12개 제한 대응) |
 
 ## 회원 문서 스키마 — `users/{uid}`
 
@@ -92,6 +93,8 @@
 | `POST /api/billing/webhook` | 공개(사업자 서명 검증) |
 
 비로그인 호출은 `401 {"code":"auth_required"}` 로 답합니다.
+
+**서버리스 함수 구성**: Vercel Hobby 플랜은 배포당 서버리스 함수가 12개까지입니다. 그래서 `/api/auth/*` 와 `/api/billing/*` 는 각각 `[...route].js` 한 파일, `/api/secret-gardens/*` 는 `[...path].js` 한 파일로 묶어 **총 11개 함수**로 배포합니다. 엔드포인트를 추가할 때는 새 파일을 만들지 말고 기존 라우터(`lib/auth-api.js` 등)에 경로를 더한 뒤 함수 수를 확인하세요.
 `Uptime check`(`scripts/uptime-check.mjs`)는 이 401 응답을 **정상**으로 판정해(인증 가드가 켜져 있다는 증거) 대신 `/api/health` 로 Firestore 연결을 확인합니다.
 
 ## 유료화 켜는 순서 (결제 연동 체크리스트)

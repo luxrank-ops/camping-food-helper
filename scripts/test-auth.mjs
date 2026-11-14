@@ -33,6 +33,7 @@ import {
   PLANS
 } from '../lib/plans.js';
 import { CHECKS, probe } from './uptime-check.mjs';
+import { catchAllSegments, secretGardenSegments } from '../lib/route-segments.js';
 
 const ENV = { AUTH_SECRET: 'test-secret-key-for-camping-food-helper' };
 const cn = (count, text) => Array.from({ length: count }, () => text);
@@ -410,3 +411,19 @@ test('헬스체크: 로그인 게이트(401)와 헬스 API 응답을 장애로 �
   assert.equal((await probe(gardens, async () => new Response('{"code":"auth_required"}', { status: 401 }))).ok, true);
   assert.equal((await probe(gardens, async () => new Response('{"code":"auth_required","gardens":[{"id":"1"}]}', { status: 401 }))).ok, false);
 });
+
+test('캐치올 경로: Vercel 함수 하나로 여러 경로를 처리해도 segments 가 정확하다', () => {
+  // /api/auth/signup, /api/auth/me …
+  assert.deepEqual(catchAllSegments(['signup']), ['signup']);
+  assert.deepEqual(catchAllSegments('signup'), ['signup']);
+  assert.deepEqual(catchAllSegments(undefined), []);
+  assert.deepEqual(catchAllSegments(''), []);
+
+  // /api/secret-gardens/{id} · /{id}/like · /verify
+  assert.deepEqual(secretGardenSegments(['sg_1001']), ['sg_1001']);
+  assert.deepEqual(secretGardenSegments('sg_1001'), ['sg_1001']);
+  assert.deepEqual(secretGardenSegments(['sg_1001', 'like']), ['sg_1001', 'like']);
+  assert.deepEqual(secretGardenSegments(['verify']), ['verify']);
+  assert.deepEqual(secretGardenSegments([]), []);
+});
+

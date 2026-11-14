@@ -113,17 +113,20 @@ async function callApi(api, { method = 'GET', segments = [], body = {}, query = 
   return response;
 }
 
-test('Vercel에는 비밀의 정원 CRUD 하위 경로가 모두 API 함수로 등록되어 있다', () => {
+test('Vercel에는 비밀의 정원 CRUD 경로가 캐치올 API 함수로 등록되어 있다', () => {
+  // 서버리스 함수 수 제한(Vercel Hobby 12개) 때문에 /{id}, /{id}/like, /verify 는
+  // api/secret-gardens/[...path].js 한 파일이 모두 처리한다.
   const rootRoute=fs.readFileSync(path.join(ROOT,'api','secret-gardens.js'),'utf8');
-  const verifyRoute=fs.readFileSync(path.join(ROOT,'api','secret-gardens','verify.js'),'utf8');
-  const idRoute=fs.readFileSync(path.join(ROOT,'api','secret-gardens','[id].js'),'utf8');
-  const likeRoute=fs.readFileSync(path.join(ROOT,'api','secret-gardens','[id]','like.js'),'utf8');
+  const catchAllRoute=fs.readFileSync(path.join(ROOT,'api','secret-gardens','[...path].js'),'utf8');
+  const segmentsLib=fs.readFileSync(path.join(ROOT,'lib','route-segments.js'),'utf8');
   const vercel=JSON.parse(fs.readFileSync(path.join(ROOT,'vercel.json'),'utf8'));
-  for(const route of [rootRoute,verifyRoute,idRoute,likeRoute])assert.match(route,/createSecretGardensApi\(\)/);
+
+  for(const route of [rootRoute,catchAllRoute])assert.match(route,/createSecretGardensApi\(\)/);
   assert.match(rootRoute,/secretGardensApi\(req, res, \[\]\)/);
-  assert.match(verifyRoute,/secretGardensApi\(req, res, \['verify'\]\)/);
-  assert.match(idRoute,/req\.query\?\.id/);
-  assert.match(likeRoute,/req\.query\?\.id, 'like'/);
+  assert.match(catchAllRoute,/secretGardenSegments\(req\.query\?\.path\)/);
+  assert.match(catchAllRoute,/withUserAuth/, '비밀의 정원 API는 로그인이 필요하다');
+  assert.match(segmentsLib,/parts\[0\] === 'verify'/);
+  assert.match(segmentsLib,/'like'/);
   assert.equal(vercel.buildCommand,'npm run build');
   assert.equal(vercel.outputDirectory,'dist');
 });
