@@ -1148,6 +1148,37 @@ input,select,textarea{accent-color:var(--brand);}
   .camp-item-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-up);}
 }
 
+/* ── 로그인 게이트 · 플랜(유료화) UI ───────────────────────── */
+body.auth-locked #tabs,body.auth-locked #visit-fab{display:none!important}
+body.auth-locked{padding-block:14px 40px}
+.authwrap{max-width:440px;margin:0 auto}
+.auth-hero{position:relative;overflow:hidden;background:var(--hero-bg);color:var(--hero-fg);border-radius:26px;padding:22px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.auth-hero .brand{font-size:12px;font-weight:700;letter-spacing:.08em;opacity:.85}
+.auth-hero h1{font-family:var(--font-display);font-size:clamp(22px,6vw,28px);line-height:1.3;margin:8px 0 6px;word-break:keep-all}
+.auth-hero h1 em{font-style:normal;color:var(--pop)}
+.auth-hero p{margin:0;font-size:13.5px;color:rgba(247,245,232,.84);word-break:keep-all}
+.auth-tabs{display:flex;gap:4px;background:var(--chip);padding:4px;border-radius:14px;margin-bottom:16px}
+.auth-tabs button{flex:1;min-height:44px;border:0;background:transparent;color:var(--muted);font:700 14px var(--font-body);border-radius:11px;cursor:pointer}
+.auth-tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.auth-field{display:block;margin-bottom:12px}
+.auth-field>span{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.auth-field input{width:100%;min-height:50px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:14px;padding:0 14px;font:inherit}
+.auth-field input:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.auth-err{margin:0 0 12px;padding:11px 13px;border-radius:12px;background:var(--soft);color:var(--ember);font-size:13.5px;font-weight:700;word-break:keep-all}
+.auth-note{margin:0 0 12px;padding:11px 13px;border-radius:12px;background:var(--chip);color:var(--muted);font-size:13px;word-break:keep-all}
+.auth-sub{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+.auth-foot{text-align:center;font-size:12.5px;color:var(--muted);margin:10px 0 0;line-height:1.6}
+.plan-pill{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.04em;background:var(--pop);color:var(--pop-fg);border-radius:999px;padding:3px 8px;margin-left:6px;vertical-align:middle}
+.plan-pill.pro{background:var(--brand);color:var(--brand-fg)}
+.plan-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.plan-head h2{margin:0;font-size:17px}
+.usage{margin:12px 0 4px}
+.usage-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px;padding:8px 0;border-top:1px dashed var(--line)}
+.usage-row:first-child{border-top:0}
+.usage-row b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pro-list{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.6}
+.plan-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.plan-actions .btn{flex:1 1 150px}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -1332,6 +1363,233 @@ input,select,textarea{accent-color:var(--brand);}
     }
   };
 
+  /* ============================================================
+     회원 로그인 게이트 (회원가입 · 로그인 · 플랜)
+     - 로그인한 사람만 앱을 쓴다. 서버(/api/*)도 토큰을 확인하므로 화면만 가리는 것이 아니다.
+     - 토큰은 localStorage 에 보관하고, 모든 /api/* 요청에 Authorization: Bearer 로 붙인다.
+     - 401(만료·위조)을 받으면 토큰을 버리고 로그인 화면으로 돌아간다.
+     ============================================================ */
+  var AUTH_TOKEN_KEY='cc.authToken';
+  var AUTH_USER_KEY='cc.authUser';
+  var AUTH={token:'',user:null,view:'login',busy:false,err:'',note:'',ready:false};
+  try{AUTH.token=localStorage.getItem(AUTH_TOKEN_KEY)||''}catch(e){AUTH.token=''}
+  try{AUTH.user=JSON.parse(localStorage.getItem(AUTH_USER_KEY)||'null')}catch(e){AUTH.user=null}
+
+  function authStorageSet(key,value){
+    try{if(value==null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch(e){}
+  }
+  function setAuthToken(token){
+    AUTH.token=token?String(token):'';
+    authStorageSet(AUTH_TOKEN_KEY,AUTH.token||null);
+  }
+  function cacheAuthUser(user){
+    AUTH.user=user||null;
+    authStorageSet(AUTH_USER_KEY,user?JSON.stringify(user):null);
+  }
+  function authHeaders(extra){
+    var h=Object.assign({},extra||{});
+    if(AUTH.token&&!h.Authorization)h.Authorization='Bearer '+AUTH.token;
+    return h;
+  }
+  /* 앱의 모든 /api 호출은 이 함수를 거친다(토큰 자동 첨부 + 만료 시 로그인 화면). */
+  function apiFetch(url,opts){
+    var init=Object.assign({},opts||{});
+    init.headers=authHeaders(init.headers);
+    return fetch(url,init).then(function(res){
+      if(res.status===401&&AUTH.token)handleAuthLost();
+      return res;
+    });
+  }
+  function authEntitlements(){return (AUTH.user&&AUTH.user.entitlements)||{}}
+  function planBadgeHtml(){
+    var e=authEntitlements();
+    var label=e.planLabel||(AUTH.user?String(AUTH.user.plan||'free').toUpperCase():'FREE');
+    return '<b class="plan-pill'+(e.pro?' pro':'')+'">'+esc(label)+'</b>';
+  }
+  function authDateLabel(value){
+    if(!value)return '';
+    var d=new Date(value);
+    if(!isFinite(d.getTime()))return '';
+    return (d.getMonth()+1)+'월 '+d.getDate()+'일';
+  }
+  function planStatusText(e){
+    if(e.reason==='trial')return '무료 체험 중 · '+authDateLabel(e.trialEndsAt||e.currentPeriodEnd)+'까지 PRO 기능';
+    if(e.reason==='canceled_active')return '해지 예약됨 · '+authDateLabel(e.currentPeriodEnd)+'까지 PRO 기능을 쓸 수 있어요.';
+    if(e.reason==='trial_ended')return '체험이 끝나 무료 플랜으로 돌아왔어요.';
+    if(e.reason==='subscription_ended')return 'PRO 기간이 끝나 무료 플랜으로 돌아왔어요.';
+    if(e.reason==='past_due')return '결제가 확인되지 않아 무료 플랜으로 쓰고 있어요.';
+    if(e.plan==='pro'&&e.currentPeriodEnd)return 'PRO 구독 중 · 다음 결제일 '+authDateLabel(e.currentPeriodEnd);
+    if(e.plan==='pro')return 'PRO 구독 중';
+    return '무료 플랜으로 쓰고 있어요.';
+  }
+  function usageRowHtml(label,used,limit){
+    var usedNum=Number(used||0);
+    var txt=(limit===null||limit===undefined)?(usedNum+'회 · 제한 없음'):(usedNum+' / '+limit+'회');
+    return '<div class="usage-row"><span>'+esc(label)+'</span><b>'+esc(txt)+'</b></div>';
+  }
+  function authFieldHtml(id,label,type,extra){
+    var e=extra||{};
+    return '<label class="auth-field"><span>'+esc(label)+'</span><input id="'+id+'" name="'+id+'" type="'+type+'"'+
+      (e.autocomplete?' autocomplete="'+e.autocomplete+'"':'')+
+      (e.maxlength?' maxlength="'+e.maxlength+'"':'')+
+      (e.minlength?' minlength="'+e.minlength+'"':'')+
+      (e.inputmode?' inputmode="'+e.inputmode+'"':'')+
+      (e.placeholder?' placeholder="'+esc(e.placeholder)+'"':'')+
+      (e.value!==undefined?' value="'+esc(e.value)+'"':'')+
+      (e.required?' required':'')+'>'+'</label>';
+  }
+  function authView(){
+    var signup=AUTH.view==='signup';
+    var h='<div class="authwrap">';
+    h+='<section class="auth-hero"><span class="brand">CAMPING FOOD HELPER</span><h1>오늘 캠핑.<br><em>춘학아~ 뭐해먹지?</em></h1><p>회원으로 로그인하면 메뉴 추천부터 준비물·식단표·비밀정원까지 이어서 써요.</p></section>';
+    h+='<section class="card">';
+    h+='<div class="auth-tabs" role="tablist" aria-label="로그인 또는 회원가입">';
+    h+='<button type="button" role="tab" data-auth-a="switch" data-v="login" aria-selected="'+(!signup)+'">로그인</button>';
+    h+='<button type="button" role="tab" data-auth-a="switch" data-v="signup" aria-selected="'+signup+'">회원가입</button>';
+    h+='</div>';
+    if(AUTH.err)h+='<p class="auth-err" role="alert">'+esc(AUTH.err)+'</p>';
+    if(AUTH.note)h+='<p class="auth-note" role="status">'+esc(AUTH.note)+'</p>';
+    h+='<form data-auth-form="'+(signup?'signup':'login')+'" novalidate>';
+    if(signup)h+=authFieldHtml('auth-nickname','닉네임','text',{autocomplete:'nickname',maxlength:20,placeholder:'캠핑에서 불릴 이름',required:true});
+    h+=authFieldHtml('auth-email','이메일','email',{autocomplete:'email',inputmode:'email',maxlength:254,placeholder:'camp@example.com',required:true});
+    h+=authFieldHtml('auth-password','비밀번호','password',{autocomplete:signup?'new-password':'current-password',minlength:8,placeholder:'영문+숫자 8자 이상',required:true});
+    if(signup)h+=authFieldHtml('auth-password2','비밀번호 확인','password',{autocomplete:'new-password',minlength:8,placeholder:'한 번 더 입력',required:true});
+    h+='<button class="btn primary wide" type="submit"'+(AUTH.busy?' disabled':'')+'>'+(AUTH.busy?'잠시만요…':(signup?'가입하고 시작하기':'로그인'))+'</button>';
+    h+='</form>';
+    if(!signup)h+='<p class="auth-sub" style="margin-top:12px">비밀번호를 잊었나요? <button class="link" type="button" data-auth-a="forgot">재설정 안내</button></p>';
+    h+='</section>';
+    h+='<p class="auth-foot">무료로 시작하고, 필요할 때 PRO로 올리면 돼요.<br>회원 정보는 이 앱 로그인에만 쓰여요.</p>';
+    h+='</div>';
+    return h;
+  }
+  function renderAuth(){
+    var app=document.getElementById('app');
+    if(app)app.innerHTML=authView();
+  }
+  function lockApp(){
+    AUTH.ready=false;
+    document.body.classList.add('auth-locked');
+    renderAuth();
+    window.scrollTo(0,0);
+  }
+  function handleAuthLost(){
+    setAuthToken('');cacheAuthUser(null);
+    AUTH.ready=false;AUTH.view='login';
+    AUTH.err='로그인이 만료됐어요. 다시 로그인해 주세요.';AUTH.note='';
+    lockApp();
+  }
+  function authValue(id){var el=document.getElementById(id);return el?String(el.value||''):''}
+  function authSubmit(kind){
+    if(AUTH.busy)return;
+    if(kind==='nickname'){authSaveNickname();return}
+    if(kind==='password'){authChangePassword();return}
+    var signup=kind==='signup';
+    var email=authValue('auth-email').trim();
+    var password=authValue('auth-password');
+    var payload={email:email,password:password};
+    if(signup){
+      var nickname=authValue('auth-nickname').trim();
+      if(!nickname){AUTH.err='닉네임을 입력해 주세요.';renderAuth();return}
+      if(password!==authValue('auth-password2')){AUTH.err='비밀번호가 서로 달라요. 두 칸을 똑같이 입력해 주세요.';renderAuth();return}
+      payload.nickname=nickname;
+    }
+    if(!email){AUTH.err='이메일을 입력해 주세요.';renderAuth();return}
+    if(!password){AUTH.err='비밀번호를 입력해 주세요.';renderAuth();return}
+    AUTH.busy=true;AUTH.err='';AUTH.note='';
+    renderAuth();
+    fetch('/api/auth/'+kind,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)})
+      .then(function(res){return res.json().catch(function(){return{}}).then(function(data){return {res:res,data:data}})})
+      .then(function(r){
+        AUTH.busy=false;
+        if(!r.res.ok){AUTH.err=(r.data&&r.data.error)||'요청을 처리하지 못했어요.';renderAuth();return}
+        setAuthToken(r.data.token);cacheAuthUser(r.data.user);
+        AUTH.err='';AUTH.note='';
+        startApp();
+      })
+      .catch(function(){AUTH.busy=false;AUTH.err='연결이 불안정해요. 잠시 뒤 다시 시도해 주세요.';renderAuth()});
+  }
+  function authLogout(){
+    var token=AUTH.token;
+    setAuthToken('');cacheAuthUser(null);AUTH.ready=false;
+    if(token)fetch('/api/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+token}}).catch(function(){});
+    AUTH.view='login';AUTH.err='';AUTH.note='로그아웃했어요.';
+    lockApp();
+  }
+  function authBilling(kind){
+    if(AUTH.busy)return;
+    AUTH.busy=true;
+    var body=kind==='checkout'?JSON.stringify({plan:'pro'}):'{}';
+    apiFetch('/api/billing/'+kind,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:body})
+      .then(function(res){return res.json().catch(function(){return{}}).then(function(d){return {res:res,d:d}})})
+      .then(function(r){
+        AUTH.busy=false;
+        if(r.res.ok&&r.d&&r.d.checkoutUrl){window.location.href=r.d.checkoutUrl;return}
+        if(r.res.ok&&r.d&&r.d.portalUrl){window.location.href=r.d.portalUrl;return}
+        showNotice((r.d&&r.d.error)||'결제 연결을 준비하고 있어요. 곧 열립니다.');
+      })
+      .catch(function(){AUTH.busy=false;showNotice('연결이 불안정해요. 잠시 뒤 다시 시도해 주세요.')});
+  }
+  function authSaveNickname(){
+    var nickname=authValue('acct-nickname').trim();
+    if(!nickname){showNotice('닉네임을 입력해 주세요.');return}
+    apiFetch('/api/auth/profile',{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({nickname:nickname})})
+      .then(function(res){return res.json().catch(function(){return{}}).then(function(d){return {res:res,d:d}})})
+      .then(function(r){
+        if(!r.res.ok){showNotice((r.d&&r.d.error)||'닉네임을 바꾸지 못했어요.');return}
+        cacheAuthUser(r.d.user);showNotice('닉네임을 바꿨어요.');
+      })
+      .catch(function(){showNotice('연결이 불안정해요. 잠시 뒤 다시 시도해 주세요.')});
+  }
+  function authChangePassword(){
+    var current=authValue('acct-current-password');
+    var next=authValue('acct-new-password');
+    if(!current){showNotice('지금 쓰는 비밀번호를 입력해 주세요.');return}
+    if(next!==authValue('acct-new-password2')){showNotice('새 비밀번호가 서로 달라요.');return}
+    apiFetch('/api/auth/password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({currentPassword:current,newPassword:next})})
+      .then(function(res){return res.json().catch(function(){return{}}).then(function(d){return {res:res,d:d}})})
+      .then(function(r){
+        if(!r.res.ok){showNotice((r.d&&r.d.error)||'비밀번호를 바꾸지 못했어요.');return}
+        showNotice('비밀번호를 바꿨어요. 다음 로그인부터 새 비밀번호를 쓰세요.');
+      })
+      .catch(function(){showNotice('연결이 불안정해요. 잠시 뒤 다시 시도해 주세요.')});
+  }
+  function planSection(){
+    if(!AUTH.user)return '';
+    var e=authEntitlements();
+    var limits=e.limits||{};
+    var usage=e.usage||{ai:0,image:0};
+    var h='<section class="card" id="plan-card">';
+    h+='<div class="plan-head"><div><h2>내 플랜'+planBadgeHtml()+'</h2>';
+    h+='<p class="hint" style="margin:4px 0 0">'+esc(planStatusText(e))+'</p>';
+    h+='<p class="hint" style="margin:2px 0 0">'+esc((AUTH.user.nickname||'회원')+' · '+(AUTH.user.email||''))+'</p></div>';
+    h+='<button class="chip sm" type="button" data-auth-a="logout">로그아웃</button></div>';
+    h+='<div class="usage">'+usageRowHtml('오늘 AI 메뉴 추천',usage.ai,limits.aiPerDay)+usageRowHtml('오늘 요리 사진',usage.image,limits.imagePerDay)+'</div>';
+    if(e.plan==='pro'){
+      h+='<div class="plan-actions"><button class="btn" type="button" data-auth-a="portal">구독 관리</button></div>';
+    }else{
+      var pro=(e.catalog||[]).filter(function(p){return p.id==='pro'})[0];
+      h+='<div style="margin-top:12px;padding:14px;border-radius:16px;background:var(--chip)">';
+      h+='<b style="font-size:14.5px">PRO로 올리면</b>';
+      if(pro){
+        h+='<ul class="pro-list">'+pro.highlights.map(function(line){return '<li>'+esc(line)+'</li>'}).join('')+'</ul>';
+        h+='<p class="hint" style="margin:8px 0 0">월 '+Number(pro.priceKRW).toLocaleString('ko-KR')+'원 · 언제든 해지</p>';
+      }
+      h+='<div class="plan-actions"><button class="btn primary" type="button" data-auth-a="upgrade">PRO 구독 시작</button></div>';
+      h+='</div>';
+    }
+    h+='</section>';
+    h+='<section class="card"><h2>계정 설정</h2>';
+    h+='<form data-auth-form="nickname"><label class="auth-field"><span>닉네임</span><input id="acct-nickname" name="acct-nickname" type="text" autocomplete="nickname" maxlength="20" value="'+esc(AUTH.user.nickname||'')+'"></label><button class="btn" type="submit">닉네임 저장</button></form>';
+    h+='<form data-auth-form="password" style="margin-top:18px"><b style="font-size:14px">비밀번호 바꾸기</b>';
+    h+=authFieldHtml('acct-current-password','지금 비밀번호','password',{autocomplete:'current-password'});
+    h+=authFieldHtml('acct-new-password','새 비밀번호','password',{autocomplete:'new-password',minlength:8,placeholder:'영문+숫자 8자 이상'});
+    h+=authFieldHtml('acct-new-password2','새 비밀번호 확인','password',{autocomplete:'new-password',minlength:8});
+    h+='<button class="btn" type="submit">비밀번호 바꾸기</button></form>';
+    h+='<p class="hint" style="margin:12px 0 0">로그인 정보는 이 앱에서만 쓰여요. 로그아웃하면 이 기기에서 바로 잠깁니다.</p>';
+    h+='</section>';
+    return h;
+  }
+
   var month=new Date().getMonth()+1;
   var season=month>=3&&month<=5?'봄':(month>=6&&month<=8?'여름':(month>=9&&month<=11?'가을':'겨울'));
 
@@ -1386,6 +1644,7 @@ input,select,textarea{accent-color:var(--brand);}
     capability_disabled:'이 화면에서는 AI 연결 대신 내장 맞춤 레시피로 안내해 드려요.',
     rate_limited:'사용량 한도에 닿았어요. 잠시 뒤에 다시 눌러 주세요.',
     session_expired:'로그인이 만료됐어요. 다시 로그인한 뒤 열어 주세요.',
+    member_quota_exceeded:'오늘 무료 추천 한도를 다 썼어요. PRO로 올리면 하루 100회까지 쓸 수 있어요.',
     invalid_json:'답을 읽지 못했어요. 한 번 더 눌러 주세요.',
     empty_completion:'답이 비어 있어요. 한 번 더 눌러 주세요.',
     refused:'이 조건으로는 답을 만들지 못했어요. 조건을 바꿔 보세요.',
@@ -1732,7 +1991,7 @@ input,select,textarea{accent-color:var(--brand);}
       var toTimer=setTimeout(function(){ac.abort()},60000);
       var response;
       try{
-        response = await fetch('/api/generate-image', {
+        response = await apiFetch('/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: 'High-quality photo of Korean camping food: ' + dishName + ', delicious, appetizing, professional food photography, outdoor camping setting, natural lighting, 4K' }),
@@ -4492,7 +4751,7 @@ input,select,textarea{accent-color:var(--brand);}
       ui.gardenMasterKey = store.get('cc.gardenMasterKey', '') || '';
     }
     var gardenListOpts = ui.gardenMasterKey ? {headers:{'x-master-key':ui.gardenMasterKey}} : {};
-    fetch('/api/secret-gardens', gardenListOpts)
+    apiFetch('/api/secret-gardens', gardenListOpts)
       .then(function(r){
         if(!r.ok) throw new Error('API not available');
         return r.json();
@@ -4646,7 +4905,7 @@ input,select,textarea{accent-color:var(--brand);}
           render();
 
           // 서버 저장소(/api/upload-image)로 전송하여 파일 URL 획득
-          fetch('/api/upload-image', {
+          apiFetch('/api/upload-image', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ imageBase64: compressedBase64 })
@@ -5534,12 +5793,12 @@ input,select,textarea{accent-color:var(--brand);}
     var s='<span class="season">'+month+'월 · '+season+'</span>';
     var wxi=(ui.wx&&profile.wxAware)?wxInfo(ui.wx):null;
     if(wxi)s='<span class="season" style="background:var(--chip);color:var(--muted)">'+wxi.icon+' '+deg(ui.wx.temp)+' '+wxi.label+'</span>'+s;
-    if(ui.tab==='rec')return '<section class="hero home">'+SCENE+'<div class="hero-top"><span class="brand">캠핑음식 도우미</span>'+s+'</div><h1>오늘 캠핑.<br><em>춘학아~ 뭐해먹지?</em></h1><p class="sub">장비와 인원만 고르면 메뉴부터 준비물까지 정리해 줘요.</p></section>';
-    if(ui.tab==='plan')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%)">'+SCENE+'<div class="hero-top"><span class="brand">장박 주간 식단 플래너</span>'+s+'</div><h1>2박 3일+ 장박,<br><em>끼니 고민 끝!</em></h1><p class="sub">인원과 일정에 맞춘 끼니별 식단표와 전체 식재료·장비 자동 취합</p></section>';
-    if(ui.tab==='camp')return '<section class="hero home" style="padding-bottom:18px">'+SCENE+'<div class="hero-top"><span class="brand">전국 캠핑장 찾기</span>'+s+'</div><h1>전국 4,000+<br><em>어디로 떠날까?</em></h1><p class="sub">전국 캠핑장 탐색부터 날씨 맞춤 요리까지 한 번에 연결돼요.</p></section>';
-    if(ui.tab==='garden')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%)">'+SCENE+'<div class="hero-top"><span class="brand">나만의 비밀의 정원</span>'+s+'</div><h1>노지 · 차박 · 비밀 캠장<br><em>나만의 아지트 등록</em></h1><p class="sub">화장실, 개수대, 전기, 진입로까지 디테일하게 기록하고 관리하는 비밀 스팟</p></section>';
-    if(ui.tab==='guestbook')return '<section class="hero home guestbook-hero">'+SCENE+'<div class="hero-top"><span class="brand">CAMPING COMMUNITY</span>'+s+'</div><h1>캠핑의 추억을<br><em>남겨 주세요.</em></h1><p class="sub">다녀온 캠핑장, 맛있었던 메뉴, 다음 캠핑의 기대까지 함께 나눠요.</p></section>';
-    return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+s+'</header>';
+    if(ui.tab==='rec')return '<section class="hero home">'+SCENE+'<div class="hero-top"><span class="brand">캠핑음식 도우미'+planBadgeHtml()+'</span>'+s+'</div><h1>오늘 캠핑.<br><em>춘학아~ 뭐해먹지?</em></h1><p class="sub">장비와 인원만 고르면 메뉴부터 준비물까지 정리해 줘요.</p></section>';
+    if(ui.tab==='plan')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%)">'+SCENE+'<div class="hero-top"><span class="brand">장박 주간 식단 플래너'+planBadgeHtml()+'</span>'+s+'</div><h1>2박 3일+ 장박,<br><em>끼니 고민 끝!</em></h1><p class="sub">인원과 일정에 맞춘 끼니별 식단표와 전체 식재료·장비 자동 취합</p></section>';
+    if(ui.tab==='camp')return '<section class="hero home" style="padding-bottom:18px">'+SCENE+'<div class="hero-top"><span class="brand">전국 캠핑장 찾기'+planBadgeHtml()+'</span>'+s+'</div><h1>전국 4,000+<br><em>어디로 떠날까?</em></h1><p class="sub">전국 캠핑장 탐색부터 날씨 맞춤 요리까지 한 번에 연결돼요.</p></section>';
+    if(ui.tab==='garden')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%)">'+SCENE+'<div class="hero-top"><span class="brand">나만의 비밀의 정원'+planBadgeHtml()+'</span>'+s+'</div><h1>노지 · 차박 · 비밀 캠장<br><em>나만의 아지트 등록</em></h1><p class="sub">화장실, 개수대, 전기, 진입로까지 디테일하게 기록하고 관리하는 비밀 스팟</p></section>';
+    if(ui.tab==='guestbook')return '<section class="hero home guestbook-hero">'+SCENE+'<div class="hero-top"><span class="brand">CAMPING COMMUNITY'+planBadgeHtml()+'</span>'+s+'</div><h1>캠핑의 추억을<br><em>남겨 주세요.</em></h1><p class="sub">다녀온 캠핑장, 맛있었던 메뉴, 다음 캠핑의 기대까지 함께 나눠요.</p></section>';
+    return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+planBadgeHtml()+s+'</header>';
   }
   function banner(){
     var h='';
@@ -5963,6 +6222,7 @@ input,select,textarea{accent-color:var(--brand);}
   function meView(){
     var gearAll=GEAR.concat(profile.gear.filter(function(g){return GEAR.indexOf(g)<0}));
     var h='';
+    h+=planSection();
     if(profile.sample)h+='<p class="banner">처음 값은 예시예요. 내 장비와 인원에 맞게 바꿔 주세요.</p>';
     h+='<section class="card"><h2>평소 인원</h2><div class="step"><button type="button" data-a="pdec" aria-label="평소 인원 줄이기">−</button><output>'+profile.people+'명</output><button type="button" data-a="pinc" aria-label="평소 인원 늘리기">+</button></div></section>';
     h+='<section class="card"><h2>가진 조리 장비</h2><div class="chips">'+gearAll.map(function(g){return '<button class="chip" type="button" data-a="gear" data-v="'+esc(g)+'" aria-pressed="'+(profile.gear.indexOf(g)>=0)+'">'+esc(g)+'</button>'}).join('')+'</div>'+
@@ -6068,7 +6328,7 @@ input,select,textarea{accent-color:var(--brand);}
 
   async function loadGuestbook(){
     ui.guestbookBusy=true;ui.guestbookBusyKind='load';ui.guestbookError='';render();
-    try{var response=await fetch('/api/guestbook',{headers:{Accept:'application/json'}});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'방명록을 불러오지 못했습니다.');ui.guestbookPosts=Array.isArray(data.posts)?data.posts:[];ui.guestbookLoaded=true;}
+    try{var response=await apiFetch('/api/guestbook',{headers:{Accept:'application/json'}});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'방명록을 불러오지 못했습니다.');ui.guestbookPosts=Array.isArray(data.posts)?data.posts:[];ui.guestbookLoaded=true;}
     catch(error){ui.guestbookError=error.message||'연결이 불안정해요. 다시 시도해주세요.';}
     finally{ui.guestbookBusy=false;ui.guestbookBusyKind='';render();}
   }
@@ -6076,14 +6336,14 @@ input,select,textarea{accent-color:var(--brand);}
   async function submitGuestbook(form){
     var body={nickname:str(form.elements.nickname.value),message:str(form.elements.message.value),password:form.elements.password.value};
     ui.guestbookNickname=body.nickname;ui.guestbookMessage=body.message;store.set('cc.guestbookNickname',body.nickname);ui.guestbookBusy=true;ui.guestbookBusyKind='create';ui.guestbookError='';render();
-    try{var response=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 저장하지 못했습니다.');ui.guestbookPosts.unshift(data.post);ui.guestbookMessage='';ui.guestbookPassword='';showNotice('방명록을 남겼어요. 캠핑의 좋은 기억을 함께 나눠요!');}
+    try{var response=await apiFetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 저장하지 못했습니다.');ui.guestbookPosts.unshift(data.post);ui.guestbookMessage='';ui.guestbookPassword='';showNotice('방명록을 남겼어요. 캠핑의 좋은 기억을 함께 나눠요!');}
     catch(error){ui.guestbookError=error.message||'글을 저장하지 못했습니다.';}
     finally{ui.guestbookBusy=false;ui.guestbookBusyKind='';render();}
   }
 
   async function deleteGuestbook(form){
     var id=form.getAttribute('data-id');var password=form.elements.password.value;ui.guestbookBusy=true;ui.guestbookBusyKind='delete';render();
-    try{var response=await fetch('/api/guestbook/'+encodeURIComponent(id),{method:'DELETE',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({password:password})});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 삭제하지 못했습니다.');ui.guestbookPosts=ui.guestbookPosts.filter(function(post){return post.id!==id});ui.guestbookDeleteId='';showNotice('방명록을 삭제했어요.');}
+    try{var response=await apiFetch('/api/guestbook/'+encodeURIComponent(id),{method:'DELETE',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({password:password})});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 삭제하지 못했습니다.');ui.guestbookPosts=ui.guestbookPosts.filter(function(post){return post.id!==id});ui.guestbookDeleteId='';showNotice('방명록을 삭제했어요.');}
     catch(error){ui.guestbookError=error.message||'글을 삭제하지 못했습니다.';}
     finally{ui.guestbookBusy=false;ui.guestbookBusyKind='';render();}
   }
@@ -6371,8 +6631,8 @@ input,select,textarea{accent-color:var(--brand);}
     visit.loggedDate=logged;
     try{
       var res=shouldCount
-        ? await fetch(VISIT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visitorId:visitorId()}),keepalive:true})
-        : await fetch(VISIT_API,{headers:{'Accept':'application/json'}});
+        ? await apiFetch(VISIT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visitorId:visitorId()}),keepalive:true})
+        : await apiFetch(VISIT_API,{headers:{'Accept':'application/json'}});
       if(!res.ok)throw {code:'http_'+res.status};
       var data=await res.json();
       if(!data||!isFinite(Number(data.total)))throw {code:'bad_payload'};
@@ -6413,7 +6673,7 @@ input,select,textarea{accent-color:var(--brand);}
   }
 
   function executeDeleteGarden(id, password){
-    fetch('/api/secret-gardens/' + encodeURIComponent(id), {
+    apiFetch('/api/secret-gardens/' + encodeURIComponent(id), {
       method: 'DELETE',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ password: password })
@@ -6436,7 +6696,7 @@ input,select,textarea{accent-color:var(--brand);}
   }
 
   function executeEditGarden(id, updatedFields, password){
-    fetch('/api/secret-gardens/' + encodeURIComponent(id), {
+    apiFetch('/api/secret-gardens/' + encodeURIComponent(id), {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(Object.assign({}, updatedFields, { password: password }))
@@ -6605,7 +6865,7 @@ input,select,textarea{accent-color:var(--brand);}
     if(a==='garden-refresh'){loadSecretGardens(true);showNotice('비밀의 정원 목록을 새로고침했습니다.');return}
     if(a==='garden-like'){
       var lId=b.getAttribute('data-id');
-      fetch('/api/secret-gardens/'+encodeURIComponent(lId)+'/like',{method:'POST'})
+      apiFetch('/api/secret-gardens/'+encodeURIComponent(lId)+'/like',{method:'POST'})
         .then(function(r){return r.json()})
         .then(function(d){
           if(d.success){
@@ -7324,7 +7584,7 @@ input,select,textarea{accent-color:var(--brand);}
       ui.gardenRegBusy=true;
       ui.gardenRegError='';
       render();
-      fetch('/api/secret-gardens', {
+      apiFetch('/api/secret-gardens', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(newSpotData)
@@ -7365,7 +7625,7 @@ input,select,textarea{accent-color:var(--brand);}
       var enteredPwd = unlockPwdIn ? unlockPwdIn.value.trim() : '';
       if(!enteredPwd) return;
 
-      fetch('/api/secret-gardens/verify', {
+      apiFetch('/api/secret-gardens/verify', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ id: sId, password: enteredPwd })
@@ -7410,7 +7670,7 @@ input,select,textarea{accent-color:var(--brand);}
       if(authAction === 'delete'){
         executeDeleteGarden(spotId, authPwd);
       } else {
-        fetch('/api/secret-gardens/verify', {
+        apiFetch('/api/secret-gardens/verify', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ id: spotId, password: authPwd })
@@ -7515,6 +7775,37 @@ input,select,textarea{accent-color:var(--brand);}
     saveProfile();render();
   });
 
+  /* 로그인·회원가입·계정 설정 화면의 클릭/폼 제출 */
+  document.addEventListener('click',function(e){
+    var el=e.target;
+    while(el&&el!==document&&!(el.getAttribute&&el.getAttribute('data-auth-a')))el=el.parentNode;
+    if(!el||el===document||!el.getAttribute)return;
+    var action=el.getAttribute('data-auth-a');
+    if(!action)return;
+    e.preventDefault();
+    if(action==='switch'){
+      AUTH.view=el.getAttribute('data-v')==='signup'?'signup':'login';
+      AUTH.err='';AUTH.note='';renderAuth();
+      return;
+    }
+    if(action==='logout'){authLogout();return}
+    if(action==='upgrade'){authBilling('checkout');return}
+    if(action==='portal'){authBilling('portal');return}
+    if(action==='forgot'){
+      AUTH.note='비밀번호 재설정 메일은 아직 연결되지 않았어요. 로그인한 뒤 [내 정보 → 계정 설정]에서 바꾸거나, 도우미에게 재설정을 요청해 주세요.';
+      renderAuth();
+    }
+  });
+
+  document.addEventListener('submit',function(e){
+    var form=e.target;
+    if(!form||!form.getAttribute)return;
+    var kind=form.getAttribute('data-auth-form');
+    if(!kind)return;
+    e.preventDefault();
+    authSubmit(kind);
+  });
+
   document.addEventListener('input',function(e){
     if(ui.gardenRegModal&&e.target&&e.target.form&&e.target.form.getAttribute('data-form')==='garden-register'){
       captureGardenRegistrationDraft();
@@ -7544,9 +7835,18 @@ input,select,textarea{accent-color:var(--brand);}
     }
   });
 
-  normalizePersistedState();
-  render();
-  initVisitorCounter();
+  /* 로그인 확인 뒤에만 앱을 그린다(비로그인 상태에서는 로그인·회원가입 화면만 보인다). */
+  var APP_STARTED=false;
+  function startApp(){
+    if(AUTH.ready)return;
+    AUTH.ready=true;
+    document.body.classList.remove('auth-locked');
+    // 로그아웃 → 다시 로그인할 때는 화면만 새로 그린다(방문자 카운터·이벤트 중복 초기화 방지).
+    if(APP_STARTED){render();return}
+    APP_STARTED=true;
+    normalizePersistedState();
+    render();
+    initVisitorCounter();
   (async function(){
     try{sampleFn=(window.claude&&window.claude.use)?await window.claude.use('sample'):null}catch(e){sampleFn=null}
     if(!sampleFn){
@@ -7562,7 +7862,7 @@ input,select,textarea{accent-color:var(--brand);}
             else outer.addEventListener('abort',function(){ac.abort()},{once:true});
           }
           try{
-            var res=await fetch('/api/sample',{
+            var res=await apiFetch('/api/sample',{
               method:'POST',
               headers:{'Content-Type':'application/json'},
               body:JSON.stringify({prompt:prompt}),
@@ -7604,6 +7904,20 @@ input,select,textarea{accent-color:var(--brand);}
       if(ui.myLoc)loadOsmNearby();
     }
     loadSecretGardens(false);
+  })();
+  }
+
+  /* 첫 진입: 저장된 세션이 있으면 서버(/api/auth/me)로 확인한 뒤 앱을 그리고, 없으면 로그인 화면만 보여 준다. */
+  (function boot(){
+    if(!AUTH.token){lockApp();return}
+    apiFetch('/api/auth/me',{headers:{'Accept':'application/json'}})
+      .then(function(res){return res.json().catch(function(){return{}}).then(function(data){return {res:res,data:data}})})
+      .then(function(r){
+        if(!r.res.ok){lockApp();return}
+        if(r.data&&r.data.user)cacheAuthUser(r.data.user);
+        startApp();
+      })
+      .catch(function(){AUTH.err='서버에 연결하지 못했어요. 잠시 뒤 다시 열어 주세요.';lockApp()});
   })();
 
   /* ───────── 모바일 전용 — Galaxy S24 Ultra 터치·키보드·뷰포트 보정 ───────── */

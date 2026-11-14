@@ -1,13 +1,50 @@
 rules_version = '2';
 
-// 이 앱의 Firestore 접근은 서버(firebase-admin 서비스 계정) 전용이다.
-// 브라우저 웹 SDK로 직접 읽거나 쓰는 경로는 없으므로, 클라이언트 접근은 전부 차단한다.
-// Admin SDK는 보안 규칙의 적용을 받지 않으므로 /api/* 동작에는 영향이 없다.
+// 이 앱의 Firestore 접근은 전부 서버(firebase-admin 서비스 계정, /api/*)에서만 일어난다.
+// 브라우저는 Firebase 웹 SDK를 쓰지 않고, 회원 토큰(Authorization: Bearer)을 붙여 우리 서버 API를 부른다.
+// Admin SDK는 보안 규칙의 적용을 받지 않으므로 아래 'if false' 는 /api/* 동작에 영향을 주지 않는다.
 //
-// 적용 방법(최초 1회): firebase deploy --only firestore:rules
+// 컬렉션 구조 (모두 서버 전용)
+//   users/{uid}              회원 1명. email·nickname·passwordHash(scrypt)·plan·status·role·
+//                            usage{date,ai,image}·billingProvider·customerId·subscriptionId·
+//                            currentPeriodEnd·trialEndsAt·createdAt·lastLoginAt
+//   _visitorStats/global     오늘·누적 방문자 카운터
+//   _health/global           헬스체크용 문서(연결 확인용, 없어도 됨)
+//   secretGardens/{id}       비밀의 정원 스팟(비밀번호 해시 포함 → 클라이언트 직접 접근 금지)
+//   guestbook/{id}           방명록 글(비밀번호 해시 포함 → 클ライアント直接 접근 금지)
+//
+// 적용 방법(최초 1회 또는 규칙 변경 시): firebase deploy --only firestore:rules
 // (GitHub Actions의 Hosting 배포 워크플로는 규칙을 배포하지 않는다.)
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // 회원·구독·사용량: 서버 API(/api/auth, /api/billing)만 읽고 쓴다.
+    // 비밀번호 해시와 결제 식별자가 들어 있으므로 클라이언트 직접 접근은 전면 차단.
+    match /users/{uid} {
+      allow read, write: if false;
+    }
+
+    // 방문자 카운터: 읽기·쓰기 모두 서버 API(/api/visitor-stats)만.
+    match /_visitorStats/{docId} {
+      allow read, write: if false;
+    }
+
+    // 헬스체크 확인용 문서: 서버만.
+    match /_health/{docId} {
+      allow read, write: if false;
+    }
+
+    // 비밀의 정원 스팟: 공개 목록도 서버가 정제해서 내려준다(비밀번호·상세 위치 제거).
+    match /secretGardens/{id} {
+      allow read, write: if false;
+    }
+
+    // 방명록: 서버가 비밀번호 해시를 검증한 뒤에만 읽고 쓴다.
+    match /guestbook/{id} {
+      allow read, write: if false;
+    }
+
+    // 그 밖의 모든 경로도 기본 차단(새 컬렉션을 만들 때 이 규칙을 먼저 확인한다).
     match /{document=**} {
       allow read, write: if false;
     }

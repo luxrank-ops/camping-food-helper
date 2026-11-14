@@ -3,6 +3,7 @@
 나 혼자 쓰는 캠핑 요리 도우미 웹앱과 기획안입니다.
 
 - **바로 접속 주소 (Vercel)**: https://camping-food-helper.vercel.app/
+- **회원가입·로그인 후 사용**: 이제 앱은 로그인한 회원만 쓸 수 있습니다(이메일·비밀번호). 아래 '회원 · 유료화 구조' 참고.
 - `캠핑음식앱_기획안.md`: 개인용 앱 기획안 (v0.4)
 - `camp-kitchen.html` / `index.html`: 캠핑 요리 도우미 웹앱 (인원·장비 입력 → 맞춤 메뉴 추천 → 준비물 체크리스트, 요리 직접 지정)
 
@@ -13,6 +14,33 @@
 - 로컬 개발(`npm run dev`): `data/guestbook_posts.json`에 저장됩니다(저장소에서 제외).
 - Vercel: `FIREBASE_SERVICE_ACCOUNT`가 설정되면 Firestore의 `guestbookPosts` 컬렉션을 사용합니다. 운영 환경에 Firestore가 설정되지 않으면 방명록 API는 503 오류를 반환합니다.
 - API: `GET/POST /api/guestbook`, `DELETE /api/guestbook/:id`
+
+## 회원 · 유료화 구조 (2026-11-14 추가)
+
+앱은 **로그인한 회원만** 사용할 수 있고, 무료(FREE)·유료(PRO) 플랜 구조 위에서 돌아갑니다.
+전체 설계·스키마·유료화 체크리스트는 [`docs/PAID-PLAN.md`](docs/PAID-PLAN.md)에 정리했습니다.
+
+- **회원가입/로그인**: 닉네임·이메일·비밀번호(영문+숫자 8자 이상). 비로그인 상태에서는 앱 화면 대신 로그인 폼만 보입니다.
+- **서버도 보호**: 모든 `/api/*`(AI 추천·이미지·비밀의 정원·방명록·방문자 수·사진 업로드)는 `Authorization: Bearer <세션 토큰>` 을 검증합니다. 비로그인 호출은 `401 {"code":"auth_required"}`.
+- **회원 문서**: Firestore `users/{uid}` — `plan`(free/pro) · `status`(active/trial/canceled/expired/past_due) · `role`(user/admin) · `usage`(하루 사용량) · `billingProvider` · `customerId` · `subscriptionId` · `currentPeriodEnd`.
+- **요금제 한 곳 정의**: `lib/plans.js` (`PLANS`). 무료 AI 추천 10회/일·사진 5회/일, PRO AI 추천 100회/일·사진 30회/일. 한도를 바꾸면 서버 제한과 화면 표시가 함께 바뀝니다.
+- **결제 연결 자리**: `lib/billing/provider.js`(어댑터 계약) + `lib/billing/apply-subscription.js`(웹훅 → 회원 문서). 사업자 키를 넣기 전에는 `POST /api/billing/checkout` 이 `503 billing_not_configured` 로 답하고 화면에는 '준비 중' 안내만 보입니다.
+- **화면**: 상단 `FREE`/`PRO` 배지, [내 정보]의 내 플랜 카드(사용량·PRO 구독 시작·구독 관리), 계정 설정(닉네임·비밀번호 변경·로그아웃).
+- **공개 경로**: `GET /api/health`(헬스체크), `POST /api/auth/signup`·`login`, `GET /api/auth/plans`, `GET /api/billing/status`, `POST /api/billing/webhook`(사업자 서명 검증).
+- **회귀 테스트**: `scripts/test-auth.mjs` — 토큰 위조/만료, 중복 가입, 로그인 실패 제한, 한도 초과, 플랜 다운그레이드, 웹훅 반영.
+- **로컬 개발**: `FIREBASE_SERVICE_ACCOUNT` 가 없으면 회원 정보는 `data/users.local.json`(저장소 제외)에 저장되어 `npm run dev` 로 가입·로그인까지 시험할 수 있습니다.
+
+### 헬스체크 점검 대상 변경 (2026-11-14)
+
+로그인 필수로 바뀌면서 `Uptime check` 점검 대상이 아래처럼 바뀌었습니다.
+
+| 대상 | 정상 기준 |
+|---|---|
+| https://camping-food-helper.vercel.app/ | HTTP 200 |
+| `GET /api/health` | HTTP 200 + `ok:true` + `storage` 값(Firestore 연결 확인) |
+| `POST /api/sample`, `POST /api/generate-image` | 토큰 없는 빈 요청에 HTTP 401 `auth_required` (로그인 게이트가 켜져 있고, Gemini는 호출하지 않음) |
+| `GET /api/secret-gardens` | 토큰 없는 요청에 HTTP 401 `auth_required` + 스팟 목록 미포함 |
+| Open-Meteo 날씨 API | HTTP 200 + 현재 기온 값 존재 |
 
 ## UI 디자인 쇼케이스 (2026-10-16 추가)
 
@@ -224,9 +252,9 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 | 대상 | 정상 기준 |
 |---|---|
 | https://camping-food-helper.vercel.app/ | HTTP 200 |
-| `POST /api/sample`, `POST /api/generate-image` | 빈 요청에 HTTP 400 (프롬프트 없음 → Gemini를 호출하지 않아 쿼터를 쓰지 않음) |
-| `GET /api/secret-gardens` | HTTP 200 + 공개 스팟 배열 (Firestore와 Vercel API 함수 점검) |
-| `GET /api/visitor-stats` | HTTP 200 + `today`·`total` 숫자 (방문자 카운터 저장소 점검) |
+| `GET /api/health` | HTTP 200 + `ok:true` + `storage` 값 (Firestore 연결 점검) |
+| `POST /api/sample`, `POST /api/generate-image` | 토큰 없는 빈 요청에 HTTP 401 `auth_required` (로그인 게이트·Vercel 함수 점검, Gemini 미호출) |
+| `GET /api/secret-gardens` | 토큰 없는 요청에 HTTP 401 `auth_required` (비로그인 접근 차단 확인) |
 | Open-Meteo 날씨 API | HTTP 200 + 현재 기온 값 존재 |
 
 - 응답이 5초를 넘거나 연결이 실패하면 장애로 봅니다. 한 번 더 확인한 뒤에도 실패해야 알림을 보냅니다.
@@ -238,7 +266,7 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 - 점검 스크립트/워크플로 변경을 push하면 스케줄을 기다리지 않고 같은 운영 대상에 점검을 실행합니다. `npm test`에는 외부 네트워크를 사용하지 않는 점검 회귀 테스트도 포함됩니다.
 - `storage_not_configured`인 경우 **Vercel → camping-food-helper → Settings → Environment Variables**에서 `FIREBASE_SERVICE_ACCOUNT`를 **Production** 환경에 민감정보로 등록합니다. 값은 Firestore 접근 권한이 있는 Firebase 서비스 계정 JSON이며, 채팅/저장소/Actions 로그에 붙여넣지 않습니다.
 - JSON의 `project_id`가 없으면 `FIREBASE_PROJECT_ID`도 필요합니다. 해당 프로젝트의 Firestore 데이터베이스 및 서비스 계정 권한을 확인하고, 환경변수를 적용할 **Production 재배포**를 실행합니다. Firebase Hosting 배포용 GitHub 시크릿만으로는 Vercel 함수에 인증이 전달되지 않습니다.
-- 재배포 후 `GET /api/secret-gardens`, `GET /api/visitor-stats`가 HTTP 200 및 정상 본문을 반환하는지, 다음 `Uptime check`가 성공하는지 확인합니다. 저장소 오류를 HTTP 200이나 임시 파일 저장으로 우회하지 않습니다.
+- 재배포 후 `GET /api/health`가 HTTP 200(`ok:true`)이고, `GET /api/secret-gardens`가 비로그인 요청에 401을 주는지, 다음 `Uptime check`가 성공하는지 확인합니다. 저장소 오류를 HTTP 200이나 임시 파일 저장으로 우회하지 않습니다.
 - 2026-10-19 진단 실행 `39257368560`에서 두 저장소 API가 재시도 후에도 503을 반환했습니다. 같은 날 Vercel Production에 `FIREBASE_SERVICE_ACCOUNT`가 등록되고 재배포된 것을 확인했습니다. 등록 이후 `GET /api/secret-gardens`·`GET /api/visitor-stats`가 HTTP 200을 반환하는지 다음 `Uptime check` 결과로 최종 확인하세요. (자세한 점검 내역: `점검_보고서_2026-10-19.md`)
 
 **텔레그램 알림 설정 (한 번만)**

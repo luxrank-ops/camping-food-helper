@@ -282,8 +282,11 @@ function createWidgetEnv({ fetchImpl, storage = {}, reducedMotion = true } = {})
   };
   const documentStub = { getElementById: (id) => (id === 'visit-fab' || id.startsWith('visit-') ? el(id) : null) };
 
+  // 위젯은 로그인 토큰을 붙이는 apiFetch 로 /api/visitor-stats 를 부른다.
+  // 테스트에서는 토큰 첨부를 흉내 내는 통과 함수를 넣어 준다.
+  const apiFetch = (url, opts) => fetchImpl(url, opts);
   const factory = new Function(
-    'store', 'str', 'document', 'window', 'fetch', 'setInterval', 'clearInterval',
+    'store', 'str', 'document', 'window', 'fetch', 'apiFetch', 'setInterval', 'clearInterval',
     `${extractWidgetSource(html)}
      return {
        visit: visit, kstToday: kstToday, fmtVisit: fmtVisit,
@@ -297,6 +300,7 @@ function createWidgetEnv({ fetchImpl, storage = {}, reducedMotion = true } = {})
     documentStub,
     browserWindow,
     fetchImpl,
+    apiFetch,
     (fn, ms) => (timers.push({ fn, ms }), timers.length),
     () => {}
   );

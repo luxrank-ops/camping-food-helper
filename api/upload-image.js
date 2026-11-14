@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { getFirebaseStorageBucket } from '../lib/firebase-admin.js';
 import { parseImageDataUrl } from '../lib/image-upload.js';
+import { withUserAuth } from '../lib/auth/guard.js';
 
 function parseBody(req) {
   if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) return req.body;
@@ -17,7 +18,7 @@ function errorResponse(res, statusCode, code, error) {
   return res.status(statusCode).json({ success: false, code, error });
 }
 
-export default async function handler(req, res) {
+async function uploadImageHandler(req, res) {
   if (String(req.method || '').toUpperCase() !== 'POST') {
     res.setHeader?.('Allow', 'POST');
     return errorResponse(res, 405, 'method_not_allowed', '지원하지 않는 요청 방식입니다.');
@@ -57,3 +58,6 @@ export default async function handler(req, res) {
     return errorResponse(res, statusCode, code, message);
   }
 }
+
+// 사진 업로드는 로그인한 회원만 쓸 수 있다(저장 공간 남용 방지).
+export default withUserAuth(uploadImageHandler);

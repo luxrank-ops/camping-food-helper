@@ -22,22 +22,24 @@ test('only failed checks retry, retaining the first failure', async () => {
   await checkWithRetry(check, async () => response(200), async () => assert.fail('must not sleep'));
 });
 
-test('visitor stats check is read-only and validates the response, not just HTTP 200', async () => {
-  const stats = CHECKS.find((c) => c.url.endsWith('/api/visitor-stats'));
-  assert.equal(stats.method, 'GET');
-  for (const body of ['<html>fallback</html>', '{}', '{"success":true,"today":"1","total":2}']) {
-    assert.equal((await probe(stats, async () => response(200, body))).ok, false);
+test('health check is public, read-only and validates the storage state, not just HTTP 200', async () => {
+  const health = CHECKS.find((c) => c.url.endsWith('/api/health'));
+  assert.equal(health.method, 'GET');
+  for (const body of ['<html>fallback</html>', '{}', '{"ok":false,"storage":"unconfigured"}']) {
+    assert.equal((await probe(health, async () => response(200, body))).ok, false);
   }
-  assert.equal((await probe(stats, async () => response(200, '{"success":true,"today":0,"total":2}'))).ok, true);
+  assert.equal((await probe(health, async () => response(200, '{"ok":true,"storage":"firestore"}'))).ok, true);
 });
 
-test('empty POST checks never request paid AI generation', async () => {
+test('auth-gated checks expect 401 auth_required from an empty, token-less request (no paid AI call)', async () => {
   for (const entry of CHECKS.filter((c) => c.method === 'POST')) {
-    assert.equal(entry.expectStatus, 400);
+    assert.equal(entry.expectStatus, 401);
+    assert.ok(entry.validateBody, `${entry.name}: 인증 오류 코드까지 확인해야 한다`);
     await probe(entry, async (_url, init) => {
       assert.equal(init.body, '{}');
       assert.equal(init.headers['Content-Type'], 'application/json');
-      return response(400);
+      assert.equal(init.headers.Authorization, undefined, '헬스체크는 토큰을 보내지 않는다');
+      return response(401, '{"success":false,"code":"auth_required"}');
     });
   }
 });
