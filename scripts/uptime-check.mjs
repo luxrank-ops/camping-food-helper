@@ -15,14 +15,14 @@
 //  - 실패 시 종료 코드 1로 끝나므로 GitHub Actions 실패 메일도 함께 받는다.
 //
 // 환경변수 (모두 선택)
-//  UPTIME_BASE_URL     기본 https://camping-food-helper.vercel.app
+//  UPTIME_BASE_URL     기본 https://camping-food-helper.luxrank.workers.dev (Cloudflare Workers 운영 주소)
 //  UPTIME_WEATHER_URL  기본 Open-Meteo 가평 좌표 예보 URL
 //  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
 import { appendFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-const BASE_URL = (process.env.UPTIME_BASE_URL || 'https://camping-food-helper.vercel.app').replace(/\/+$/, '');
+const BASE_URL = (process.env.UPTIME_BASE_URL || 'https://camping-food-helper.luxrank.workers.dev').replace(/\/+$/, '');
 const WEATHER_URL = process.env.UPTIME_WEATHER_URL
   || 'https://api.open-meteo.com/v1/forecast?latitude=37.8311&longitude=127.5097&current=temperature_2m';
 
