@@ -34,7 +34,9 @@ const SITE_URL = (
 // 파일이 없으면 소유확인이 실패하므로 다른 값으로 바꾸지 말고 서비스에서 새로 발급받아 교체한다.
 const VERIFICATION_FILES = {
   'google968bd4b8f647180b.html': 'google-site-verification: google968bd4b8f647180b.html',
-  'naver53529db3a5cfcbb80cd1a7045bf9d026.html': 'naver-site-verification: naver53529db3a5cfcbb80cd1a7045bf9d026.html'
+  'naver53529db3a5cfcbb80cd1a7045bf9d026.html': 'naver-site-verification: naver53529db3a5cfcbb80cd1a7045bf9d026.html',
+  // 2026-11-14 Cloudflare Workers 도메인용으로 네이버 서치어드바이저가 새로 발급한 확인 파일
+  'naver4e2fab7d5ef508f9e045df89a0f4b005.html': 'naver-site-verification: naver4e2fab7d5ef508f9e045df89a0f4b005.html'
 };
 
 // 2. HTML 엔트리 복사 (index.html, camp-kitchen.html 동기화 보장)
