@@ -16,6 +16,12 @@
   "observability": {
     "enabled": true
   },
+  // 사진 업로드 저장소 — Workers KV 무료 한도(저장 1GB, 읽기 10만/일, 쓰기 1,000/일).
+  //  lib/upload-store.js 가 UPLOADS_KV 바인딩을 잡아 저장하고 GET /api/uploads/<key> 로 내려 준다.
+  //  (R2 를 쓰게 되면 r2_buckets 로 UPLOADS_BUCKET 을 붙이면 그쪽이 우선이다.)
+  "kv_namespaces": [
+    { "binding": "UPLOADS_KV", "id": "1f8572fdaaff4700b4cc1a8718cb9a4a" }
+  ],
   // 앱 코드(lib/*)의 __dirname 계산은 로컬 파일 저장소용일 뿐 Workers 에서는 쓰이지 않는다.
   // Workers 번들에는 import.meta.url 이 없어 fileURLToPath(undefined) 로 죽으므로 고정값을 준다.
   "define": {

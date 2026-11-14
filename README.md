@@ -304,8 +304,8 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 | 엔트리 | `worker/index.js` — 기존 `api/*.js` 핸들러를 Request/Response 로 감싸 그대로 재사용 |
 | 정적 자산 | `dist/` (Workers Static Assets, `run_worker_first: ["/api/*"]`) |
 | Firestore | `worker/firestore-rest.js` — firebase-admin 대신 Firestore REST + 서비스 계정 JWT(Web Crypto) |
-| Storage | `worker/shims/firebase-storage.js` — Cloud Storage JSON API multipart 업로드 (R2 바인딩이 있으면 쓰지 않음) |
-| 사진 저장소 | Cloudflare R2 바인딩 `UPLOADS_BUCKET`(버킷 `camping-food-helper-uploads`) — `lib/upload-store.js`, 서빙은 `GET /api/uploads/<key>` |
+| Storage | `worker/shims/firebase-storage.js` — Cloud Storage JSON API multipart 업로드 (KV 바인딩이 있으면 쓰지 않음) |
+| 사진 저장소 | Cloudflare Workers KV 바인딩 `UPLOADS_KV`(네임스페이스 `camping-food-helper-uploads`) — `lib/upload-store.js`, 서빙은 `GET /api/uploads/<key>` |
 | Gemini | `worker/gemini-rest.js` — `@google/genai` 대신 Gemini REST |
 | 라우팅 별칭 | `wrangler.jsonc` 의 `alias` (firebase-admin/app·firestore·storage, @google/genai) |
 
@@ -316,12 +316,14 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 - 로컬 검증: `npm run build && npx wrangler deploy --dry-run --outdir=.wrangler/dry && npm run test:worker`
 - `SITE_URL` 환경변수로 canonical·og:url·robots.txt·sitemap.xml 의 기준 주소가 결정됩니다.
 
-### 사진 업로드 (R2)
+### 사진 업로드 (Workers KV)
 
-`/api/upload-image` 는 `UPLOADS_BUCKET`(R2) 바인딩이 있으면 사진을 R2 에 저장하고
+`/api/upload-image` 는 `UPLOADS_KV`(Workers KV) 바인딩이 있으면 사진을 거기에 저장하고
 `https://camping-food-helper.luxrank.workers.dev/api/uploads/secret-gardens/<파일명>` 주소를 돌려줍니다.
 그 주소는 같은 워커가 `GET`/`HEAD` 로 내려 주며(1년 캐시, `nosniff`), 키는 `secret-gardens/` 아래만 허용합니다.
 바인딩이 없으면(Express 로컬 실행·Vercel 함수) 기존 Firebase Storage 경로를 그대로 씁니다.
 
-- 버킷: `npx wrangler r2 bucket create camping-food-helper-uploads` (무료 한도 저장 10GB/월)
-- 바인딩: `wrangler.jsonc` 의 `r2_buckets` → `{ "binding": "UPLOADS_BUCKET", "bucket_name": "camping-food-helper-uploads" }`
+- 무료 한도(2026-11 기준): 저장 1GB, 읽기 10만 회/일, 쓰기 1,000 회/일 — 카드 등록·구독 없이 동작합니다.
+- 네임스페이스: `camping-food-helper-uploads` (대시보드 Workers KV → 네임스페이스 생성)
+- 바인딩: `wrangler.jsonc` 의 `kv_namespaces` → `{ "binding": "UPLOADS_KV", "id": "<네임스페이스 ID>" }`
+- 나중에 R2 로 옮기려면 `r2_buckets` 에 `UPLOADS_BUCKET` 을 추가하면 됩니다(코드는 R2 바인딩을 먼저 본다).
