@@ -291,5 +291,26 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 
 ## 참고
 
-- 정식 운영 주소는 Vercel 배포본입니다(위 '바로 접속 주소' 참고). AI 추천·비밀의 정원·방문자 카운터 같은 서버 기능은 Vercel 서버리스 함수(`/api/*`)에서 제공됩니다.
+- 2026-11-14 부터 Cloudflare Workers 배포본(`https://camping-food-helper.luxrank.workers.dev`)이 운영 주소이며, Vercel 배포본(`https://camping-food-helper.vercel.app`)도 같은 코드로 계속 동작합니다. AI 추천·비밀의 정원·방문자 카운터 같은 서버 기능은 각 플랫폼의 `/api/*` 에서 제공됩니다.
 - 파일을 로컬에서 그냥 열거나(`file://`) Firebase Hosting/GitHub Pages 같은 정적 전용 호스팅에서 열면 화면은 보이지만 `/api/*` 기능은 동작하지 않습니다. 로컬 실행은 `npm ci` 후 `npm run dev`(기본 `http://localhost:3000`)를 사용하세요.
+
+## Cloudflare Workers 배포 (2026-11-14 이전)
+
+정식 운영 주소는 **https://camping-food-helper.luxrank.workers.dev** 입니다(기존 Vercel 배포는 그대로 유지).
+
+| 구성 | 값 |
+| --- | --- |
+| Worker 이름 | `camping-food-helper` (`wrangler.jsonc`) |
+| 엔트리 | `worker/index.js` — 기존 `api/*.js` 핸들러를 Request/Response 로 감싸 그대로 재사용 |
+| 정적 자산 | `dist/` (Workers Static Assets, `run_worker_first: ["/api/*"]`) |
+| Firestore | `worker/firestore-rest.js` — firebase-admin 대신 Firestore REST + 서비스 계정 JWT(Web Crypto) |
+| Storage | `worker/shims/firebase-storage.js` — Cloud Storage JSON API multipart 업로드 |
+| Gemini | `worker/gemini-rest.js` — `@google/genai` 대신 Gemini REST |
+| 라우팅 별칭 | `wrangler.jsonc` 의 `alias` (firebase-admin/app·firestore·storage, @google/genai) |
+
+- 빌드: `npm run build` (`dist/` 생성, `WORKERS_CI` 가 있으면 `SITE_URL` 기본값이 workers.dev 주소)
+- 배포: `npx wrangler deploy` (Cloudflare Git Builds 로 `main` 푸시 시 자동 배포)
+- 시크릿(대시보드 또는 `wrangler secret put/bulk`): `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`,
+  `FIREBASE_STORAGE_BUCKET`, `GEMINI_API_KEY`, `AUTH_SECRET`
+- 로컬 검증: `npm run build && npx wrangler deploy --dry-run --outdir=.wrangler/dry && npm run test:worker`
+- `SITE_URL` 환경변수로 canonical·og:url·robots.txt·sitemap.xml 의 기준 주소가 결정됩니다.

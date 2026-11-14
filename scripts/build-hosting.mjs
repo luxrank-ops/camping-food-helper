@@ -20,7 +20,15 @@ fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST_DATA, { recursive: true });
 
 // 검색 등록·분석용 루트 파일의 기준 주소. 배포 도메인이 바뀌면 여기만 고친다.
-const SITE_URL = (process.env.SITE_URL || 'https://camping-food-helper.vercel.app').replace(/\/+$/, '');
+// - Vercel 빌드: 기본값(vercel.app)
+// - Cloudflare Workers 빌드: WORKERS_CI 가 잡혀 있으므로 workers.dev 주소를 기본값으로 쓴다
+//   (SITE_URL 을 지정하면 그 값이 항상 우선한다).
+const VERCEL_SITE_URL = 'https://camping-food-helper.vercel.app';
+const WORKERS_SITE_URL = 'https://camping-food-helper.luxrank.workers.dev';
+const SITE_URL = (
+  process.env.SITE_URL
+  || (process.env.WORKERS_CI || process.env.CF_PAGES ? WORKERS_SITE_URL : VERCEL_SITE_URL)
+).replace(/\/+$/, '');
 
 // 검색엔진(구글 서치콘솔·네이버 서치어드바이저) 소유확인 파일 — 발급된 이름·내용 그대로 두고,
 // 파일이 없으면 소유확인이 실패하므로 다른 값으로 바꾸지 말고 서비스에서 새로 발급받아 교체한다.
@@ -30,8 +38,14 @@ const VERIFICATION_FILES = {
 };
 
 // 2. HTML 엔트리 복사 (index.html, camp-kitchen.html 동기화 보장)
-fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST, 'index.html'));
-fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST, 'camp-kitchen.html'));
+//    canonical·og:url 은 실제 배포 도메인(SITE_URL)으로 맞춘다. 원본 index.html 은 그대로 둔다.
+function rewriteSiteUrls(html) {
+  if (SITE_URL === VERCEL_SITE_URL) return html;
+  return html.split(VERCEL_SITE_URL).join(SITE_URL);
+}
+const entryHtml = rewriteSiteUrls(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'));
+fs.writeFileSync(path.join(DIST, 'index.html'), entryHtml, 'utf8');
+fs.writeFileSync(path.join(DIST, 'camp-kitchen.html'), entryHtml, 'utf8');
 
 // 2-1. 쿠팡 파트너스 장보기 블록 (index.html 이 불러 쓰는 클라이언트 자산)
 const coupangSrc = path.join(ROOT, 'coupang-partners.js');
@@ -71,3 +85,25 @@ for (const [name, body] of Object.entries(VERIFICATION_FILES)) {
 // GA4 측정 스크립트 (index.html 이 /analytics.js 로 부른다)
 const analyticsSrc = path.join(ROOT, 'analytics.js');
 if (fs.existsSync(analyticsSrc)) fs.copyFileSync(analyticsSrc, path.join(DIST, 'analytics.js'));
+
+// 6. Cloudflare Workers 정적 자산용 헤더(_headers)
+//    Vercel 의 vercel.json / Firebase 의 firebase.json 과 같은 보안·캐시 정책을 유지한다.
+//    (Workers Static Assets 가 dist/_headers 를 읽어 응답 헤더로 붙인다)
+fs.writeFileSync(path.join(DIST, '_headers'), [
+  '/*',
+  '  X-Content-Type-Options: nosniff',
+  '  Referrer-Policy: strict-origin-when-cross-origin',
+  '  X-Frame-Options: SAMEORIGIN',
+  '',
+  '/*.html',
+  '  Cache-Control: no-cache, no-store, must-revalidate',
+  '',
+  '/data/campgrounds.js',
+  '  Cache-Control: public, max-age=86400, s-maxage=604800',
+  '',
+  '/data/secret_gardens.json',
+  '  Cache-Control: public, max-age=300',
+  ''
+].join('\n'), 'utf8');
+
+console.log(`build-hosting: 사이트 기준 주소 ${SITE_URL}`);

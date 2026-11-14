@@ -15,3 +15,7 @@ data/guestbook_posts.json
 data/*.tmp
 # 로컬 개발 회원 저장 파일 (운영은 Firestore users/{uid})
 data/users.local.json
+# Cloudflare Workers (wrangler) 로컬 상태·시크릿
+.wrangler/
+.dev.vars
+.dev.vars.*

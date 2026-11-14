@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "camping-food-helper",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    "not_found_handling": "none"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // 앱 코드(lib/*)의 __dirname 계산은 로컬 파일 저장소용일 뿐 Workers 에서는 쓰이지 않는다.
+  // Workers 번들에는 import.meta.url 이 없어 fileURLToPath(undefined) 로 죽으므로 고정값을 준다.
+  "define": {
+    "import.meta.url": "\"file:///worker/index.js\""
+  },
+  "alias": {
+    "firebase-admin/app": "./worker/shims/firebase-app.js",
+    "firebase-admin/firestore": "./worker/shims/firebase-firestore.js",
+    "firebase-admin/storage": "./worker/shims/firebase-storage.js",
+    "@google/genai": "./worker/gemini-rest.js"
+  },
+  "vars": {
+    "SITE_URL": "https://camping-food-helper.luxrank.workers.dev"
+  }
+}
