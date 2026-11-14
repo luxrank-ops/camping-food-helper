@@ -5986,6 +5986,8 @@ body.auth-locked{padding-block:14px 40px}
       '<span>📅 <b>2박 3일+ 장박 주간 식단표</b> 자동 생성 & 장보기 취합</span>'+
       '<button class="btn sm primary" type="button" data-a="tab" data-v="plan" style="min-height:34px;padding:0 12px;font-size:12px">식단표 짜기 →</button>'+
     '</section>';
+    // 메인 화면(첫 화면) 퀵 픽 — 추천을 돌리기 전에도 눌러 볼 수 있는 쿠팡 파트너스 카테고리 칩 4종(공정위 문구 포함)
+    if(window.CampCoupang&&CampCoupang.quickPickHtml)h+=CampCoupang.quickPickHtml();
     if(list){
       h+='<section class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
         '<span>현재 식단: <b>'+esc(list.dish)+'</b> ('+list.people+'명)</span>'+
@@ -6024,6 +6026,10 @@ body.auth-locked{padding-block:14px 40px}
         h+=recommendationCard(r,i);
       });
       h+='<button class="btn wide" type="button" data-a="more" style="margin-bottom:14px">다른 요리로 추천받기</button>';
+      // 추천 결과 바로 아래 맥락형 파트너스 블록 — 방금 추천한 메뉴 이름으로 바로 장보기
+      if(window.CampCoupang&&CampCoupang.resultHtml){
+        h+=CampCoupang.resultHtml({dishes:activeRecs.map(function(r){return r&&r.name?String(r.name):''})});
+      }
     }
     h+='<form class="card" data-form="dish"><h2>만들 요리가 정해져 있다면</h2>'+
       '<div class="addrow" style="margin-top:0"><input id="dish-add" type="text" maxlength="40" placeholder="예: 부대찌개, 감바스, 토마호크" value="'+esc(ui.dishText)+'" aria-label="만들 요리 이름"><button class="btn primary" type="submit"'+off+'>새로 만들기</button>'+(list?'<button class="btn pop" type="button" data-a="mergedish"'+off+'>＋합산</button>':'')+'</div>'+

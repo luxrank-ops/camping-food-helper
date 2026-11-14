@@ -125,25 +125,46 @@
       if (v && /^[a-z0-9_-]{1,32}$/.test(v)) track('tab_view', { tab: v });
       return;
     }
+    if (a === 'cp-quick' || a === 'cp-pick') {
+      // 칩·장보기 버튼처럼 우리가 직접 링크를 건 파트너스 요소는 누른 자리까지 센다(iframe 안쪽은 못 읽는다)
+      track('affiliate_click', {
+        feature: 'coupang',
+        placement: a === 'cp-quick' ? 'home_quick_pick' : 'rec_result',
+        label: String(t.getAttribute('data-cat') || '').slice(0, 32)
+      });
+      return;
+    }
     var name = ACTION_EVENTS[a];
     if (name) track(name, { action: a });
   }
 
-  // 쿠팡 파트너스 장보기 블록 — iframe 안쪽 클릭은 다른 출처라 읽을 수 없다.
-  // 그래서 '블록이 화면에 붙었을 때'와 '사용자가 블록 안으로 들어갔을 때(포커스 이동)'만 센다.
-  // 실제 클릭·구매는 쿠팡 파트너스 대시보드의 수치로 확인한다.
-  var affiliateSeen = false;
+  // 쿠팡 파트너스 블록 — iframe 안쪽 클릭은 다른 출처라 읽을 수 없다.
+  // 그래서 '블록이 화면에 붙었을 때'와 '사용자가 블록 안으로 들어갔을 때(포커스 이동)',
+  // 그리고 우리가 직접 건 링크(카테고리 칩·장보기 버튼)의 클릭만 센다.
+  //   home_quick_pick : 메인 화면 퀵 픽(추천 돌리기 전)  /  rec_result : 추천 결과 직후
+  //   checklist       : 준비물 탭의 기존 장보기 블록
+  var AFFILIATE_BLOCKS = [
+    { sel: '.cp-quick', placement: 'home_quick_pick' },
+    { sel: '.cp-rec', placement: 'rec_result' },
+    { sel: '.cp-slot .cp-card', placement: 'checklist' }
+  ];
+  var affiliateSeen = {};
   function watchAffiliate() {
     function check() {
-      if (affiliateSeen) return;
-      var slot = document.querySelector('.cp-slot .cp-card, .cp-slot iframe');
-      if (!slot) return;
-      affiliateSeen = true;
-      track('affiliate_block_view', { feature: 'coupang' });
+      var missing = 0;
+      for (var i = 0; i < AFFILIATE_BLOCKS.length; i++) {
+        var b = AFFILIATE_BLOCKS[i];
+        if (affiliateSeen[b.placement]) continue;
+        if (!document.querySelector(b.sel)) { missing++; continue; }
+        affiliateSeen[b.placement] = true;
+        track('affiliate_block_view', { feature: 'coupang', placement: b.placement });
+      }
+      return missing;
     }
-    check();
-    if (affiliateSeen || typeof MutationObserver !== 'function') return;
-    new MutationObserver(check).observe(document.body, { childList: true, subtree: true });
+    var missing = check();
+    if (!missing || typeof MutationObserver !== 'function') return;
+    var obs = new MutationObserver(function () { if (!check()) obs.disconnect(); });
+    obs.observe(document.body, { childList: true, subtree: true });
   }
 
   function init() {
