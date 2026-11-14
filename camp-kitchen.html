@@ -1218,6 +1218,7 @@ body.auth-locked{padding-block:14px 40px}
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data/campgrounds.js"></script>
+<script src="coupang-partners.js"></script>
 <script>
 (function(){
   var STYLES=['오토캠핑','차박','백패킹','솔캠'];
@@ -6306,6 +6307,8 @@ body.auth-locked{padding-block:14px 40px}
       }).join('')+'</ul></section>';
     });
 
+    h+='<div class="cp-slot" data-cp-kind="list"></div>';
+
     if(list.steps&&list.steps.length)h+='<section class="card"><details open><summary>조리 순서 ('+list.steps.length+'단계)</summary><ol>'+list.steps.map(function(t){return '<li>'+esc(t)+'</li>'}).join('')+'</ol></details></section>';
     if(list.pairing||(list.tips&&list.tips.length)){
       h+='<section class="card"><h2>캠핑 꿀팁 · 주류 페어링</h2>'+
@@ -6549,6 +6552,7 @@ body.auth-locked{padding-block:14px 40px}
   function render(){
     document.querySelectorAll('#tabs button').forEach(function(b){b.setAttribute('aria-current',b.getAttribute('data-v')===ui.tab?'page':'false')});
     document.getElementById('app').innerHTML=head()+banner()+(ui.tab==='rec'?recView():(ui.tab==='plan'?planView():(ui.tab==='camp'?campView():(ui.tab==='garden'?gardenView():(ui.tab==='list'?listView():(ui.tab==='guestbook'?guestbookView():meView()))))))+campDetailModalHtml()+planSwapModalHtml()+gardenModalsHtml()+lightboxModalHtml();
+    if(window.CampCoupang)CampCoupang.mountAll(document.getElementById('app'));
     if(ui.wxOpen)updateSuggest();
     if(ui.tab==='garden'){
       setTimeout(initOrUpdateGardenMap, 60);

@@ -23,6 +23,12 @@ fs.mkdirSync(DIST_DATA, { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST, 'index.html'));
 fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST, 'camp-kitchen.html'));
 
+// 2-1. 쿠팡 파트너스 장보기 블록 (index.html 이 불러 쓰는 클라이언트 자산)
+const coupangSrc = path.join(ROOT, 'coupang-partners.js');
+if (fs.existsSync(coupangSrc)) {
+  fs.copyFileSync(coupangSrc, path.join(DIST, 'coupang-partners.js'));
+}
+
 // 3. 캠핑장 데이터 복사
 const campgroundsSrc = path.join(ROOT, 'data', 'campgrounds.js');
 if (fs.existsSync(campgroundsSrc)) {
