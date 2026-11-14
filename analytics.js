@@ -129,11 +129,36 @@
     if (name) track(name, { action: a });
   }
 
+  // 쿠팡 파트너스 장보기 블록 — iframe 안쪽 클릭은 다른 출처라 읽을 수 없다.
+  // 그래서 '블록이 화면에 붙었을 때'와 '사용자가 블록 안으로 들어갔을 때(포커스 이동)'만 센다.
+  // 실제 클릭·구매는 쿠팡 파트너스 대시보드의 수치로 확인한다.
+  var affiliateSeen = false;
+  function watchAffiliate() {
+    function check() {
+      if (affiliateSeen) return;
+      var slot = document.querySelector('.cp-slot .cp-card, .cp-slot iframe');
+      if (!slot) return;
+      affiliateSeen = true;
+      track('affiliate_block_view', { feature: 'coupang' });
+    }
+    check();
+    if (affiliateSeen || typeof MutationObserver !== 'function') return;
+    new MutationObserver(check).observe(document.body, { childList: true, subtree: true });
+  }
+
   function init() {
     if (readConsent() === true) loadGA();
     document.addEventListener('click', onClick, true);
+    // 쿠팡 위젯을 누르면 포커스가 iframe 으로 옮겨간다 — 그 순간을 '관심'으로 기록한다
+    document.addEventListener('focusin', function (e) {
+      var t = e.target;
+      if (t && t.tagName === 'IFRAME' && /cp-widget|cp-banner/.test(t.className || '')) {
+        track('affiliate_widget_focus', { feature: 'coupang' });
+      }
+    }, true);
     window.addEventListener('hashchange', trackPage);
     trackPage();
+    watchAffiliate();
     if (readConsent() === null) setTimeout(showBanner, 1200);   // 첫 화면을 가리지 않도록 잠깐 뒤에
   }
 
