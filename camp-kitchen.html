@@ -120,6 +120,12 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .rec-facts{display:flex;flex-wrap:wrap;gap:6px 10px;margin:0 0 10px}
 .rec-facts .fact{font-size:13px;color:var(--muted);background:var(--bg);border:1px solid var(--cream-line);border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums}
 .rec-facts .fact b{color:var(--fg);font-weight:900}
+/* 추천 카드 사진 자리 — 사진은 '요청 시에만' 생성하므로 기본은 버튼이 있는 자리표시 카드 */
+.rec-img-ph{width:100%;min-height:132px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 14px;text-align:center;color:var(--brand-fg)}
+.rec-img-emoji{font-size:20px;line-height:1}
+.rec-img-name{font-family:var(--font-display);font-size:18px;line-height:1.25;word-break:keep-all;color:var(--brand-fg)}
+.rec-img-btn{background:#fff;color:var(--brand);border:0;font-weight:900;font-size:12.5px;min-height:38px;padding:0 14px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.rec-img-note{font-size:12px;font-weight:700;line-height:1.35;opacity:.95;word-break:keep-all}
 .why-lab{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.04em;background:var(--pop);color:var(--pop-fg);border-radius:8px;padding:2px 8px;margin-right:6px;vertical-align:1px}
 .rec-ings{background:var(--bg);border-radius:14px;padding:10px 12px;margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.5}
 .rec-ings b{color:var(--fg);font-weight:700}
@@ -967,6 +973,16 @@ input,select,textarea{ font-size:16px !important; }
   }
 }
 
+/* ── 캠핑장·비밀의 정원 상세 시트 — 하단 탭바를 덮지 않게 위로 띄운다 ──
+   시트가 화면 끝까지 차면 하단 탭바가 가려져 다른 화면으로 넘어갈 수 없었다.
+   이제 시트는 탭바 바로 위에서 끝나고, 시트가 열려 있는 동안에도 탭바를 그대로 쓸 수 있다. */
+@media (max-width:600px){
+  .camp-modal-backdrop.camp-sheet{ padding-bottom:calc(74px + env(safe-area-inset-bottom,0px)); }
+  .camp-modal-backdrop.camp-sheet .camp-modal-content{ max-height:min(78dvh, 78svh); }
+  body:has(.camp-modal-backdrop.camp-sheet) .tabs{ z-index:95; }
+  body:has(.camp-modal-backdrop.camp-sheet) .visit-fab{ display:none; }
+}
+
 /* ── 가로 스크롤 카드·필터 — 가장자리 페이드 힌트 (스크롤 가능 알림) ── */
 @media (max-width:600px){
   .camp-scroll-row{
@@ -1139,11 +1155,11 @@ input,select,textarea{accent-color:var(--brand);}
 <body>
 <div class="app" id="app"></div>
 <!-- 방문자 카운터 플로팅 위젯: 오늘 방문자 · 누적 방문자 (화면을 다시 그려도 사라지지 않게 #app 밖에 둔다) -->
-<aside class="visit-fab" id="visit-fab" data-open="true" aria-label="방문자 통계">
+<aside class="visit-fab" id="visit-fab" data-open="false" aria-label="방문자 통계">
   <div class="visit-fab-card">
     <div class="visit-fab-head">
       <div class="visit-fab-grip" id="visit-fab-grip" title="잡아서 위치 옮기기"><span class="visit-dots" aria-hidden="true">⠿</span><span class="visit-fab-title">👣 방문자<span class="visit-badge" id="visit-badge">전체</span></span></div>
-      <button class="visit-fab-toggle" id="visit-fab-toggle" type="button" data-a="visit-fab-toggle" aria-expanded="true" aria-controls="visit-fab-body" aria-label="방문자 통계 접기">−</button>
+      <button class="visit-fab-toggle" id="visit-fab-toggle" type="button" data-a="visit-fab-toggle" aria-expanded="false" aria-controls="visit-fab-body" aria-label="방문자 통계 펼치기">+</button>
     </div>
     <div class="visit-fab-body" id="visit-fab-body">
       <div class="visit-rows">
@@ -1327,7 +1343,7 @@ input,select,textarea{accent-color:var(--brand);}
   var logs=store.get('cc.logs',[]);
 
   var ui={
-    tab:'rec',guestbookPosts:[],guestbookLoaded:false,guestbookBusy:false,guestbookError:'',guestbookDeleteId:'',guestbookNickname:store.get('cc.guestbookNickname',''),guestbookMessage:'',guestbookPassword:'',guestbookDeletePassword:'',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
+    tab:'rec',guestbookPosts:[],guestbookLoaded:false,guestbookBusy:false,guestbookBusyKind:'',guestbookError:'',guestbookDeleteId:'',guestbookNickname:store.get('cc.guestbookNickname',''),guestbookMessage:'',guestbookPassword:'',guestbookDeletePassword:'',style:'오토캠핑',people:profile.people||2,meal:'저녁',time:'30분',mood:'든든하게',
     recs:[],seen:[],busy:null,busyName:'',err:'',confirmClear:false,aiOk:null,dishText:'',
     filter:'all',cookMode:false,cookStep:0,timerSec:180,timerRunning:false,wakeLockOn:false,
     ttsSpeaking:false,ttsAuto:store.get('cc.ttsAuto',false),
@@ -1697,37 +1713,75 @@ input,select,textarea{accent-color:var(--brand);}
     });
   }
 
-  async function generateRecipeImage(dishName) {
-    // 주의: 브라우저에는 process.env가 없다. 키 유무는 서버가 판단해서
-    // 503으로 알려주므로, 여기서는 그냥 요청하고 상태만 확인한다.
-    try {
-      var response = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: 'High-quality photo of Korean camping food: ' + dishName + ', delicious, appetizing, professional food photography, outdoor camping setting, natural lighting, 4K' })
-      });
-      if(!response.ok) {
-        console.warn('Image generation unavailable:', response.status);
-        return null;
-      }
-      var data = await response.json();
-      return (data && data.imageUrl) || null;
-    } catch(e) {
-      console.error('Image generation failed:', e);
-    }
-    return null;
+  /* Gemini 이미지 생성은 하루 할당량(Quota)이 정해져 있으므로 추천 카드가 뜰 때마다
+     자동으로 호출하지 않는다. 카드의 '요리 사진 보기' 버튼을 누른 사람에게만 한 번 만들고,
+     같은 요리는 다시 만들지 않도록 결과를 이름별로 기억해 둔다(카드가 다시 그려져도 유지). */
+  var recipeImageState = {};
+  function recipeImgState(name){
+    var key=str(name);
+    if(!recipeImageState[key])recipeImageState[key]={url:'',busy:false,err:''};
+    return recipeImageState[key];
   }
 
-  var recipeImagesCache = {};
-  async function getRecipeImageUrl(dishName) {
-    if(recipeImagesCache[dishName]) {
-      return recipeImagesCache[dishName];
+  async function generateRecipeImage(dishName) {
+    // 주의: 브라우저에는 process.env가 없다. 키 유무는 서버가 판단해서
+    // 503으로 알려주므로, 여기서는 그냥 요청하고 응답 상태만 확인한다.
+    try {
+      // 함수가 응답을 주지 않으면 버튼이 '만드는 중'에 머물지 않도록 60초 뒤 스스로 끊는다.
+      var ac=new AbortController();
+      var toTimer=setTimeout(function(){ac.abort()},60000);
+      var response;
+      try{
+        response = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: 'High-quality photo of Korean camping food: ' + dishName + ', delicious, appetizing, professional food photography, outdoor camping setting, natural lighting, 4K' }),
+          signal: ac.signal
+        });
+      }finally{clearTimeout(toTimer)}
+      var data = null;
+      try { data = await response.json(); } catch (e) { data = null; }
+      if (!response.ok) {
+        console.warn('Image generation unavailable:', response.status, data && data.code);
+        return { url:null, code:(data && data.code) || ('http_' + response.status) };
+      }
+      return { url:(data && data.imageUrl) || null, code:(data && data.imageUrl) ? '' : 'empty' };
+    } catch(e) {
+      console.error('Image generation failed:', e);
+      if(e && e.name==='AbortError')return { url:null, code:'timeout' };
+      return { url:null, code:'network' };
     }
-    var url = await generateRecipeImage(dishName);
-    if(url) {
-      recipeImagesCache[dishName] = url;
+  }
+
+  // 카드의 '요리 사진 보기'를 눌렀을 때만 실행된다.
+  async function requestRecipeImage(i){
+    var rec=(ui.CurrentRenderedRecs || ui.recs || [])[i];
+    if(!rec)return;
+    var st=recipeImgState(rec.name);
+    if(st.busy)return;
+    if(st.url){render();return}
+    st.busy=true;st.err='';render();
+    var result=await generateRecipeImage(rec.name);
+    st.busy=false;
+    if(result && result.url){
+      st.url=result.url;
+      showNotice('🍳 「'+rec.name+'」 사진을 만들었어요.');
+    }else{
+      var code=(result && result.code) || '';
+      if(code==='quota_exceeded'){
+        st.err='오늘 사진 생성 한도를 다 썼어요. 내일 다시 시도해 주세요.';
+        showNotice('📷 Gemini 사진 생성 일일 할당량이 다 찼어요. 사진 없이도 메뉴와 준비물은 그대로 쓸 수 있어요.');
+      }else if(code==='capability_disabled'){
+        st.err='이 화면에서는 사진 생성을 쓸 수 없어요.';
+      }else if(code==='network'){
+        st.err='연결이 불안정해 사진을 못 만들었어요. 한 번 더 눌러 주세요.';
+      }else if(code==='timeout'){
+        st.err='사진 생성이 너무 오래 걸려 멈췄어요. 잠시 뒤 다시 눌러 주세요.';
+      }else{
+        st.err='사진을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.';
+      }
     }
-    return url;
+    render();
   }
 
   function mergePrepLists(cur,incoming){
@@ -2808,7 +2862,7 @@ input,select,textarea{accent-color:var(--brand);}
     var themes=getCampThemes(c);
     var w=ui.campDetailWx;
 
-    var h='<div class="camp-modal-backdrop" data-a="camp-modal-close">'+
+    var h='<div class="camp-modal-backdrop camp-sheet" data-a="camp-modal-close">'+
       '<div class="camp-modal-content">'+
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px">'+
           '<div>'+
@@ -5205,7 +5259,7 @@ input,select,textarea{accent-color:var(--brand);}
       var catInfo = GARDEN_CATEGORIES[spot.category] || {label:'노지', icon:'🏞️'};
       var dateStr = spot.createdAt ? spot.createdAt.slice(0,10) : '';
 
-      h += '<div class="camp-modal-backdrop" data-a="garden-detail-close">'+
+      h += '<div class="camp-modal-backdrop camp-sheet" data-a="garden-detail-close">'+
         '<div class="camp-modal-content" style="max-width:540px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0">'+
           // 사진 헤더
           '<div style="position:relative;width:100%;height:220px;background:#000;cursor:zoom-in" data-a="open-lightbox" data-img="'+esc(spot.photoUrl||GARDEN_PHOTO_PRESETS[0].url)+'" data-title="'+esc(spot.name)+'" title="사진 크게 보기">'+
@@ -5518,11 +5572,19 @@ input,select,textarea{accent-color:var(--brand);}
         '<button class="btn pop" type="button" data-a="merge" data-i="'+i+'">＋ 현재 목록에 합산</button>'+
       '</div>';
     }
+    var img=recipeImgState(r.name);
     var imageHtml = '';
-    if(r.imageUrl) {
-      imageHtml = '<img src="'+esc(r.imageUrl)+'" alt="'+esc(r.name)+'" style="width:100%;border-radius:14px;margin-bottom:12px;object-fit:cover;aspect-ratio:16/9;">';
+    if(img.url) {
+      imageHtml = '<img src="'+esc(img.url)+'" alt="'+esc(r.name)+' 요리 사진" loading="lazy" style="width:100%;border-radius:14px;margin-bottom:12px;object-fit:cover;aspect-ratio:16/9;">';
     } else {
-      imageHtml = '<div style="width:100%;height:140px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--brand-fg);font-family:var(--font-display);font-size:24px;">🍳 '+esc(r.name)+(ui.imageLoading&&!r.imageFailed?'<span style="font-size:13px;margin-left:8px">📷 사진 만드는 중…</span>':'')+'</div>';
+      imageHtml = '<div class="rec-img-ph">'+
+        '<span class="rec-img-emoji" aria-hidden="true">🍳</span>'+
+        '<span class="rec-img-name">'+esc(r.name)+'</span>'+
+        (img.busy
+          ? '<span class="rec-img-note" role="status">📷 사진 만드는 중…</span>'
+          : '<button class="btn sm rec-img-btn" type="button" data-a="recipe-img" data-i="'+i+'"'+(ui.busy?' disabled':'')+'>📷 요리 사진 보기</button>')+
+        (img.err&&!img.busy?'<span class="rec-img-note">'+esc(img.err)+'</span>':'')+
+      '</div>';
     }
     return '<article class="card rec">'+
       imageHtml+
@@ -5588,31 +5650,7 @@ input,select,textarea{accent-color:var(--brand);}
     h+=locCard();
     h+=campIntroCard();
     h+=wxCard();
-    
-    if(ui.recs.length && !ui.imageLoading && ui.recs.some(function(r){return !r.imageUrl && !r.imageFailed})) {
-      ui.imageLoading = true;
-      setTimeout(async function() {
-        for(var i = 0; i < ui.recs.length; i++) {
-          if(!ui.recs[i].imageUrl && !ui.recs[i].imageFailed) {
-            try {
-              var url = await getRecipeImageUrl(ui.recs[i].name);
-              if(url) {
-                ui.recs[i].imageUrl = url;
-              } else {
-                // 실패를 표시해 두지 않으면 render() 때마다 무한 재시도한다.
-                ui.recs[i].imageFailed = true;
-              }
-            } catch(e) {
-              ui.recs[i].imageFailed = true;
-              console.error('Failed to load image for recipe:', e);
-            }
-          }
-        }
-        ui.imageLoading = false;
-        render();
-      }, 100);
-    }
-    
+    // 요리 사진은 카드의 '📷 요리 사진 보기'를 누를 때만 만든다(자동 호출 없음 → Gemini 할당량 절약).
     var coolerItems = ['삼겹살', '김치', '라면', '햇반', '소시지', '계란', '치즈', '참치캔', '마늘/양파', '대파', '감자', '두부'];
     var coolerSelectedCount = (ui.coolerSelected || []).length;
     var matchedCoolerDishes = [];
@@ -6012,7 +6050,7 @@ input,select,textarea{accent-color:var(--brand);}
       '<p class="hint">캠핑 이야기와 인사를 남겨주세요. 삭제 비밀번호는 글을 지울 때만 사용하며 공개되지 않아요.</p>'+
       '<form data-form="guestbook-create" class="guestbook-form"><div class="guestbook-fields"><label class="guestbook-field">닉네임<input name="nickname" maxlength="16" required placeholder="예: 숲속의감자" value="'+esc(ui.guestbookNickname)+'"></label><label class="guestbook-field">삭제 비밀번호<input name="password" type="password" minlength="4" maxlength="64" required autocomplete="new-password" placeholder="4자 이상"></label></div>'+
       '<label class="guestbook-field">캠핑 한마디<textarea name="message" maxlength="300" required rows="3" placeholder="이번 캠핑에서 가장 좋았던 순간은…">'+esc(ui.guestbookMessage)+'</textarea><span class="guestbook-count">300자 이내 · 따뜻한 인사를 나눠요</span></label>'+
-      '<button class="btn primary wide" type="submit" '+(ui.guestbookBusy?'disabled':'')+'>'+(ui.guestbookBusy?'남기는 중…':'🌿 방명록 남기기')+'</button></form></section>';
+      '<button class="btn primary wide" type="submit" '+(ui.guestbookBusy?'disabled':'')+'>'+((ui.guestbookBusy&&ui.guestbookBusyKind==='create')?'남기는 중…':'🌿 방명록 남기기')+'</button></form></section>';
     h+='<div class="guestbook-list-head"><div><p class="guestbook-eyebrow">NOTES FROM CAMPERS</p><h2>캠퍼들의 이야기 <span>'+posts.length+'</span></h2></div><button type="button" class="btn sm" data-a="guestbook-refresh" '+(ui.guestbookBusy?'disabled':'')+'>↻ 새로고침</button></div>';
     if(ui.guestbookError)h+='<div class="err" role="alert">'+esc(ui.guestbookError)+' <button class="link" type="button" data-a="guestbook-refresh">다시 시도</button></div>';
     if(ui.guestbookBusy&&!ui.guestbookLoaded)h+='<section class="card guestbook-empty"><span class="guestbook-empty-icon">🏕️</span><h3>캠퍼들의 이야기를 불러오는 중</h3><p>잠시만 기다려 주세요.</p></section>';
@@ -6020,7 +6058,7 @@ input,select,textarea{accent-color:var(--brand);}
     posts.forEach(function(post,index){
       var date=new Date(post.createdAt);var dateText=Number.isNaN(date.getTime())?'방금 전':date.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
       h+='<article class="card guestbook-post"><div class="guestbook-post-top"><div class="guestbook-avatar" aria-hidden="true">'+esc((post.nickname||'?').slice(0,1))+'</div><div class="guestbook-author"><strong>'+esc(post.nickname)+'</strong><time datetime="'+esc(post.createdAt)+'">'+esc(dateText)+'</time></div><span class="guestbook-index">NOTE '+String(posts.length-index).padStart(2,'0')+'</span></div><p class="guestbook-message">'+esc(post.message)+'</p>';
-      if(ui.guestbookDeleteId===post.id){h+='<form data-form="guestbook-delete" data-id="'+esc(post.id)+'" class="guestbook-delete-form"><label class="guestbook-field">삭제 비밀번호<input name="password" type="password" required autocomplete="current-password" placeholder="작성할 때 입력한 비밀번호"></label><div class="guestbook-delete-actions"><button class="btn sm" type="button" data-a="guestbook-delete-cancel">취소</button><button class="btn sm guestbook-delete-confirm" type="submit">삭제 확인</button></div></form>'}
+      if(ui.guestbookDeleteId===post.id){h+='<form data-form="guestbook-delete" data-id="'+esc(post.id)+'" class="guestbook-delete-form"><label class="guestbook-field">삭제 비밀번호<input name="password" type="password" required autocomplete="current-password" placeholder="작성할 때 입력한 비밀번호"></label><div class="guestbook-delete-actions"><button class="btn sm" type="button" data-a="guestbook-delete-cancel" '+(ui.guestbookBusy?'disabled':'')+'>취소</button><button class="btn sm guestbook-delete-confirm" type="submit" '+(ui.guestbookBusy?'disabled':'')+'>'+((ui.guestbookBusy&&ui.guestbookBusyKind==='delete')?'삭제 중…':'삭제 확인')+'</button></div></form>'}
       else h+='<button class="guestbook-delete-link" type="button" data-a="guestbook-delete-open" data-id="'+esc(post.id)+'" aria-label="'+esc(post.nickname)+'님의 방명록 삭제">삭제</button>';
       h+='</article>';
     });
@@ -6029,25 +6067,25 @@ input,select,textarea{accent-color:var(--brand);}
   }
 
   async function loadGuestbook(){
-    ui.guestbookBusy=true;ui.guestbookError='';render();
+    ui.guestbookBusy=true;ui.guestbookBusyKind='load';ui.guestbookError='';render();
     try{var response=await fetch('/api/guestbook',{headers:{Accept:'application/json'}});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'방명록을 불러오지 못했습니다.');ui.guestbookPosts=Array.isArray(data.posts)?data.posts:[];ui.guestbookLoaded=true;}
     catch(error){ui.guestbookError=error.message||'연결이 불안정해요. 다시 시도해주세요.';}
-    finally{ui.guestbookBusy=false;render();}
+    finally{ui.guestbookBusy=false;ui.guestbookBusyKind='';render();}
   }
 
   async function submitGuestbook(form){
     var body={nickname:str(form.elements.nickname.value),message:str(form.elements.message.value),password:form.elements.password.value};
-    ui.guestbookNickname=body.nickname;ui.guestbookMessage=body.message;store.set('cc.guestbookNickname',body.nickname);ui.guestbookBusy=true;ui.guestbookError='';render();
+    ui.guestbookNickname=body.nickname;ui.guestbookMessage=body.message;store.set('cc.guestbookNickname',body.nickname);ui.guestbookBusy=true;ui.guestbookBusyKind='create';ui.guestbookError='';render();
     try{var response=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 저장하지 못했습니다.');ui.guestbookPosts.unshift(data.post);ui.guestbookMessage='';ui.guestbookPassword='';showNotice('방명록을 남겼어요. 캠핑의 좋은 기억을 함께 나눠요!');}
     catch(error){ui.guestbookError=error.message||'글을 저장하지 못했습니다.';}
-    finally{ui.guestbookBusy=false;render();}
+    finally{ui.guestbookBusy=false;ui.guestbookBusyKind='';render();}
   }
 
   async function deleteGuestbook(form){
-    var id=form.getAttribute('data-id');var password=form.elements.password.value;ui.guestbookBusy=true;render();
+    var id=form.getAttribute('data-id');var password=form.elements.password.value;ui.guestbookBusy=true;ui.guestbookBusyKind='delete';render();
     try{var response=await fetch('/api/guestbook/'+encodeURIComponent(id),{method:'DELETE',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({password:password})});var data=await response.json();if(!response.ok||!data.success)throw new Error(data.error||'글을 삭제하지 못했습니다.');ui.guestbookPosts=ui.guestbookPosts.filter(function(post){return post.id!==id});ui.guestbookDeleteId='';showNotice('방명록을 삭제했어요.');}
     catch(error){ui.guestbookError=error.message||'글을 삭제하지 못했습니다.';}
-    finally{ui.guestbookBusy=false;render();}
+    finally{ui.guestbookBusy=false;ui.guestbookBusyKind='';render();}
   }
 
   function lightboxModalHtml(){
@@ -6166,9 +6204,13 @@ input,select,textarea{accent-color:var(--brand);}
      - 위젯은 #app 밖에 있어서 render()로 화면을 다시 그려도 상태가 유지된다.
      ============================================================ */
   var VISIT_API='/api/visitor-stats';
+  // 모바일(좁은 화면)에서는 본문을 가리지 않도록 기본 '접힘'으로 시작한다.
+  // 사용자가 직접 펼치거나 접어 둔 값이 저장돼 있으면 그 값을 따른다.
+  var visitSavedOpen=store.get('cc.visitFabOpen',null);
+  var visitDefaultOpen=(window.innerWidth||0)>640;
   var visit={
     today:0,total:0,mode:'loading',countedToday:false,loggedDate:'',
-    open:store.get('cc.visitFabOpen',true)!==false,
+    open:(visitSavedOpen===null||visitSavedOpen===undefined)?visitDefaultOpen:(visitSavedOpen!==false),
     pos:store.get('cc.visitFabPos',null),
     rollTimer:null
   };
@@ -6434,6 +6476,8 @@ input,select,textarea{accent-color:var(--brand);}
     if(a==='tab'){
       ui.tab=v;
       ui.confirmClear=false;
+      // 상세 시트를 띄운 채 하단 탭으로 이동하면 시트는 닫는다(탭바가 시트 위에 있어 누를 수 있다).
+      ui.campDetail=null;ui.campDetailWx=null;ui.gardenDetailModal=null;ui.lightbox=null;
       if(v==='garden'&&!ui.gardenLoaded)loadSecretGardens(false);
       window.scrollTo(0,0);
       render();
@@ -6683,6 +6727,7 @@ input,select,textarea{accent-color:var(--brand);}
     }
     if(a==='recs'){getRecs(false);return}
     if(a==='more'){getRecs(true);return}
+    if(a==='recipe-img'){requestRecipeImage(Number(b.getAttribute('data-i')));return}
     if(a==='pick'||a==='merge'){
       var pool=(ui.CurrentRenderedRecs&&ui.CurrentRenderedRecs.length)?ui.CurrentRenderedRecs:ui.recs;
       pickDish(pool[Number(b.getAttribute('data-i'))],a==='merge');
