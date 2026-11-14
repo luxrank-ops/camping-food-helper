@@ -1,5 +1,5 @@
 import { createAuthApi } from '../../lib/auth-api.js';
-import { catchAllSegments } from '../../lib/route-segments.js';
+import { requestSegments } from '../../lib/route-segments.js';
 
 const authApi = createAuthApi();
 
@@ -14,5 +14,5 @@ const authApi = createAuthApi();
 //   DELETE /api/auth/account   (Bearer)  회원 탈퇴
 //   GET    /api/auth/plans                                   → 무료·프로 요금제(공개)
 export default function handler(req, res) {
-  return authApi(req, res, catchAllSegments(req.query?.route));
+  return authApi(req, res, requestSegments(req, { prefix: '/api/auth', queryKey: 'route' }));
 }

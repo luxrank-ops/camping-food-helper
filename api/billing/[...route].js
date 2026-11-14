@@ -1,5 +1,5 @@
 import { createBillingApi } from '../../lib/billing-api.js';
-import { catchAllSegments } from '../../lib/route-segments.js';
+import { requestSegments } from '../../lib/route-segments.js';
 
 const billingApi = createBillingApi();
 
@@ -9,5 +9,5 @@ const billingApi = createBillingApi();
 //   POST /api/billing/portal    (Bearer) 구독 관리
 //   POST /api/billing/webhook   결제 사업자 콜백(서명 검증)
 export default function handler(req, res) {
-  return billingApi(req, res, catchAllSegments(req.query?.route));
+  return billingApi(req, res, requestSegments(req, { prefix: '/api/billing', queryKey: 'route' }));
 }

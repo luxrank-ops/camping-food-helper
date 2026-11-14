@@ -33,7 +33,7 @@ import {
   PLANS
 } from '../lib/plans.js';
 import { CHECKS, probe } from './uptime-check.mjs';
-import { catchAllSegments, secretGardenSegments } from '../lib/route-segments.js';
+import { catchAllSegments, pathSegments, requestSegments, secretGardenSegments } from '../lib/route-segments.js';
 
 const ENV = { AUTH_SECRET: 'test-secret-key-for-camping-food-helper' };
 const cn = (count, text) => Array.from({ length: count }, () => text);
@@ -425,5 +425,16 @@ test('캐치올 경로: Vercel 함수 하나로 여러 경로를 처리해도 se
   assert.deepEqual(secretGardenSegments(['sg_1001', 'like']), ['sg_1001', 'like']);
   assert.deepEqual(secretGardenSegments(['verify']), ['verify']);
   assert.deepEqual(secretGardenSegments([]), []);
+});
+
+test('캐치올 경로: 쿼리 파라미터가 없어도 요청 URL에서 경로를 얻는다', () => {
+  // Vercel이 req.query.route 를 채우지 않는 경우에도 동작해야 한다.
+  assert.deepEqual(requestSegments({ url: '/api/auth/signup', query: {} }, { prefix: '/api/auth', queryKey: 'route' }), ['signup']);
+  assert.deepEqual(requestSegments({ url: '/api/auth/me?x=1' }, { prefix: '/api/auth', queryKey: 'route' }), ['me']);
+  assert.deepEqual(requestSegments({ url: '/api/billing/status', query: {} }, { prefix: '/api/billing', queryKey: 'route' }), ['status']);
+  assert.deepEqual(pathSegments('/api/secret-gardens/sg_1001/like', '/api/secret-gardens'), ['sg_1001', 'like']);
+  // 쿼리 파라미터가 있으면 그 값을 우선한다(런타임이 디코딩해 준 값).
+  assert.deepEqual(requestSegments({ url: '/api/auth/login', query: { route: ['login'] } }, { prefix: '/api/auth', queryKey: 'route' }), ['login']);
+  assert.deepEqual(requestSegments({ url: '/api/auth', query: {} }, { prefix: '/api/auth', queryKey: 'route' }), []);
 });
 

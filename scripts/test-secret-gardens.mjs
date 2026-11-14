@@ -123,7 +123,8 @@ test('Vercel에는 비밀의 정원 CRUD 경로가 캐치올 API 함수로 등�
 
   for(const route of [rootRoute,catchAllRoute])assert.match(route,/createSecretGardensApi\(\)/);
   assert.match(rootRoute,/secretGardensApi\(req, res, \[\]\)/);
-  assert.match(catchAllRoute,/secretGardenSegments\(req\.query\?\.path\)/);
+  assert.match(catchAllRoute,/requestSegments\(req, \{ prefix: '\/api\/secret-gardens'/);
+  assert.match(catchAllRoute,/secretGardenSegments\(parts\)/);
   assert.match(catchAllRoute,/withUserAuth/, '비밀의 정원 API는 로그인이 필요하다');
   assert.match(segmentsLib,/parts\[0\] === 'verify'/);
   assert.match(segmentsLib,/'like'/);
