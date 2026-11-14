@@ -55,6 +55,12 @@ if (fs.existsSync(coupangSrc)) {
   fs.copyFileSync(coupangSrc, path.join(DIST, 'coupang-partners.js'));
 }
 
+// 2-2. 앱 아이콘·웹 앱 매니페스트 — 파비콘·홈 화면 추가 아이콘은 dist/ 루트에서 서빙된다.
+for (const file of ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.png', 'favicon.ico', 'manifest.webmanifest']) {
+  const from = path.join(ROOT, file);
+  if (fs.existsSync(from)) fs.copyFileSync(from, path.join(DIST, file));
+}
+
 // 3. 캠핑장 데이터 복사
 const campgroundsSrc = path.join(ROOT, 'data', 'campgrounds.js');
 if (fs.existsSync(campgroundsSrc)) {

@@ -194,7 +194,13 @@ app.get('/data/secret_gardens.json', (req, res) => {
 
 // 정적 파일은 허용 목록만 내려준다.
 // 예전에는 저장소 루트 전체가 공개되어 server.js, lib/*.js 같은 서버 소스도 열람할 수 있었다.
-const PUBLIC_FILES = new Set(['/', '/index.html', '/camp-kitchen.html', '/data/campgrounds.js']);
+const PUBLIC_FILES = new Set([
+  '/', '/index.html', '/camp-kitchen.html', '/data/campgrounds.js',
+  // 첫 화면이 직접 부르는 클라이언트 자산과 앱 아이콘(파비콘·PWA)
+  '/analytics.js', '/coupang-partners.js',
+  '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/favicon.png', '/favicon.ico',
+  '/manifest.webmanifest'
+]);
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
   const requestPath = req.path;

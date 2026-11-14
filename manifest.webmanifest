@@ -1,0 +1,16 @@
+{
+  "name": "캠핑 푸드 헬퍼 — 오늘 캠핑, 뭐 해먹지?",
+  "short_name": "캠핑푸드",
+  "description": "장비와 인원만 고르면 메뉴 추천부터 준비물 체크리스트까지 정리해 주는 캠핑 요리 도우미",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0E2820",
+  "theme_color": "#0E2820",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
