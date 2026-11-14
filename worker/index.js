@@ -226,8 +226,12 @@ export default {
         response = jsonError(500, 'server_error', '요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.');
       }
     } else if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-      // run_worker_first 가 /api/* 만이라 보통은 여기 오지 않는다(정적 자산이 직접 응답).
-      response = await env.ASSETS.fetch(request);
+      // 정적 자산은 html_handling:"none" 으로 확장자·index 치환 없이 그대로 서빙한다.
+      // (google 소유확인 .html 처럼 파일 이름 그대로 내려가야 하는 경우 307 리다이렉트를 막기 위해)
+      // 그래서 루트 "/" 만 index.html 로 직접 넘긴다.
+      const assetUrl = url.pathname === '/' ? new URL('/index.html', url) : url;
+      const assetRequest = assetUrl === url ? request : new Request(assetUrl, request);
+      response = await env.ASSETS.fetch(assetRequest);
     } else {
       response = jsonError(404, 'not_found', '찾을 수 없는 경로입니다.');
     }
