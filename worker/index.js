@@ -19,6 +19,7 @@ import guestbookItemHandler from '../api/guestbook/[id].js';
 import secretGardensHandler from '../api/secret-gardens.js';
 import secretGardensPathHandler from '../api/secret-gardens/[...path].js';
 import visitorStatsHandler from '../api/visitor-stats.js';
+import { serveUpload, setUploadStore } from '../lib/upload-store.js';
 
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -216,11 +217,15 @@ export default {
   async fetch(request, env = {}, ctx = {}) {
     const url = new URL(request.url);
     syncProcessEnv(env);
+    // 업로드 사진 저장소 바인딩(R2 우선, 없으면 KV). 요청마다 갱신해 다른 요청의 바인딩이 남지 않게 한다.
+    setUploadStore(env.UPLOADS_BUCKET || env.UPLOADS_KV || null);
 
     let response;
     if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
       try {
-        response = await routeApi(request, url);
+        response = url.pathname.startsWith('/api/uploads/')
+          ? await serveUpload(request, url)
+          : await routeApi(request, url);
       } catch (error) {
         console.error('[Worker] unhandled API error:', error?.stack || error?.message || error);
         response = jsonError(500, 'server_error', '요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.');

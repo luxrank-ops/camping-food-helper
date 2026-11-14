@@ -113,6 +113,144 @@ test('worker: /api 라우팅과 어댑터', async (t) => {
   });
 });
 
+// ── 업로드 사진 저장소(R2 바인딩) ─────────────────────────────────────────
+// 워커는 env.UPLOADS_BUCKET(R2) 또는 env.UPLOADS_KV 바인딩이 있으면 사진을 그쪽에 두고
+// GET /api/uploads/<key> 로 내려 준다. 실제 R2 없이 API 모양만 같은 가짜 버킷으로 검증한다.
+const PNG_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+const PNG_BYTES = Buffer.from(PNG_DATA_URL.split(',')[1], 'base64');
+
+function createFakeR2() {
+  const objects = new Map();
+  return {
+    objects,
+    async createMultipartUpload() { throw new Error('not used in tests'); },
+    async head(key) {
+      const stored = objects.get(key);
+      return stored ? { key, size: stored.bytes.byteLength } : null;
+    },
+    async put(key, value, options = {}) {
+      const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+      objects.set(key, {
+        bytes,
+        contentType: options?.httpMetadata?.contentType || 'application/octet-stream',
+        cacheControl: options?.httpMetadata?.cacheControl || ''
+      });
+      return { key };
+    },
+    async get(key) {
+      const stored = objects.get(key);
+      if (!stored) return null;
+      return {
+        body: new Blob([stored.bytes]).stream(),
+        size: stored.bytes.byteLength,
+        httpMetadata: { contentType: stored.contentType, cacheControl: stored.cacheControl }
+      };
+    },
+    async delete(key) {
+      objects.delete(key);
+    }
+  };
+}
+
+test('worker: 사진 업로드(R2) 와 /api/uploads 서빙', async (t) => {
+  const worker = await loadWorker();
+  const bucket = createFakeR2();
+  const env = makeEnv({ UPLOADS_BUCKET: bucket });
+  let uploadedUrl = '';
+  let uploadedKey = '';
+
+  await t.test('POST /api/upload-image → 200 + 워커 주소 URL', async () => {
+    const response = await requestTo(worker, env, '/api/upload-image', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ imageBase64: PNG_DATA_URL })
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.match(
+      body.url,
+      /^https:\/\/camping-food-helper\.luxrank\.workers\.dev\/api\/uploads\/secret-gardens\/\d+_[0-9a-f]{16}\.png$/
+    );
+    uploadedUrl = body.url;
+    uploadedKey = new URL(body.url).pathname.slice('/api/uploads/'.length);
+
+    assert.equal(bucket.objects.size, 1, 'R2 에 한 개만 저장된다');
+    const stored = bucket.objects.get(uploadedKey);
+    assert.ok(stored, 'R2 에 반환된 키로 저장됐다');
+    assert.equal(stored.contentType, 'image/png');
+    assert.equal(stored.bytes.byteLength, PNG_BYTES.byteLength);
+  });
+
+  await t.test('반환된 URL GET → 200 image/png', async () => {
+    const response = await requestTo(worker, env, new URL(uploadedUrl).pathname);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'image/png');
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.deepEqual(bytes, PNG_BYTES);
+  });
+
+  await t.test('HEAD /api/uploads/<key> → 200 (본문 없음)', async () => {
+    const response = await requestTo(worker, env, new URL(uploadedUrl).pathname, { method: 'HEAD' });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'image/png');
+    assert.equal(await response.text(), '');
+  });
+
+  await t.test('없는 키 → 404 upload_not_found', async () => {
+    const response = await requestTo(worker, env, '/api/uploads/secret-gardens/0_missing.png');
+    assert.equal(response.status, 404);
+    const body = await response.json();
+    assert.equal(body.code, 'upload_not_found');
+  });
+
+  await t.test('secret-gardens/ 밖의 키 → 404', async () => {
+    const response = await requestTo(worker, env, '/api/uploads/other/evil.png');
+    assert.equal(response.status, 404);
+  });
+
+  await t.test('경로 탈출(..) → 404', async () => {
+    const response = await requestTo(worker, env, '/api/uploads/secret-gardens/../secret.png');
+    assert.equal(response.status, 404);
+  });
+
+  await t.test('POST 로 사진 경로 접근 → 405', async () => {
+    const response = await requestTo(worker, env, new URL(uploadedUrl).pathname, { method: 'POST' });
+    assert.equal(response.status, 405);
+  });
+
+  await t.test('잘못된 이미지 → 400 (저장하지 않는다)', async () => {
+    const before = bucket.objects.size;
+    const response = await requestTo(worker, env, '/api/upload-image', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ imageBase64: 'data:image/png;base64,aGVsbG8=' })
+    });
+    assert.equal(response.status, 400);
+    assert.equal(bucket.objects.size, before);
+  });
+
+  await t.test('이미지 URL 은 저장소 없이 그대로 돌려준다', async () => {
+    const response = await requestTo(worker, env, '/api/upload-image', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ imageBase64: 'https://example.com/photo.jpg' })
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.url, 'https://example.com/photo.jpg');
+  });
+
+  await t.test('바인딩이 없는 요청에서는 /api/uploads 가 404 (이전 바인딩이 남지 않는다)', async () => {
+    const noBinding = await requestTo(worker, makeEnv(), new URL(uploadedUrl).pathname);
+    assert.equal(noBinding.status, 404);
+    const body = await noBinding.json();
+    assert.equal(body.code, 'upload_storage_not_configured');
+  });
+});
+
 // ── Firestore REST shim ────────────────────────────────────────────────────
 function createFakeFirestore(projectId = 'demo-project') {
   const store = new Map();

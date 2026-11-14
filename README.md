@@ -46,7 +46,7 @@
 
 | 대상 | 정상 기준 |
 |---|---|
-| https://camping-food-helper.vercel.app/ | HTTP 200 |
+| https://camping-food-helper.luxrank.workers.dev/ | HTTP 200 |
 | `GET /api/health` | HTTP 200 + `ok:true` + `storage` 값(Firestore 연결 확인) |
 | `POST /api/sample`, `POST /api/generate-image` | 빈 요청에 HTTP 400 (게스트도 호출 가능, 프롬프트 없음 → Gemini 미호출) |
 | `GET /api/secret-gardens` | HTTP 200 + 공개 스팟 배열 (게스트 공개 목록, 비밀번호 필드 없음) |
@@ -262,7 +262,7 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 
 | 대상 | 정상 기준 |
 |---|---|
-| https://camping-food-helper.vercel.app/ | HTTP 200 |
+| https://camping-food-helper.luxrank.workers.dev/ | HTTP 200 |
 | `GET /api/health` | HTTP 200 + `ok:true` + `storage` 값 (Firestore 연결 점검) |
 | `POST /api/sample`, `POST /api/generate-image` | 빈 요청에 HTTP 400 (게스트도 호출 가능, Gemini 미호출) |
 | `GET /api/secret-gardens` | HTTP 200 + 공개 스팟 배열 (게스트 공개 목록) |
@@ -291,7 +291,7 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 
 ## 참고
 
-- 2026-11-14 부터 Cloudflare Workers 배포본(`https://camping-food-helper.luxrank.workers.dev`)이 운영 주소이며, Vercel 배포본(`https://camping-food-helper.vercel.app`)도 같은 코드로 계속 동작합니다. AI 추천·비밀의 정원·방문자 카운터 같은 서버 기능은 각 플랫폼의 `/api/*` 에서 제공됩니다.
+- 2026-11-14 부터 Cloudflare Workers 배포본(`https://camping-food-helper.luxrank.workers.dev`)이 운영 주소입니다. Vercel 배포본(`https://camping-food-helper.vercel.app`)은 `vercel.json` 의 `/(.*)` → 워커 주소 308 리다이렉트만 하므로, 요청·API 호출은 워커로 넘어가 처리됩니다.
 - 파일을 로컬에서 그냥 열거나(`file://`) Firebase Hosting/GitHub Pages 같은 정적 전용 호스팅에서 열면 화면은 보이지만 `/api/*` 기능은 동작하지 않습니다. 로컬 실행은 `npm ci` 후 `npm run dev`(기본 `http://localhost:3000`)를 사용하세요.
 
 ## Cloudflare Workers 배포 (2026-11-14 이전)
@@ -304,7 +304,8 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
 | 엔트리 | `worker/index.js` — 기존 `api/*.js` 핸들러를 Request/Response 로 감싸 그대로 재사용 |
 | 정적 자산 | `dist/` (Workers Static Assets, `run_worker_first: ["/api/*"]`) |
 | Firestore | `worker/firestore-rest.js` — firebase-admin 대신 Firestore REST + 서비스 계정 JWT(Web Crypto) |
-| Storage | `worker/shims/firebase-storage.js` — Cloud Storage JSON API multipart 업로드 |
+| Storage | `worker/shims/firebase-storage.js` — Cloud Storage JSON API multipart 업로드 (R2 바인딩이 있으면 쓰지 않음) |
+| 사진 저장소 | Cloudflare R2 바인딩 `UPLOADS_BUCKET`(버킷 `camping-food-helper-uploads`) — `lib/upload-store.js`, 서빙은 `GET /api/uploads/<key>` |
 | Gemini | `worker/gemini-rest.js` — `@google/genai` 대신 Gemini REST |
 | 라우팅 별칭 | `wrangler.jsonc` 의 `alias` (firebase-admin/app·firestore·storage, @google/genai) |
 
@@ -314,3 +315,13 @@ KST 날짜 계산·파일 저장소 카운트·API 중복/한도 무시·405/503
   `FIREBASE_STORAGE_BUCKET`, `GEMINI_API_KEY`, `AUTH_SECRET`
 - 로컬 검증: `npm run build && npx wrangler deploy --dry-run --outdir=.wrangler/dry && npm run test:worker`
 - `SITE_URL` 환경변수로 canonical·og:url·robots.txt·sitemap.xml 의 기준 주소가 결정됩니다.
+
+### 사진 업로드 (R2)
+
+`/api/upload-image` 는 `UPLOADS_BUCKET`(R2) 바인딩이 있으면 사진을 R2 에 저장하고
+`https://camping-food-helper.luxrank.workers.dev/api/uploads/secret-gardens/<파일명>` 주소를 돌려줍니다.
+그 주소는 같은 워커가 `GET`/`HEAD` 로 내려 주며(1년 캐시, `nosniff`), 키는 `secret-gardens/` 아래만 허용합니다.
+바인딩이 없으면(Express 로컬 실행·Vercel 함수) 기존 Firebase Storage 경로를 그대로 씁니다.
+
+- 버킷: `npx wrangler r2 bucket create camping-food-helper-uploads` (무료 한도 저장 10GB/월)
+- 바인딩: `wrangler.jsonc` 의 `r2_buckets` → `{ "binding": "UPLOADS_BUCKET", "bucket_name": "camping-food-helper-uploads" }`
