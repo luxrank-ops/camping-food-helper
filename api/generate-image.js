@@ -1,19 +1,19 @@
 import { generateImageUrl } from '../lib/generate-image.js';
 import { MAX_IMAGE_PROMPT_LENGTH } from '../lib/sample.js';
 import { getAuthService } from '../lib/auth/service.js';
-import { requireUser } from '../lib/auth/guard.js';
+import { optionalUser, clientIp } from '../lib/auth/guard.js';
 import { checkQuota, recordUsage } from '../lib/auth/quota.js';
+import { checkGuestQuota, recordGuestUsage } from '../lib/auth/guest-limit.js';
 
 // Vercel 서버리스용 이미지 생성 엔드포인트.
-// 로그인한 회원만 호출할 수 있고, 하루 이미지 생성 한도(lib/plans.js)를 넘으면 429 로 답한다.
+// 로그인 없이도 쓸 수 있고, 토큰이 있으면 그 회원의 하루 한도(lib/plans.js)를 적용한다.
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ code: 'method_not_allowed' });
   }
 
-  const auth = await requireUser(req);
+  const auth = await optionalUser(req);
   if (!auth.ok) {
-    res.setHeader('WWW-Authenticate', 'Bearer');
     return res.status(auth.status).json({ success: false, code: auth.code, error: auth.message });
   }
 
@@ -30,12 +30,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ code: 'prompt_too_long', error: 'Prompt is too long' });
   }
 
-  const quota = checkQuota(auth.user, 'image');
+  const ip = clientIp(req);
+  const quota = auth.user ? checkQuota(auth.user, 'image') : checkGuestQuota(ip, 'image');
   if (!quota.ok) {
     return res.status(429).json({
       success: false,
       code: quota.code,
-      plan: quota.plan,
+      plan: quota.plan || 'guest',
       limit: quota.limit,
       used: quota.used,
       error: quota.message
@@ -44,7 +45,8 @@ export default async function handler(req, res) {
 
   try {
     const imageUrl = await generateImageUrl(prompt);
-    await recordUsage(getAuthService().store, auth.user, 'image');
+    if (auth.user) await recordUsage(getAuthService().store, auth.user, 'image');
+    else recordGuestUsage(ip, 'image');
     return res.status(200).json({ imageUrl });
   } catch (err) {
     if (err.code === 'capability_disabled') {

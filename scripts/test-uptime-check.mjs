@@ -31,17 +31,24 @@ test('health check is public, read-only and validates the storage state, not jus
   assert.equal((await probe(health, async () => response(200, '{"ok":true,"storage":"firestore"}'))).ok, true);
 });
 
-test('auth-gated checks expect 401 auth_required from an empty, token-less request (no paid AI call)', async () => {
+test('guest POST checks still send an empty body so no paid AI call is made', async () => {
   for (const entry of CHECKS.filter((c) => c.method === 'POST')) {
-    assert.equal(entry.expectStatus, 401);
-    assert.ok(entry.validateBody, `${entry.name}: 인증 오류 코드까지 확인해야 한다`);
+    assert.equal(entry.expectStatus, 400, `${entry.name}: 게스트도 호출할 수 있고 빈 요청은 400`);
     await probe(entry, async (_url, init) => {
       assert.equal(init.body, '{}');
       assert.equal(init.headers['Content-Type'], 'application/json');
       assert.equal(init.headers.Authorization, undefined, '헬스체크는 토큰을 보내지 않는다');
-      return response(401, '{"success":false,"code":"auth_required"}');
+      return response(400, '{"code":"invalid_json"}');
     });
   }
+});
+
+test('member API guard is checked without a token (401 auth_required)', async () => {
+  const me = CHECKS.find((c) => c.url.endsWith('/api/auth/me'));
+  assert.equal(me.method, 'GET');
+  assert.equal((await probe(me, async () => response(401, '{"code":"auth_required"}'))).ok, true);
+  assert.equal((await probe(me, async () => response(200, '{"success":true}'))).ok, false);
+  assert.equal((await probe(me, async () => response(401, '{"code":"invalid_token"}'))).ok, false);
 });
 
 test('failure annotations escape workflow command control characters', () => {
