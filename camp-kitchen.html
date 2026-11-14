@@ -1356,6 +1356,9 @@ input,select,textarea{accent-color:var(--brand);}
     condDetailsOpen:false
   };
   var sampleFn=null, ctl=null, timerId=null, wakeLockSentinel=null;
+  // AI 응답이 이 시간을 넘으면 기다리지 않고 내장 레시피로 폴백한다.
+  // (타임아웃이 없으면 서버가 응답을 못 줄 때 화면이 '고르는 중'에서 영영 멈춘다.)
+  var AI_TIMEOUT_MS=60000;
   var gardenMapInstance=null, gardenMapMarkers=[];
 
   function saveProfile(){profile.sample=false;store.set('cc.profile',profile)}
@@ -1370,7 +1373,8 @@ input,select,textarea{accent-color:var(--brand);}
     invalid_json:'답을 읽지 못했어요. 한 번 더 눌러 주세요.',
     empty_completion:'답이 비어 있어요. 한 번 더 눌러 주세요.',
     refused:'이 조건으로는 답을 만들지 못했어요. 조건을 바꿔 보세요.',
-    upstream_error:'연결이 불안정해요. 한 번 더 눌러 주세요.'
+    upstream_error:'연결이 불안정해요. 한 번 더 눌러 주세요.',
+    timeout:'AI 응답이 너무 늦어요. 내장 맞춤 레시피로 안내할게요.'
   };
   function copy(code){return COPY[code]||'문제가 생겼어요. 한 번 더 눌러 주세요.'}
 
@@ -1566,15 +1570,28 @@ input,select,textarea{accent-color:var(--brand);}
       var opts={modelTier:'quick',signal:ctl.signal};
       if(more)opts.cache=false;
       var data=await sampleFn.json(recPrompt(),opts);
+      // 모델이 요청한 키(name/minutes/equipment/preview) 대신 menuName·cookingTime 같은
+      // 다른 이름으로 답하는 경우가 있어 흔한 별칭을 함께 받아 준다.
+      // (예전에는 키가 다르면 AI 결과를 통째로 버리고 조용히 로컬 추천으로 폴백했다.)
+      var txt=function(v){return typeof v==='string'?v.trim():''};
       var arr=(Array.isArray(data)?data:[]).map(function(r){
+        r=(r&&typeof r==='object')?r:{};
+        var eq=r.equipment||r.cookingEquipment||r.equipments||'';
+        if(typeof eq==='string')eq=eq.split(/[,，、·/]/);
+        var mins=(r.minutes!=null&&r.minutes!=='')?Number(r.minutes)
+          :parseInt(String(r.cookingTime||r.time||'').replace(/[^0-9]/g,''),10);
+        var preview=r.ingredientsPreview||r.ingredientsText||r.ingredients||'';
+        if(Array.isArray(preview))preview=preview.map(function(x){return typeof x==='string'?x:(txt(x&&x.name)||txt(x&&x.item))}).filter(Boolean).join(' · ');
+        var reason=txt(r.reason)||txt(r.why)||'';
+        if(reason.length>90)reason=reason.slice(0,88)+'…';
         return {
-          name:str(r&&r.name),
-          minutes:Number(r&&r.minutes)||0,
-          level:str(r&&r.level),
-          equipment:Array.isArray(r&&r.equipment)?r.equipment.map(str).filter(Boolean):[],
+          name:txt(r.name)||txt(r.menuName)||txt(r.dish)||txt(r.title),
+          minutes:isFinite(mins)?Number(mins):0,
+          level:txt(r.level)||txt(r.difficulty),
+          equipment:Array.isArray(eq)?eq.map(txt).filter(Boolean):[],
           people:ui.people,
-          ingredientsPreview:str(r&&r.ingredientsPreview),
-          reason:str(r&&r.reason)
+          ingredientsPreview:typeof preview==='string'?preview.trim():'',
+          reason:reason
         };
       }).filter(function(r){return r.name}).slice(0,3);
       if(!arr.length)throw {code:'invalid_json'};
@@ -7490,21 +7507,31 @@ input,select,textarea{accent-color:var(--brand);}
     if(!sampleFn){
       sampleFn={
         json:async function(prompt,opts){
+          // 사용자가 '멈추기'를 누른 경우(cancelled)와 응답 지연(timeout)을 구분한다.
+          // timeout은 로컬 폴백을 태우고, cancelled는 폴백 없이 조용히 끝낸다.
+          var ac=new AbortController(), timedOut=false;
+          var toTimer=setTimeout(function(){timedOut=true;ac.abort()},AI_TIMEOUT_MS);
+          var outer=opts&&opts.signal;
+          if(outer){
+            if(outer.aborted)ac.abort();
+            else outer.addEventListener('abort',function(){ac.abort()},{once:true});
+          }
           try{
             var res=await fetch('/api/sample',{
               method:'POST',
               headers:{'Content-Type':'application/json'},
               body:JSON.stringify({prompt:prompt}),
-              signal:opts&&opts.signal
+              signal:ac.signal
             });
             var data=await res.json();
             if(!res.ok)throw {code:(data&&data.code)||'upstream_error'};
             return data;
           }catch(err){
+            if(timedOut)throw {code:'timeout'};
             if(err&&err.name==='AbortError')throw {code:'cancelled'};
             if(err&&err.code)throw err;
             throw {code:'upstream_error'};
-          }
+          }finally{clearTimeout(toTimer)}
         }
       };
     }
