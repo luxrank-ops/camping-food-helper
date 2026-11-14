@@ -19,6 +19,16 @@ const DIST_DATA = path.join(DIST, 'data');
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.mkdirSync(DIST_DATA, { recursive: true });
 
+// 검색 등록·분석용 루트 파일의 기준 주소. 배포 도메인이 바뀌면 여기만 고친다.
+const SITE_URL = (process.env.SITE_URL || 'https://camping-food-helper.vercel.app').replace(/\/+$/, '');
+
+// 검색엔진(구글 서치콘솔·네이버 서치어드바이저) 소유확인 파일 — 발급된 이름·내용 그대로 두고,
+// 파일이 없으면 소유확인이 실패하므로 다른 값으로 바꾸지 말고 서비스에서 새로 발급받아 교체한다.
+const VERIFICATION_FILES = {
+  'google968bd4b8f647180b.html': 'google-site-verification: google968bd4b8f647180b.html',
+  'naver53529db3a5cfcbb80cd1a7045bf9d026.html': 'naver-site-verification: naver53529db3a5cfcbb80cd1a7045bf9d026.html'
+};
+
 // 2. HTML 엔트리 복사 (index.html, camp-kitchen.html 동기화 보장)
 fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST, 'index.html'));
 fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST, 'camp-kitchen.html'));
@@ -44,3 +54,20 @@ if (fs.existsSync(gardensSrc)) {
 }
 
 console.log('build-hosting: Firebase Hosting 정적 배포 번들(dist/) 생성 완료');
+
+// 5. 검색 등록용 루트 파일 (robots.txt·sitemap.xml·소유확인) + GA4 측정 스크립트
+//    dist/ 가 배포 루트라서 여기에 두어야 /robots.txt 로 내려간다.
+fs.writeFileSync(path.join(DIST, 'robots.txt'),
+  `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
+
+// 해시 라우팅(#/rec 등)은 검색엔진이 따로 수집하지 않으므로 홈 하나만 알린다.
+fs.writeFileSync(path.join(DIST, 'sitemap.xml'),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${SITE_URL}/</loc></url>\n</urlset>\n`, 'utf8');
+
+for (const [name, body] of Object.entries(VERIFICATION_FILES)) {
+  fs.writeFileSync(path.join(DIST, name), body + '\n', 'utf8');
+}
+
+// GA4 측정 스크립트 (index.html 이 /analytics.js 로 부른다)
+const analyticsSrc = path.join(ROOT, 'analytics.js');
+if (fs.existsSync(analyticsSrc)) fs.copyFileSync(analyticsSrc, path.join(DIST, 'analytics.js'));
