@@ -127,10 +127,10 @@
         + '<span aria-hidden="true">' + p.emoji + '</span>' + esc(p.label) + '</a>';
     }).join('');
     return '<section class="card cp-card cp-quick" aria-labelledby="cpQuickTitle">'
-      + '<div class="cp-quick-head"><h2 id="cpQuickTitle">🛒 이번 주말 인기 캠핑 템</h2>'
-      + '<span class="cp-quick-sub">추천 돌리기 전에 미리 보기</span></div>'
+      + '<div class="cp-quick-head"><h2 id="cpQuickTitle">🛒 식재료 바로 구매 쿠팡연동</h2>'
+      + '<span class="cp-quick-sub">쿠팡에서 바로 확인</span></div>'
       + '<div class="cp-chips">' + chips + '</div>'
-      + '<p class="cp-lead">칩을 누르면 쿠팡에서 그 카테고리 상품이 바로 나와요. 직접 찾고 싶으면 아래 검색창에 적어 주세요.</p>'
+      + '<p class="cp-lead">칩을 누르면 쿠팡에서 그 카테고리 상품이 바로 나와요. 필요한 재료·장비를 그 자리에서 살 수 있어요.</p>'
       + '<iframe class="cp-widget" title="쿠팡 상품 검색" loading="lazy" referrerpolicy="unsafe-url"'
       + ' src="' + esc(widgetUrl()) + '"></iframe>'
       + noteHtml()
