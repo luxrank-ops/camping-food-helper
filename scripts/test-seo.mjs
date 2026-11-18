@@ -37,8 +37,15 @@ test('3. sitemap.xml 이 홈 주소를 담은 올바른 XML 이다', () => {
 
 test('3-1. 사본 주소(/index.html·/camp-kitchen.html)는 대표 주소로 301 한다', () => {
   const redirects = fs.readFileSync(path.join(DIST, '_redirects'), 'utf8');
-  assert.match(redirects, /^\/index\.html \/ 301$/m);
   assert.match(redirects, /^\/camp-kitchen\.html \/ 301$/m);
+  // '/' 는 Worker 가 내부적으로 '/index.html' 을 부르므로, _redirects 에 넣으면 '301 /' 무한 리다이렉트가 된다.
+  assert.ok(!/^\/index\.html \/ 301$/m.test(redirects), '/index.html 규칙은 _redirects 가 아니라 Worker 에서 처리한다');
+  const worker = fs.readFileSync(path.join(ROOT, 'worker', 'index.js'), 'utf8');
+  assert.match(worker, /url\.pathname === '\/index\.html'/, 'Worker 가 /index.html 을 대표 주소로 넘겨야 한다');
+  assert.match(worker, /status: 301/);
+  const wrangler = fs.readFileSync(path.join(ROOT, 'wrangler.jsonc'), 'utf8');
+  assert.match(wrangler, /run_worker_first": \["\/api\/\*", "\/", "\/index\.html"\]/, '/index.html 은 Worker 가 먼저 받아야 한다');
+  assert.match(wrangler, /preview_urls": false/, '버전 프리뷰 주소는 중복 페이지가 되므로 꺼 둔다');
 });
 
 test('3-2. camp-kitchen.html 은 앱 사본이 아니라 대표 주소 안내 페이지다', () => {
