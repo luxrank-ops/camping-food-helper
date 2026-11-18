@@ -15,8 +15,19 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const kitchen = fs.readFileSync(path.join(ROOT, 'camp-kitchen.html'), 'utf8');
 
-test('index.html 과 camp-kitchen.html 은 같은 내용이다', () => {
-  assert.equal(html, kitchen);
+// 옛 입구 camp-kitchen.html 은 앱 화면을 복제하지 않는다.
+// (같은 내용이 두 주소에 있으면 구글 서치콘솔이 '중복 페이지'로 보고 색인을 미룬다)
+// 대표 주소로 보내는 안내 페이지만 남기고, 앱 본문은 index.html 한 곳에만 둔다.
+function assertLegacyEntry() {
+  assert.ok(kitchen.length < 2000, 'camp-kitchen.html 은 앱 사본이 아니라 안내 페이지여야 한다');
+  assert.match(kitchen, /<link rel="canonical" href="https:\/\/camping-food-helper\.luxrank\.workers\.dev\/">/);
+  assert.match(kitchen, /http-equiv="refresh"/, '대표 주소로 자동 이동해야 한다');
+  assert.ok(!kitchen.includes('id="app"'), '앱 본문이 복제되면 중복 페이지가 된다');
+}
+
+test('index.html 만 앱 본문을 갖고, camp-kitchen.html 은 대표 주소 안내 페이지다', () => {
+  assert.ok(html.includes('id="app"'), 'index.html 이 앱 본문을 가져야 한다');
+  assertLegacyEntry();
 });
 
 test('비로그인 상태에서도 앱이 바로 시작된다(강제 로그인 게이트 없음)', () => {

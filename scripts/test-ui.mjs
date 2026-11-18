@@ -12,6 +12,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const kitchen = fs.readFileSync(path.join(ROOT, 'camp-kitchen.html'), 'utf8');
 
+// 옛 입구 camp-kitchen.html 은 앱 화면을 복제하지 않는다(중복 페이지 방지 → 대표 주소 안내만).
+function assertLegacyEntry() {
+  assert.ok(kitchen.length < 2000, 'camp-kitchen.html 은 앱 사본이 아니라 안내 페이지여야 한다');
+  assert.match(kitchen, /<link rel="canonical" href="https:\/\/camping-food-helper\.luxrank\.workers\.dev\/">/);
+  assert.match(kitchen, /http-equiv="refresh"/, '대표 주소로 자동 이동해야 한다');
+  assert.ok(!kitchen.includes('id="app"'), '앱 본문이 복제되면 중복 페이지가 된다');
+}
+
 test('첫 화면: 인원·장비·끼니 선택이 캠핑장 등 부가 기능보다 위에 배치된다', () => {
   const peopleIdx = html.indexOf('<h2>인원 · 조리 장비 설정</h2>');
   const condIdx = html.indexOf('<h2>오늘 캠핑 조건</h2>');
@@ -81,7 +89,7 @@ test('모바일 제목 개선: 글자 크기·줄바꿈 조정과 배경 그림 
   assert.match(m[2], /opacity:/, '배경 그림 투명도를 낮춰야 한다');
   const opacity = parseFloat((m[2].match(/opacity:([0-9.]+)/) || [])[1]);
   assert.ok(opacity > 0 && opacity < 0.95, '배경 그림이 기본보다 흐려야 한다');
-  assert.equal(html, kitchen, 'index.html과 camp-kitchen.html은 같은 내용이어야 한다');
+  assertLegacyEntry();
 });
 
 test('앱 홍보: 내 정보 탭의 [📢 홍보글 복사] 버튼이 홍보 문구와 workers.dev 주소를 복사한다', () => {
@@ -100,5 +108,25 @@ test('앱 홍보: 내 정보 탭의 [📢 홍보글 복사] 버튼이 홍보 문
   assert.match(html, /navigator\.clipboard&&navigator\.clipboard\.writeText/, 'Clipboard API를 써야 한다');
   assert.match(html, /document\.execCommand\('copy'\)/, 'Clipboard API가 막히는 환경을 위한 textarea fallback이 있어야 한다');
   assert.match(html, /홍보글이 복사됐어요!/, '복사 후 안내 문구가 있어야 한다');
-  assert.equal(html, kitchen, 'index.html과 camp-kitchen.html은 같은 내용이어야 한다');
+  assertLegacyEntry();
+});
+
+test('비밀의 정원: 카드에 직선거리와 네이버/카카오 길찾기 바로가기가 있다', () => {
+  // 거리 기준: 기본은 부산 명지(사업장), '내 위치'로 바꿀 수 있다
+  assert.match(html, /var GARDEN_ORIGIN_HOME=\{[\s\S]{0,80}lat:35\.0866,lng:128\.9038,/, '기본 출발지는 부산 명지 좌표여야 한다');
+  assert.match(html, /function haversineKm\(/, '직선거리 계산 함수가 있어야 한다');
+  assert.match(html, /function spotDistanceKm\(/, '스팟 거리 계산 함수가 있어야 한다');
+  // 실제 좌표가 없는 스팟(비공개 잠금)에는 거리를 지어내지 않는다
+  assert.match(html, /if\(!isFinite\(la\)\|\|!isFinite\(ln\)\|\|!la\|\|!ln\) return null;/, '좌표가 없으면 거리를 만들지 않아야 한다');
+  // 지도 앱 바로가기: 좌표가 있으면 출발지→도착지 길찾기, 없으면 장소 검색
+  assert.match(html, /https:\/\/map\.naver\.com\/p\/directions\//, '네이버 지도 길찾기 주소가 있어야 한다');
+  assert.match(html, /https:\/\/map\.kakao\.com\/link\/from\//, '카카오맵 출발지 지정 길찾기 주소가 있어야 한다');
+  assert.match(html, /tmap:\/\/route\?/, '티맵 앱 길찾기 주소가 있어야 한다');
+  // 카드 렌더링에 길찾기 줄이 붙는다
+  assert.match(html, /r \+= gardenNavBarHtml\(g\);/, '비밀의 정원 카드에 길찾기 줄을 붙여야 한다');
+  assert.match(html, /class="garden-nav-link kakao"/, '카카오 길찾기 버튼이 있어야 한다');
+  assert.match(html, /class="garden-nav-link naver"/, '네이버 길찾기 버튼이 있어야 한다');
+  // 출발지 전환 버튼
+  assert.match(html, /data-a="garden-origin"/, '거리 기준 출발지를 바꾸는 버튼이 있어야 한다');
+  assert.match(html, /gardenOriginMode/, '출발지 선택이 상태로 유지되어야 한다');
 });

@@ -230,6 +230,14 @@ export default {
         console.error('[Worker] unhandled API error:', error?.stack || error?.message || error);
         response = jsonError(500, 'server_error', '요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.');
       }
+    } else if (url.pathname === '/index.html') {
+      // 사본 주소(/index.html)는 대표 주소로 301 한다.
+      //  dist/_redirects 로 처리하면 '/' 요청이 내부적으로 '/index.html' 을 부를 때 같이 걸려
+      //  '301 /' 로 무한 리다이렉트가 되므로, 여기서 직접 넘긴다.
+      response = new Response(null, {
+        status: 301,
+        headers: { location: `${url.origin}/`, 'cache-control': 'public, max-age=300' }
+      });
     } else if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
       // 정적 자산은 html_handling:"none" 으로 확장자·index 치환 없이 그대로 서빙한다.
       // (google 소유확인 .html 처럼 파일 이름 그대로 내려가야 하는 경우 307 리다이렉트를 막기 위해)

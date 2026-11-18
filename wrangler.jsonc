@@ -5,11 +5,13 @@
   "compatibility_date": "2026-11-14",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
-  "preview_urls": true,
+  // 버전 프리뷰 주소(<해시>-camping-food-helper.luxrank.workers.dev)는 운영과 똑같은 화면을 내려 준다.
+  // 그 주소가 검색 결과에 잡히면 같은 내용이 여러 주소에 있는 '중복 페이지'가 되므로 꺼 둔다.
+  "preview_urls": false,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*", "/"],
+    "run_worker_first": ["/api/*", "/", "/index.html"],
     "html_handling": "none",
     "not_found_handling": "none"
   },
