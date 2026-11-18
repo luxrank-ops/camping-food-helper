@@ -114,8 +114,10 @@ fs.writeFileSync(path.join(DIST, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${SITE_URL}/</loc></url>\n</urlset>\n`, 'utf8');
 
 // 같은 화면을 내려 주던 사본 주소는 대표 주소로 301 한다(Workers 정적 자산이 dist/_redirects 를 읽는다).
+//  주의: `/' 는 Worker 가 내부적으로 ASSETS 에 '/index.html' 로 넘기므로, 여기에 '/index.html / 301' 을 넣으면
+//  '/' 요청이 '301 /' 로 튀어 무한 리다이렉트가 된다(2026-11-18 실제 발생).
+//  그래서 '/index.html' 정리는 Worker 진입점에서 직접 처리한다(worker/index.js).
 fs.writeFileSync(path.join(DIST, '_redirects'), [
-  '/index.html / 301',
   '/camp-kitchen.html / 301',
   ''
 ].join('\n'), 'utf8');
