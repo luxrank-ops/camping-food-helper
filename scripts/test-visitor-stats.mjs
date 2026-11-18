@@ -196,8 +196,10 @@ test('Vercel·Express 양쪽에서 같은 방문자 카운터 API를 쓴다', ()
   );
 });
 
-test('플로팅 위젯: 오늘 방문자·누적 방문자가 #app 밖에 떠 있고 두 HTML이 같다', () => {
-  for (const [name, doc] of [['index.html', html], ['camp-kitchen.html', kitchen]]) {
+test('플로팅 위젯: 오늘 방문자·누적 방문자가 #app 밖에 떠 있다', () => {
+  // 옛 입구 camp-kitchen.html 은 앱 사본을 두지 않으므로(index.html 한 곳만이 앱 본문)
+  // 위젯 검사도 index.html 한 벌에만 한다.
+  for (const [name, doc] of [['index.html', html]]) {
     // 마크업: 하단 탭바를 가리지 않는 고정 플로팅 + 오늘/누적 두 줄
     assert.match(doc, /<aside class="visit-fab" id="visit-fab"/, `${name}: 플로팅 위젯이 있어야 한다`);
     assert.match(doc, /id="visit-today"/, `${name}: 오늘 방문자 숫자 요소가 있어야 한다`);
@@ -230,7 +232,10 @@ test('플로팅 위젯: 오늘 방문자·누적 방문자가 #app 밖에 떠 �
       `${name}: 초기화는 앱 시작 흐름에서 호출되어야 한다`
     );
   }
-  assert.equal(html, kitchen, 'index.html과 camp-kitchen.html은 같은 내용이어야 한다');
+  // 옛 입구는 대표 주소로 보내는 안내 페이지여야 한다(중복 페이지 방지)
+  assert.ok(kitchen.length < 2000, 'camp-kitchen.html 은 앱 사본이 아니라 안내 페이지여야 한다');
+  assert.match(kitchen, /<link rel="canonical" href="https:\/\/camping-food-helper\.luxrank\.workers\.dev\/">/);
+  assert.match(kitchen, /http-equiv="refresh"/);
 });
 
 test('로컬 방문자 통계 파일은 저장소에 커밋되지 않는다', () => {

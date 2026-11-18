@@ -20,9 +20,11 @@
 <meta property="og:title" content="오늘 캠핑. 춘학아~ 뭐해먹지?">
 <meta property="og:description" content="장비와 인원만 고르면 메뉴 추천부터 준비물 체크리스트까지 정리해 주는 캠핑 요리 도우미 웹앱">
 <meta property="og:type" content="website">
-<!-- 검색엔진 기준 주소. camp-kitchen.html 같은 옛 주소로 들어와도 대표 주소 하나로 모은다. -->
-<link rel="canonical" href="https://camping-food-helper.vercel.app/">
-<meta property="og:url" content="https://camping-food-helper.vercel.app/">
+<!-- 검색엔진 기준 주소. 실제 운영 도메인은 Cloudflare Workers 주소이며, 옛 vercel.app 주소는 308 로 여기로 넘어온다.
+     캐노니컬이 리다이렉트되는 옛 주소를 가리키면 구글이 표준 URL 선택을 보류해 색인을 미루므로 반드시 운영 주소로 둔다.
+     (다른 도메인으로 배포할 때는 scripts/build-hosting.mjs 의 SITE_URL 로 일괄 치환된다) -->
+<link rel="canonical" href="https://camping-food-helper.luxrank.workers.dev/">
+<meta property="og:url" content="https://camping-food-helper.luxrank.workers.dev/">
 <!-- GA4 (동의 후에만 수집) — index.html 은 이 한 줄만 알면 된다 -->
 <script src="/analytics.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -418,6 +420,16 @@ details li{margin-bottom:8px}
 .garden-btn-mini{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .12s}
 .garden-btn-mini:hover{background:var(--chip);border-color:var(--brand);color:var(--brand)}
 .garden-btn-mini.primary{background:var(--brand);color:var(--brand-fg);border-color:var(--brand)}
+/* 길찾기 · 거리 — 카드/상세에서 네이버·카카오로 바로 넘어가고, 출발지 기준 직선거리를 보여 준다 */
+.garden-nav-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding:8px 10px;background:var(--chip);border-radius:12px}
+.garden-nav-dist{font-size:12px;font-weight:900;color:var(--fg);display:inline-flex;align-items:baseline;gap:5px;margin-right:auto;white-space:nowrap}
+.garden-nav-dist b{font-size:14px;color:var(--brand)}
+.garden-nav-dist small{font-size:11px;font-weight:700;color:var(--muted)}
+.garden-nav-link{appearance:none;text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:6px 10px;font-size:11.5px;font-weight:900;color:var(--fg);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;line-height:1.2}
+.garden-nav-link:hover{filter:brightness(.96)}
+.garden-nav-link.kakao{background:#FEE500;border-color:#FEE500;color:#3C1E1E}
+.garden-nav-link.naver{background:#03C75A;border-color:#03C75A;color:#FFFFFF}
+.garden-nav-link.tmap{background:#0E4CD9;border-color:#0E4CD9;color:#FFFFFF}
 .garden-admin-hint{background:#fef9c3;color:#713f12;border:1px solid #fde047;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;margin-top:8px}
 
 /* 시설물 다중 선택 그리드 (등록 모달용) */
@@ -1744,6 +1756,7 @@ body.auth-locked{padding-block:14px 40px}
     gardenCategory:'noji',gardenSelectedFacilities:GARDEN_DEFAULT_FACILITIES.slice(),
     gardenSelectedPhoto:GARDEN_PHOTO_PRESETS[0].url,gardenCustomPhoto:'',gardenUploadedPhoto:'',
     gardenMapFocusId:null,gardenHidePrivateOnMap:false,
+    gardenOriginMode:(store.get('cc.gardenOrigin','home')==='gps'?'gps':'home'),
     gardenUnlockedIds:store.get('cc.gardenUnlocked',[]),
     lightbox:null,
     coolerSelected:[],
@@ -4992,6 +5005,94 @@ body.auth-locked{padding-block:14px 40px}
     return [37.3 + (s1 - 5) * 0.06, 127.8 + (s2 - 5) * 0.06];
   }
 
+  /* ---------- 비밀의 정원: 출발지 기준 직선거리 + 네이버/카카오 길찾기 ---------- */
+  // 기본 출발지는 사업장이 있는 부산 강서구 명지오션시티. '내 위치'로 바꾸면 GPS 좌표를 쓰고 그 선택을 기억한다.
+  var GARDEN_ORIGIN_HOME={
+    lat:35.0866,lng:128.9038,name:'부산 명지',
+    // 지도 앱에 넘길 출발지 검색어 (좌표가 없을 때 쓰는 폴백)
+    query:'명지오션시티'
+  };
+
+  function gardenOriginMode(){ return ui.gardenOriginMode==='gps' ? 'gps' : 'home'; }
+
+  function gardenOrigin(){
+    if(gardenOriginMode()==='gps' && ui.myLoc && isFinite(ui.myLoc.lat) && isFinite(ui.myLoc.lon)){
+      return {lat:Number(ui.myLoc.lat),lng:Number(ui.myLoc.lon),name:'내 위치',query:'내 위치',src:'gps'};
+    }
+    return {lat:GARDEN_ORIGIN_HOME.lat,lng:GARDEN_ORIGIN_HOME.lng,name:GARDEN_ORIGIN_HOME.name,query:GARDEN_ORIGIN_HOME.query,src:'home'};
+  }
+
+  // 두 좌표 사이 직선거리(km). 도로 거리가 아니라 '얼마나 멀리 있는지' 감을 주는 값이다.
+  function haversineKm(lat1,lng1,lat2,lng2){
+    var R=6371,toRad=Math.PI/180;
+    var dLat=(lat2-lat1)*toRad, dLng=(lng2-lng1)*toRad;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*toRad)*Math.cos(lat2*toRad)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  // 스팟에 실제 좌표가 있을 때만 거리를 계산한다(지역명으로 만든 추정 좌표는 쓰지 않는다).
+  function spotDistanceKm(spot){
+    if(!spot) return null;
+    var la=Number(spot.lat), ln=Number(spot.lng);
+    if(!isFinite(la)||!isFinite(ln)||!la||!ln) return null;
+    var o=gardenOrigin();
+    var km=haversineKm(o.lat,o.lng,la,ln);
+    return isFinite(km) ? km : null;
+  }
+
+  function fmtDistanceKm(km){
+    if(km==null||!isFinite(km)) return '';
+    if(km<1) return Math.round(km*1000)+'m';
+    if(km<10) return (Math.round(km*10)/10)+'km';
+    return Math.round(km)+'km';
+  }
+
+  // 네이버 지도·카카오맵 길찾기 주소. 좌표가 있으면 출발지(내 위치/명지)→도착지 경로를 바로 띄우고,
+  // 없으면 장소명 검색으로 넘긴다. (좌표 순서: 네이버·카카오 모두 '경도,위도')
+  function gardenNavUrls(spot){
+    var name=(spot&&(spot.navQuery||spot.name))||'캠핑지';
+    var q=encodeURIComponent(name);
+    var la=Number(spot&&spot.lat), ln=Number(spot&&spot.lng);
+    var hasCoord=isFinite(la)&&isFinite(ln)&&!!la&&!!ln;
+    var o=gardenOrigin();
+    var oq=encodeURIComponent(o.query||o.name);
+    return {
+      hasCoord:hasCoord,
+      naver: hasCoord
+        ? 'https://map.naver.com/p/directions/'+o.lng+','+o.lat+','+oq+'/'+ln+','+la+','+q+'/-/car'
+        : 'https://map.naver.com/p/search/'+q,
+      kakao: hasCoord
+        ? 'https://map.kakao.com/link/from/'+oq+','+o.lat+','+o.lng+'/to/'+q+','+la+','+ln
+        : 'https://map.kakao.com/link/search/'+q,
+      tmap: hasCoord
+        ? 'tmap://route?startname='+oq+'&startx='+o.lng+'&starty='+o.lat+'&goalname='+q+'&goalx='+ln+'&goaly='+la
+        : 'tmap://search?name='+q
+    };
+  }
+
+  // 카드·상세에 공통으로 쓰는 길찾기 줄 (직선거리 + 네이버/카카오).
+  function gardenNavBarHtml(spot,opts){
+    opts=opts||{};
+    var nav=gardenNavUrls(spot);
+    var km=spotDistanceKm(spot);
+    var o=gardenOrigin();
+    var dist;
+    if(km!=null){
+      dist='<span class="garden-nav-dist">📏 직선 <b>'+fmtDistanceKm(km)+'</b><small>'+esc(o.name)+' 기준</small></span>';
+    }else if(spot&&spot.isPrivate){
+      dist='<span class="garden-nav-dist">🔒 <small>위치 비공개 · 열람하면 거리 표시</small></span>';
+    }else{
+      dist='<span class="garden-nav-dist">📏 <small>좌표 없음 · 검색으로 길찾기</small></span>';
+    }
+    var h='<div class="garden-nav-bar">'+dist+
+      '<a class="garden-nav-link kakao" href="'+esc(nav.kakao)+'" target="_blank" rel="noopener" aria-label="'+esc(spot.name)+' 카카오맵 길찾기">🧭 카카오 길찾기</a>'+
+      '<a class="garden-nav-link naver" href="'+esc(nav.naver)+'" target="_blank" rel="noopener" aria-label="'+esc(spot.name)+' 네이버 지도 길찾기">🗺️ 네이버 길찾기</a>';
+    if(opts.tmap){
+      h+='<a class="garden-nav-link tmap" href="'+esc(nav.tmap)+'" aria-label="'+esc(spot.name)+' 티맵 길찾기">🚙 티맵</a>';
+    }
+    return h+'</div>';
+  }
+
   function handleGardenPhotoUpload(file, isEdit){
     if(!file) return;
     if(!isEdit)captureGardenRegistrationDraft();
@@ -5190,6 +5291,7 @@ body.auth-locked{padding-block:14px 40px}
             (unlocked ? '📍 <b>' + esc(spot.address || '상세 주소 없음') + '</b>' : '📍 ' + esc(spot.addressMasked || '비공개 스팟 (잠금)'))+
           '</div>'+
           (metaLine ? '<div style="font-size:11px;color:#5a7367;font-weight:700;margin-bottom:6px">'+metaLine+'</div>' : '')+
+          (unlocked && spotDistanceKm(spot)!=null ? '<div style="font-size:11px;color:#3f5a4e;font-weight:900;margin-bottom:6px">📏 '+esc(gardenOrigin().name)+' 직선 '+esc(fmtDistanceKm(spotDistanceKm(spot)))+'</div>' : '')+
           facChips +
           '<div class="garden-map-popup-actions">'+
             '<button class="garden-map-popup-btn" type="button" data-a="garden-detail-open" data-id="'+esc(spot.id)+'">'+
@@ -5339,6 +5441,9 @@ body.auth-locked{padding-block:14px 40px}
             r += '<p style="font-size:12.5px;color:var(--fg);margin:8px 0;line-height:1.4;background:var(--soft);padding:8px 10px;border-radius:8px">💡 <b>캠퍼 팁:</b> '+esc(g.tips)+'</p>';
           }
 
+          // 길찾기 · 직선거리 (네이버/카카오 바로가기)
+          r += gardenNavBarHtml(g);
+
           // 작성자 및 등록일 바
           r += '<div class="garden-author-bar">'+
             '<span>👤 작성자: <b>'+esc(g.author)+'</b> · '+esc(dateStr)+'</span>'+
@@ -5379,6 +5484,9 @@ body.auth-locked{padding-block:14px 40px}
     h += '<div class="garden-hero-bar">'+
       '<button class="btn primary" type="button" data-a="garden-reg-open" style="font-size:14px;font-weight:900;padding:10px 18px;border-radius:14px;flex:1">'+
         '➕ 나만의 비밀의 정원 등록하기'+
+      '</button>'+
+      '<button class="chip sm" type="button" data-a="garden-origin" title="거리 기준 출발지 바꾸기" style="padding:10px 12px;border-radius:14px;font-weight:800">'+
+        (gardenOriginMode()==='gps' ? '📍 내 위치 기준' : '📍 부산 명지 기준')+
       '</button>'+
       '<button class="chip sm" type="button" data-a="garden-refresh" title="새로고침" style="padding:10px 12px;border-radius:14px">'+
         '🔄'+
@@ -5695,10 +5803,15 @@ body.auth-locked{padding-block:14px 40px}
                   '🚗 <b>찾아가는 길 / 진입로 디테일:</b><br>'+esc(spot.addressDetail)+
                 '</div>' : '')+
               '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">'+
-                '<a class="btn sm" href="https://map.kakao.com/link/search/'+encodeURIComponent(spot.navQuery||spot.name)+'" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:12px;padding:0 4px">🧭 카카오맵 ↗</a>'+
-                '<a class="btn sm" href="https://map.naver.com/v5/search/'+encodeURIComponent(spot.navQuery||spot.name)+'" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:12px;padding:0 4px">🗺️ 네이버 ↗</a>'+
-                '<a class="btn sm" href="https://apis.openapi.sk.com/tmap/app/routes?appKey=&name='+encodeURIComponent(spot.navQuery||spot.name)+(spot.lat?'&lat='+spot.lat+'&lon='+spot.lng:'')+'" target="_blank" rel="noopener" style="text-align:center;font-weight:700;font-size:12px;padding:0 4px">🚙 티맵 TMAP ↗</a>'+
+                '<a class="garden-nav-link kakao" href="'+esc(gardenNavUrls(spot).kakao)+'" target="_blank" rel="noopener" style="justify-content:center;padding:9px 4px">🧭 카카오 길찾기</a>'+
+                '<a class="garden-nav-link naver" href="'+esc(gardenNavUrls(spot).naver)+'" target="_blank" rel="noopener" style="justify-content:center;padding:9px 4px">🗺️ 네이버 길찾기</a>'+
+                '<a class="garden-nav-link tmap" href="'+esc(gardenNavUrls(spot).tmap)+'" style="justify-content:center;padding:9px 4px">🚙 티맵</a>'+
               '</div>'+
+              '<p style="font-size:11.5px;color:var(--muted);margin:6px 0 0;line-height:1.4">'+
+                (spotDistanceKm(spot)!=null
+                  ? '📏 '+esc(gardenOrigin().name)+'에서 직선 <b style="color:var(--brand)">'+fmtDistanceKm(spotDistanceKm(spot))+'</b> · 지도 앱은 실제 도로 경로를 안내합니다.'
+                  : '📏 좌표가 없어 거리는 계산하지 못했어요. 지도 앱 검색으로 이어집니다.')+
+              '</p>'+
             '</div>';
 
             // 시설물
@@ -7162,6 +7275,34 @@ body.auth-locked{padding-block:14px 40px}
       }, function(err){
         showNotice('위치 정보를 가져올 수 없습니다: ' + (err.message || '브라우저 권한 허용 필요'));
       }, { enableHighAccuracy: true, timeout: 8000 });
+      return;
+    }
+    if(a==='garden-origin'){
+      // 거리 기준 출발지: 부산 명지(기본) ↔ 내 위치(GPS). 선택은 기기에 기억한다.
+      if(gardenOriginMode()==='gps'){
+        ui.gardenOriginMode='home';
+        store.set('cc.gardenOrigin','home');
+        showNotice('📏 거리 기준을 부산 명지로 바꿨습니다.');
+        render();
+        return;
+      }
+      if(!navigator.geolocation){
+        showNotice('이 브라우저에서는 현재 위치를 쓸 수 없어 부산 명지 기준으로 표시합니다.');
+        return;
+      }
+      showNotice('📍 현재 위치로 거리를 다시 계산하는 중입니다…');
+      navigator.geolocation.getCurrentPosition(function(pos){
+        var myLat=pos.coords.latitude, myLng=pos.coords.longitude;
+        ui.myLoc={lat:myLat,lon:myLng,acc:pos.coords.accuracy,at:Date.now()};
+        store.set('cc.loc',ui.myLoc);
+        ui.gardenOriginMode='gps';
+        store.set('cc.gardenOrigin','gps');
+        showNotice('📍 내 위치 기준으로 거리를 다시 계산했습니다.');
+        render();
+      },function(){
+        showNotice('위치 사용이 허용되지 않아 부산 명지 기준으로 표시합니다.');
+        render();
+      },{enableHighAccuracy:false,timeout:9000,maximumAge:600000});
       return;
     }
     if(a==='garden-map-focus'){
