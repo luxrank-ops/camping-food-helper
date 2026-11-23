@@ -130,3 +130,64 @@ test('비밀의 정원: 카드에 직선거리와 네이버/카카오 길찾기 
   assert.match(html, /data-a="garden-origin"/, '거리 기준 출발지를 바꾸는 버튼이 있어야 한다');
   assert.match(html, /gardenOriginMode/, '출발지 선택이 상태로 유지되어야 한다');
 });
+
+test('내비게이션 개편: 하단 탭 5개 + 전체메뉴 시트 + 상단 전환 탭 + 빠른 길잡이 4버튼', () => {
+  // ① 하단 탭은 5개로 넓게 — 추천 · 캠핑지·노지 · 준비물 · 식단표 · 전체메뉴
+  const navStart = html.indexOf('<nav class="tabs" id="tabs"');
+  const navEnd = html.indexOf('</nav>', navStart);
+  assert.ok(navStart > -1 && navEnd > navStart, '하단 탭바를 찾아야 한다');
+  const nav = html.slice(navStart, navEnd);
+  assert.equal((nav.match(/<button\b/g) || []).length, 5, '하단 탭 버튼은 5개여야 한다');
+  assert.match(html, /\.pill\{[^}]*grid-template-columns:repeat\(5,1fr\)/, '하단 탭은 5칸 그리드여야 한다');
+  for (const v of ['rec', 'camp', 'list', 'plan']) {
+    assert.ok(nav.includes(`data-v="${v}"`), `하단 탭에 ${v} 화면이 있어야 한다`);
+  }
+  assert.match(nav, /data-v="camp" data-tabs="camp garden"/, '캠핑지·노지 탭은 두 화면을 묶어야 한다');
+  assert.match(nav, /data-a="menu-open"[^>]*data-tabs="guestbook me"/, '전체메뉴 버튼은 방명록·내 정보에서 활성 표시돼야 한다');
+
+  // ② 전체메뉴 바텀시트 — 7개 화면 모두, 각 항목에 한 줄 설명
+  assert.match(html, /function menuSheetHtml\(\)/, '전체메뉴 시트 렌더러가 있어야 한다');
+  assert.match(html, /if\(a==='menu-open'\)\{ui\.menuOpen=true;render\(\);return\}/, '전체메뉴 열기 액션이 있어야 한다');
+  assert.match(html, /if\(a==='menu-close'\)\{if\(!closeFromBackdrop\(b,e\)\)return;ui\.menuOpen=false;render\(\);return\}/, '전체메뉴 닫기 액션이 있어야 한다');
+  const listStart = html.indexOf('var ALL_MENU=[');
+  const listEnd = html.indexOf('];', listStart);
+  assert.ok(listStart > -1 && listEnd > listStart, '전체메뉴 항목 정의가 있어야 한다');
+  const menuList = html.slice(listStart, listEnd);
+  for (const v of ['rec', 'plan', 'camp', 'garden', 'list', 'guestbook', 'me']) {
+    assert.ok(menuList.includes(`v:'${v}'`), `전체메뉴에 ${v} 화면이 있어야 한다`);
+  }
+  assert.equal((menuList.match(/desc:/g) || []).length, 7, '메뉴 7개 모두 한 줄 설명이 있어야 한다');
+  // 탭으로 이동하면 열려 있던 시트는 닫힌다
+  const tabAction = html.slice(html.indexOf("if(a==='tab'){"), html.indexOf("if(a==='menu-open'){"));
+  assert.match(tabAction, /ui\.tab=v;[\s\S]{0,120}ui\.menuOpen=false;/, '탭 이동 시 전체메뉴 시트를 닫아야 한다');
+
+  // ③ 상단 전환 탭 — 추천↔식단표, 캠핑장↔비밀의 정원
+  assert.match(html, /function foodSwitch\(\)/, '먹거리 전환 탭이 있어야 한다');
+  assert.match(html, /function placeSwitch\(\)/, '장소 전환 탭이 있어야 한다');
+  const food = html.slice(html.indexOf('function foodSwitch(){'), html.indexOf('function placeSwitch(){'));
+  assert.match(food, /data-v="rec"[^>]*aria-current[^>]*>[^<]*오늘 메뉴 추천/, '전환 탭에 오늘 메뉴 추천이 있어야 한다');
+  assert.match(food, /data-v="plan"[^>]*aria-current[^>]*>[^<]*식단표/, '전환 탭에 식단표가 있어야 한다');
+  const place = html.slice(html.indexOf('function placeSwitch(){'), html.indexOf('function menuSheetHtml(){'));
+  assert.match(place, /data-v="camp"[^>]*aria-current[^>]*>[^<]*전국 캠핑장/, '전환 탭에 전국 캠핑장이 있어야 한다');
+  assert.match(place, /data-v="garden"[^>]*aria-current[^>]*>[^<]*비밀의 정원/, '전환 탭에 비밀의 정원이 있어야 한다');
+  // 각 화면 맨 위에 전환 탭이 붙는다
+  const rec = html.slice(html.indexOf('function recView(){'), html.indexOf('function listView(){'));
+  assert.match(rec, /var h='';[\s\S]{0,200}h\+=quickGuide\(\);[\s\S]{0,60}h\+=foodSwitch\(\);/, '첫 화면은 빠른 길잡이 → 전환 탭 순서여야 한다');
+  assert.match(html, /var h=foodSwitch\(\)\+'<div class="plan-hero">/, '식단표 화면 위에도 전환 탭이 있어야 한다');
+  assert.match(html, /h\+=placeSwitch\(\);[\s\S]{0,80}camp-browse-hero/, '캠핑장 화면 위에도 전환 탭이 있어야 한다');
+  assert.match(html, /h \+= placeSwitch\(\);[\s\S]{0,120}garden-hero-bar/, '비밀의 정원 화면 위에도 전환 탭이 있어야 한다');
+
+  // ④ 첫 화면 빠른 길잡이 4버튼
+  const quickStart = html.indexOf('function quickGuide(){');
+  const quickEnd = html.indexOf('function foodSwitch(){', quickStart);
+  assert.ok(quickStart > -1 && quickEnd > quickStart, '빠른 길잡이 렌더러가 있어야 한다');
+  const quick = html.slice(quickStart, quickEnd);
+  for (const label of ['오늘 메뉴 추천', '주간 식단표', '노지·비밀정원', '장보기·준비물']) {
+    assert.ok(quick.includes(label), `빠른 길잡이에 ${label} 버튼이 있어야 한다`);
+  }
+  assert.equal((quick.match(/class="quick-btn"/g) || []).length, 4, '빠른 길잡이 버튼은 4개여야 한다');
+  assert.match(quick, /data-a="jump" data-v="rec-cta"/, '오늘 메뉴 추천은 추천 조건 카드로 이동해야 한다');
+  assert.match(html, /id="rec-cta"/, '이동 목표(추천 조건 카드)가 있어야 한다');
+  assert.match(html, /if\(a==='jump'\)\{[\s\S]{0,160}scrollIntoView/, 'jump 액션이 목표를 부드럽게 스크롤해야 한다');
+  assertLegacyEntry();
+});
