@@ -51,6 +51,10 @@
   --ok:#6FD3A0; --ok-fg:#08261A;
   --cream:#F6F2E7; --cream-fg:#13261D; --cream-muted:#4F6457; --cream-line:#DFD8C4; --cream-chip:#ECE7D6;
   --sky:#8FC3D9;
+  /* 준비물 3분류 — 집에서 손질(파랑) / 챙기기(모스) / 현장 구입(코랄) */
+  --tag-prep-bg:rgba(126,166,255,.13); --tag-prep-line:rgba(126,166,255,.30); --tag-prep-fg:#A8C7FF;
+  --tag-pack-bg:rgba(230,236,175,.13); --tag-pack-line:rgba(230,236,175,.28); --tag-pack-fg:var(--pop);
+  --tag-buy-bg:var(--soft);            --tag-buy-line:rgba(255,122,89,.32);  --tag-buy-fg:var(--ember);
   --shadow:0 20px 40px -28px rgba(0,0,0,.9); --shadow-up:0 24px 44px -18px rgba(0,0,0,.95);
   --r-sm:10px; --r-md:14px; --r-lg:18px; --r-card:22px; --r-sheet:28px;
   --font-display:'Do Hyeon','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
@@ -68,6 +72,9 @@
   --ok:#1B7A4B; --ok-fg:#FFFFFF;
   --cream:#FFFDF6; --cream-fg:#13261D; --cream-muted:#4F6457; --cream-line:#E5DFCC; --cream-chip:#F0ECDF;
   --sky:#3D7E99;
+  --tag-prep-bg:rgba(37,86,168,.10); --tag-prep-line:rgba(37,86,168,.26); --tag-prep-fg:#1E5296;
+  --tag-pack-bg:rgba(31,77,60,.08);  --tag-pack-line:rgba(31,77,60,.20);  --tag-pack-fg:#1F4D3C;
+  --tag-buy-bg:var(--soft);          --tag-buy-line:rgba(192,57,26,.28);  --tag-buy-fg:var(--ember);
   --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
 }
 @media (prefers-color-scheme: light){
@@ -81,6 +88,9 @@
   --ok:#1B7A4B; --ok-fg:#FFFFFF;
   --cream:#FFFDF6; --cream-fg:#13261D; --cream-muted:#4F6457; --cream-line:#E5DFCC; --cream-chip:#F0ECDF;
   --sky:#3D7E99;
+  --tag-prep-bg:rgba(37,86,168,.10); --tag-prep-line:rgba(37,86,168,.26); --tag-prep-fg:#1E5296;
+  --tag-pack-bg:rgba(31,77,60,.08);  --tag-pack-line:rgba(31,77,60,.20);  --tag-pack-fg:#1F4D3C;
+  --tag-buy-bg:var(--soft);          --tag-buy-line:rgba(192,57,26,.28);  --tag-buy-fg:var(--ember);
   --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
   }
 }
@@ -148,14 +158,35 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 
 /* 추천 카드 */
 .rec-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
-.rec{--surface:var(--cream);--fg:var(--cream-fg);--muted:var(--cream-muted);--line:var(--cream-line);--chip:var(--cream-chip);--bg:#FFFDF6;--brand:var(--cta);--brand-fg:var(--cta-fg);background:var(--cream);color:var(--cream-fg);border-color:transparent;box-shadow:0 10px 28px rgba(0,0,0,.22)}
-.rec h3{font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
+.rec{--surface:var(--cream);--fg:var(--cream-fg);--muted:var(--cream-muted);--line:var(--cream-line);--chip:var(--cream-chip);--bg:#FFFDF6;--brand:var(--cta);--brand-fg:var(--cta-fg);
+  background:var(--cream);color:var(--cream-fg);border-color:transparent;box-shadow:var(--shadow-up);
+  border-radius:var(--r-card);overflow:hidden;padding:0}
+/* 사진·AI 일러스트가 카드 상단을 꽉 채운다 (시안 01: rec-card) */
+.rec .rec-img-ph{border-radius:0;margin:0;min-height:176px}
+.rec .rec-top,.rec .rec-facts,.rec .rec-ings,.rec .row2,.rec .rec-meta-line,.rec .why,.rec .rec-hero-sub{padding-inline:16px}
+.rec .rec-top{padding-top:16px}
+.rec .rec-img-ph+.rec-top{padding-top:16px}
+.rec>.rec-hero-sub{padding-top:16px;margin-top:0}
+.rec>.why{padding-top:14px;margin-top:0}
+.rec>.rec-facts{padding-inline:16px}
+.rec>.rec-ings{margin-inline:16px;margin-bottom:14px}
+.rec .rec-img-name{font-size:22px;letter-spacing:-.3px}
+/* 사진 위 그라데이션 스크림 — 흰 글씨 규칙(시안 §2) */
+.rec .rec-img-ph{position:relative;isolation:isolate}
+.rec .rec-img-ph::after{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(6,23,15,0) 26%,rgba(6,23,15,.55) 68%,rgba(6,23,15,.88))}
+.rec .rec-img-ph,.rec .rec-img-ph *{color:#F5EFE2}
+.rec .rec-img-name{text-shadow:0 1px 8px rgba(6,23,15,.5)}
+.rec .rec-img-btn{background:rgba(255,255,255,.94);color:var(--ember-deep)}
+.rec h3{font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.2;min-width:0;overflow-wrap:anywhere;letter-spacing:-.4px}
+.rec .rec-top+.rec-facts{margin-top:2px}
+.rec .btn.primary,.rec .btn.pop{border-radius:var(--r-md)}
 .time{flex:none;background:var(--cream-fg);color:var(--cream);font-weight:900;font-size:13px;border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums}
 .rec .why{margin:0 0 10px;color:var(--fg);font-weight:500}
 .rec-meta-line{font-size:13px;color:var(--muted);margin:0 0 12px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 /* 추천 카드 비교 개선: 예상 조리시간·난이도는 모든 카드에서 같은 라벨·형식으로 표시한다 */
 .rec-facts{display:flex;flex-wrap:wrap;gap:6px 10px;margin:0 0 10px}
-.rec-facts .fact{font-size:13px;color:var(--muted);background:var(--bg);border:1px solid var(--cream-line);border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums}
+.rec-facts .fact{font-size:13px;color:var(--muted);background:var(--bg);border:1px solid var(--cream-line);border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums;font-weight:700}
 .rec-facts .fact b{color:var(--fg);font-weight:900}
 /* 추천 카드 사진 자리 — 사진은 '요청 시에만' 생성하므로 기본은 버튼이 있는 자리표시 카드 */
 .rec-img-ph{width:100%;min-height:132px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 14px;text-align:center;color:var(--brand-fg)}
@@ -188,24 +219,32 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .prog b{font-size:20px;font-weight:900;color:var(--pop)}
 .track{flex:1;height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
 .track i{display:block;height:100%;background:var(--ok);border-radius:99px}
-.group h3{font-size:17px;font-weight:900;margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline}
-.group h3 small{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.group h3{font-size:17px;font-weight:900;margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline;letter-spacing:-.3px}
+.group h3 small{font-size:12px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;
+  background:var(--chip);border-radius:999px;padding:2px 9px}
+.group h3 small.all-done{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
 .list{list-style:none;margin:0;padding:0}
 .item{border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
 .item label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;cursor:pointer}
 .item input{appearance:none;-webkit-appearance:none;position:relative;width:26px;height:26px;margin:0;border:2px solid var(--muted);border-radius:50%;background:transparent;cursor:pointer}
-.item input:checked{background:var(--ok);border-color:var(--ok)}
+.item input:checked{background:var(--ok);border-color:var(--ok);box-shadow:0 3px 10px color-mix(in srgb,var(--ok) 34%,transparent)}
 .item input:checked::after{content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;border:solid var(--ok-fg);border-width:0 3px 3px 0;transform:rotate(45deg)}
 .item .txt{min-width:0;overflow-wrap:anywhere}
 .item .txt b{font-weight:700}
 .item .txt small{display:block;color:var(--muted);font-size:13px}
 .item .side{text-align:right;display:grid;gap:4px;justify-items:end}
 .amt{font-variant-numeric:tabular-nums;font-weight:900;font-size:14px}
-.tag{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;background:var(--chip);color:var(--muted);white-space:nowrap}
-.tag.prep{background:var(--brand);color:var(--brand-fg)}
-.tag.buy{background:var(--soft);color:var(--ember)}
-.item.done .txt b{text-decoration:line-through;color:var(--muted);font-weight:500}
+/* 준비물 3분류 — 색 고정: 집에서 손질(파랑) / 챙기기(모스) / 현장 구입(코랄) */
+.tag{font-size:11px;font-weight:900;border-radius:8px;padding:3px 8px;background:var(--chip);color:var(--muted);white-space:nowrap;border:1px solid transparent}
+.tag.prep{background:var(--tag-prep-bg);border-color:var(--tag-prep-line);color:var(--tag-prep-fg)}
+.tag.pack{background:var(--tag-pack-bg);border-color:var(--tag-pack-line);color:var(--tag-pack-fg)}
+.tag.buy{background:var(--tag-buy-bg);border-color:var(--tag-buy-line);color:var(--tag-buy-fg)}
+/* 완료 항목: 취소선 + 흐린 색 (시안 02 주의사항) */
+.item.done .txt b{text-decoration:line-through;color:var(--muted);font-weight:500;opacity:.75}
+.item.done .txt small{opacity:.6}
+.item.done .side{opacity:.55}
+.item.done .amt{font-weight:700}
 .plain{margin:0;padding-left:20px}
 .plain li{margin-bottom:6px}
 details summary{cursor:pointer;font-size:18px;font-weight:900;list-style:none;display:flex;justify-content:space-between;align-items:center}
@@ -346,16 +385,19 @@ details li{margin-bottom:8px}
 .camp-search-clear{position:absolute;right:84px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:8px}
 .camp-scroll-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
 .camp-scroll-row::-webkit-scrollbar{display:none}
-.camp-item-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);transition:border-color .15s ease}
+.camp-item-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:16px;margin-bottom:12px;
+  box-shadow:var(--shadow);transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease}
+.camp-item-card.is-selected{border-color:color-mix(in srgb,var(--ember) 55%,transparent);box-shadow:0 18px 34px -24px color-mix(in srgb,var(--ember) 55%,transparent)}
 @media (hover:hover){.camp-item-card:hover{border-color:var(--brand)}}
 .camp-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.camp-item-name{font-size:17px;font-weight:900;color:var(--fg);line-height:1.3;cursor:pointer;border:0;background:none;padding:0;text-align:left;font-family:inherit}
+.camp-item-name{font-size:17px;font-weight:900;color:var(--fg);line-height:1.3;cursor:pointer;border:0;background:none;padding:0;text-align:left;font-family:inherit;letter-spacing:-.3px}
 .camp-item-name:hover{color:var(--brand)}
-.camp-item-dist{font-size:12px;font-weight:900;color:var(--brand);background:var(--chip);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.camp-item-dist{font-size:12px;font-weight:900;color:var(--brand);background:var(--chip);padding:3px 9px;border-radius:999px;white-space:nowrap;
+  border:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .camp-item-loc{font-size:13px;color:var(--muted);margin:4px 0 8px;display:flex;align-items:center;gap:4px}
 .camp-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-.camp-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:var(--chip);color:var(--fg)}
-.camp-tag.theme{background:var(--soft);color:var(--ember)}
+.camp-tag{font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;background:var(--chip);color:var(--fg);border:1px solid transparent}
+.camp-tag.theme{background:var(--tag-pack-bg);border-color:var(--tag-pack-line);color:var(--tag-pack-fg)}
 .camp-item-actions{display:grid;grid-template-columns:minmax(0,1.4fr) auto auto;gap:6px;align-items:center}
 .fav-btn{border:0;background:none;cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:transform .12s}
 .fav-btn:active{transform:scale(1.2)}
@@ -3146,7 +3188,7 @@ body.auth-locked{padding-block:14px 40px}
       var themes=getCampThemes(c);
       var isSelected=(profile.camp&&profile.camp.name===c.name);
 
-      h+='<article class="camp-item-card" id="camp-card-'+esc(c.name)+'" style="'+(isSelected?'border-color:var(--brand);background:rgba(18,73,58,.04);':'')+'">'+
+      h+='<article class="camp-item-card'+(isSelected?' is-selected':'')+'" id="camp-card-'+esc(c.name)+'">'+
         '<div class="camp-item-top">'+
           '<div style="flex:1;min-width:0">'+
             '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
@@ -6508,7 +6550,7 @@ body.auth-locked{padding-block:14px 40px}
       var its=allIts.filter(filterMatchesItem);
       if(!its.length)return;
       var gd=allIts.filter(function(x){return x.checked}).length;
-      h+='<section class="card group"><h3>'+g+'<small>'+gd+'/'+allIts.length+'</small></h3><ul class="list">'+its.map(function(x){
+      h+='<section class="card group"><h3>'+g+'<small'+(gd===allIts.length?' class="all-done"':'')+'>'+gd+'/'+allIts.length+'</small></h3><ul class="list">'+its.map(function(x){
         var side='';
         if(x.amount)side+='<span class="amt">'+esc(x.amount)+'</span>';
         if(x.tag&&TAGS[x.tag])side+='<span class="tag '+x.tag+'">'+TAGS[x.tag]+'</span>';
