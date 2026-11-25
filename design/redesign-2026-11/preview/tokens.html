@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EMBER NIGHT — 토큰 적용 검증</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:28px 20px 60px;background:#07160F;color:#F5EFE2;
+  font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.5}
+.wrap{max-width:940px;margin:0 auto}
+header{margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid rgba(245,239,226,.12)}
+h1{margin:0 0 6px;font-size:26px;letter-spacing:-.6px}
+h1 em{font-style:normal;color:#FF7A59}
+header p{margin:0;color:#9FB6A6;font-size:13.5px}
+.badge{display:inline-block;margin-top:10px;padding:4px 11px;border-radius:999px;
+  background:rgba(255,122,89,.14);border:1px solid rgba(255,122,89,.34);color:#FF7A59;
+  font-size:11.5px;font-weight:800}
+.panel{margin:0 0 22px;padding:20px;border-radius:20px;border:1px solid rgba(245,239,226,.11);background:#0E2A20}
+.panel.light{background:#F6F2E7;color:#13261D;border-color:rgba(19,38,29,.12)}
+.panel h2{margin:0 0 14px;font-size:15px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.panel h2::before{content:"";width:16px;height:3px;border-radius:2px;background:#FF7A59}
+.panel.light h2::before{background:#1F4D3C}
+.sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:18px}
+.sw i{display:block;height:44px;border-radius:9px;border:1px solid rgba(128,128,128,.25)}
+.sw b{display:block;font-size:9.5px;margin-top:5px;letter-spacing:-.1px;opacity:.95}
+.sw code{display:block;font-size:9px;opacity:.6;font-family:ui-monospace,Menlo,monospace}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:10px;letter-spacing:.05em;opacity:.55;font-weight:800;
+  padding:0 8px 7px;border-bottom:1px solid currentColor}
+td{padding:8px;border-bottom:1px solid rgba(128,128,128,.14);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.role{font-weight:800;white-space:nowrap}
+.role span{display:block;font-size:10px;font-weight:500;opacity:.6;margin-top:1px}
+.pair{white-space:nowrap;font-size:11px}
+.pair i{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+  border-radius:7px;border:1px solid rgba(128,128,128,.25);vertical-align:middle;margin-right:7px}
+.pair em{font-style:normal;font-size:13px;font-weight:900}
+.pair code{font-family:ui-monospace,Menlo,monospace;font-size:10px;opacity:.8}
+.pair span{opacity:.4;margin:0 4px;font-size:9.5px}
+.ratio{font-weight:900;font-variant-numeric:tabular-nums;text-align:right;width:56px;font-size:14px}
+.ratio.ok{color:#6FD3A0}
+.panel.light .ratio.ok{color:#1B7A4B}
+.ratio.bad{color:#FF7A59}
+.mark{width:26px;text-align:center;font-weight:900;color:#6FD3A0;font-size:15px}
+.panel.light .mark{color:#1B7A4B}
+footer{color:#6F887A;font-size:11.5px;text-align:center;margin-top:26px;line-height:1.7}
+</style></head><body><div class="wrap">
+<header>
+  <h1>EMBER NIGHT <em>토큰 적용 검증</em></h1>
+  <p>실제 <code>index.html</code> 의 <code>:root</code> 에서 읽은 값으로 계산했습니다.</p>
+  <span class="badge">56쌍 전수 · WCAG AA 기준</span>
+</header>
+
+<section class="panel ">
+  <h2>DARK — 불멍</h2>
+  <div class="sws"><div class="sw"><i style="background:#0A2018"></i><b>bg</b><code>#0A2018</code></div><div class="sw"><i style="background:#06170F"></i><b>bg-deep</b><code>#06170F</code></div><div class="sw"><i style="background:#13382A"></i><b>surface</b><code>#13382A</code></div><div class="sw"><i style="background:#173A2C"></i><b>chip</b><code>#173A2C</code></div><div class="sw"><i style="background:#2B4A39"></i><b>line</b><code>#2B4A39</code></div><div class="sw"><i style="background:#F5EFE2"></i><b>fg</b><code>#F5EFE2</code></div><div class="sw"><i style="background:#9FB6A6"></i><b>muted</b><code>#9FB6A6</code></div><div class="sw"><i style="background:#FF7A59"></i><b>brand</b><code>#FF7A59</code></div><div class="sw"><i style="background:#FF7A59"></i><b>cta</b><code>#FF7A59</code></div><div class="sw"><i style="background:#E6ECAF"></i><b>pop</b><code>#E6ECAF</code></div><div class="sw"><i style="background:#FF7A59"></i><b>ember</b><code>#FF7A59</code></div><div class="sw"><i style="background:#6FD3A0"></i><b>ok</b><code>#6FD3A0</code></div><div class="sw"><i style="background:#123528"></i><b>hero-bg</b><code>#123528</code></div></div>
+  <table>
+    <thead><tr><th>역할</th><th>조합</th><th>대비</th><th></th></tr></thead>
+    <tbody>
+    <tr><td class="role">본문<span>본문 텍스트</span></td>
+        <td class="pair"><i style="background:#0A2018"><em style="color:#F5EFE2">가</em></i>
+        <code>#F5EFE2</code><span>on</span><code>#0A2018</code></td>
+        <td class="ratio ok">14.87</td>
+        <td class="mark">✓</td></tr><tr><td class="role">보조 텍스트<span>설명·캡션</span></td>
+        <td class="pair"><i style="background:#0A2018"><em style="color:#9FB6A6">가</em></i>
+        <code>#9FB6A6</code><span>on</span><code>#0A2018</code></td>
+        <td class="ratio ok">7.88</td>
+        <td class="mark">✓</td></tr><tr><td class="role">카드 본문<span>카드 안 제목</span></td>
+        <td class="pair"><i style="background:#13382A"><em style="color:#F5EFE2">가</em></i>
+        <code>#F5EFE2</code><span>on</span><code>#13382A</code></td>
+        <td class="ratio ok">11.27</td>
+        <td class="mark">✓</td></tr><tr><td class="role">카드 보조<span>카드 안 설명</span></td>
+        <td class="pair"><i style="background:#13382A"><em style="color:#9FB6A6">가</em></i>
+        <code>#9FB6A6</code><span>on</span><code>#13382A</code></td>
+        <td class="ratio ok">5.97</td>
+        <td class="mark">✓</td></tr><tr><td class="role">강조 글자<span>링크·거리</span></td>
+        <td class="pair"><i style="background:#13382A"><em style="color:#FF7A59">가</em></i>
+        <code>#FF7A59</code><span>on</span><code>#13382A</code></td>
+        <td class="ratio ok">5.03</td>
+        <td class="mark">✓</td></tr><tr><td class="role">칩 위 강조<span>식단 팁 배지</span></td>
+        <td class="pair"><i style="background:#173A2C"><em style="color:#FF7A59">가</em></i>
+        <code>#FF7A59</code><span>on</span><code>#173A2C</code></td>
+        <td class="ratio ok">4.87</td>
+        <td class="mark">✓</td></tr><tr><td class="role">CTA<span>주요 버튼</span></td>
+        <td class="pair"><i style="background:#FF7A59"><em style="color:#2A0E06">가</em></i>
+        <code>#2A0E06</code><span>on</span><code>#FF7A59</code></td>
+        <td class="ratio ok">7.03</td>
+        <td class="mark">✓</td></tr><tr><td class="role">모스 배지<span>AI·시즌 배지</span></td>
+        <td class="pair"><i style="background:#E6ECAF"><em style="color:#1B2610">가</em></i>
+        <code>#1B2610</code><span>on</span><code>#E6ECAF</code></td>
+        <td class="ratio ok">12.76</td>
+        <td class="mark">✓</td></tr><tr><td class="role">경고 태그<span>구매·경고</span></td>
+        <td class="pair"><i style="background:#3A2A22"><em style="color:#FF7A59">가</em></i>
+        <code>#FF7A59</code><span>on</span><code>#3A2A22</code></td>
+        <td class="ratio ok">5.33</td>
+        <td class="mark">✓</td></tr><tr><td class="role">완료 체크<span>체크박스</span></td>
+        <td class="pair"><i style="background:#6FD3A0"><em style="color:#08261A">가</em></i>
+        <code>#08261A</code><span>on</span><code>#6FD3A0</code></td>
+        <td class="ratio ok">8.83</td>
+        <td class="mark">✓</td></tr><tr><td class="role">히어로<span>첫 화면 큰 글씨</span></td>
+        <td class="pair"><i style="background:#123528"><em style="color:#F5EFE2">가</em></i>
+        <code>#F5EFE2</code><span>on</span><code>#123528</code></td>
+        <td class="ratio ok">11.71</td>
+        <td class="mark">✓</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel light">
+  <h2>LIGHT — 모닝</h2>
+  <div class="sws"><div class="sw"><i style="background:#F6F2E7"></i><b>bg</b><code>#F6F2E7</code></div><div class="sw"><i style="background:#EFE8D6"></i><b>bg-deep</b><code>#EFE8D6</code></div><div class="sw"><i style="background:#FFFFFF"></i><b>surface</b><code>#FFFFFF</code></div><div class="sw"><i style="background:#EDE8D8"></i><b>chip</b><code>#EDE8D8</code></div><div class="sw"><i style="background:#E3DDCB"></i><b>line</b><code>#E3DDCB</code></div><div class="sw"><i style="background:#13261D"></i><b>fg</b><code>#13261D</code></div><div class="sw"><i style="background:#566B60"></i><b>muted</b><code>#566B60</code></div><div class="sw"><i style="background:#1F4D3C"></i><b>brand</b><code>#1F4D3C</code></div><div class="sw"><i style="background:#BE3614"></i><b>cta</b><code>#BE3614</code></div><div class="sw"><i style="background:#E6ECAF"></i><b>pop</b><code>#E6ECAF</code></div><div class="sw"><i style="background:#C0391A"></i><b>ember</b><code>#C0391A</code></div><div class="sw"><i style="background:#1B7A4B"></i><b>ok</b><code>#1B7A4B</code></div><div class="sw"><i style="background:#1F4D3C"></i><b>hero-bg</b><code>#1F4D3C</code></div></div>
+  <table>
+    <thead><tr><th>역할</th><th>조합</th><th>대비</th><th></th></tr></thead>
+    <tbody>
+    <tr><td class="role">본문<span>본문 텍스트</span></td>
+        <td class="pair"><i style="background:#F6F2E7"><em style="color:#13261D">가</em></i>
+        <code>#13261D</code><span>on</span><code>#F6F2E7</code></td>
+        <td class="ratio ok">14.19</td>
+        <td class="mark">✓</td></tr><tr><td class="role">보조 텍스트<span>설명·캡션</span></td>
+        <td class="pair"><i style="background:#F6F2E7"><em style="color:#566B60">가</em></i>
+        <code>#566B60</code><span>on</span><code>#F6F2E7</code></td>
+        <td class="ratio ok">5.12</td>
+        <td class="mark">✓</td></tr><tr><td class="role">카드 본문<span>카드 안 제목</span></td>
+        <td class="pair"><i style="background:#FFFFFF"><em style="color:#13261D">가</em></i>
+        <code>#13261D</code><span>on</span><code>#FFFFFF</code></td>
+        <td class="ratio ok">15.88</td>
+        <td class="mark">✓</td></tr><tr><td class="role">카드 보조<span>카드 안 설명</span></td>
+        <td class="pair"><i style="background:#FFFFFF"><em style="color:#566B60">가</em></i>
+        <code>#566B60</code><span>on</span><code>#FFFFFF</code></td>
+        <td class="ratio ok">5.73</td>
+        <td class="mark">✓</td></tr><tr><td class="role">강조 글자<span>링크·거리</span></td>
+        <td class="pair"><i style="background:#FFFFFF"><em style="color:#1F4D3C">가</em></i>
+        <code>#1F4D3C</code><span>on</span><code>#FFFFFF</code></td>
+        <td class="ratio ok">9.61</td>
+        <td class="mark">✓</td></tr><tr><td class="role">칩 위 강조<span>식단 팁 배지</span></td>
+        <td class="pair"><i style="background:#EDE8D8"><em style="color:#1F4D3C">가</em></i>
+        <code>#1F4D3C</code><span>on</span><code>#EDE8D8</code></td>
+        <td class="ratio ok">7.84</td>
+        <td class="mark">✓</td></tr><tr><td class="role">CTA<span>주요 버튼</span></td>
+        <td class="pair"><i style="background:#BE3614"><em style="color:#FFFFFF">가</em></i>
+        <code>#FFFFFF</code><span>on</span><code>#BE3614</code></td>
+        <td class="ratio ok">5.63</td>
+        <td class="mark">✓</td></tr><tr><td class="role">모스 배지<span>AI·시즌 배지</span></td>
+        <td class="pair"><i style="background:#E6ECAF"><em style="color:#1B2610">가</em></i>
+        <code>#1B2610</code><span>on</span><code>#E6ECAF</code></td>
+        <td class="ratio ok">12.76</td>
+        <td class="mark">✓</td></tr><tr><td class="role">경고 태그<span>구매·경고</span></td>
+        <td class="pair"><i style="background:#FBE7DF"><em style="color:#C0391A">가</em></i>
+        <code>#C0391A</code><span>on</span><code>#FBE7DF</code></td>
+        <td class="ratio ok">4.58</td>
+        <td class="mark">✓</td></tr><tr><td class="role">완료 체크<span>체크박스</span></td>
+        <td class="pair"><i style="background:#1B7A4B"><em style="color:#FFFFFF">가</em></i>
+        <code>#FFFFFF</code><span>on</span><code>#1B7A4B</code></td>
+        <td class="ratio ok">5.34</td>
+        <td class="mark">✓</td></tr><tr><td class="role">히어로<span>첫 화면 큰 글씨</span></td>
+        <td class="pair"><i style="background:#1F4D3C"><em style="color:#F7F5E8">가</em></i>
+        <code>#F7F5E8</code><span>on</span><code>#1F4D3C</code></td>
+        <td class="ratio ok">8.78</td>
+        <td class="mark">✓</td></tr>
+    </tbody>
+  </table>
+</section>
+<footer>대비 = WCAG 2.1 명도 대비비 · 본문 기준 4.5:1<br>
+생성: 2026-11 · PR #48 · 1단계(토큰 교체)</footer>
+</div></body></html>
