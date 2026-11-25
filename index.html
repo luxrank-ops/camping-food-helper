@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<meta name="theme-color" content="#0E2820" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#F3F0E4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#06170F" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F6F2E7" media="(prefers-color-scheme: light)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -36,29 +36,52 @@
    - 한 화면에 할 일은 하나: 주요 행동은 코랄 CTA 하나, 나머지는 조용한 면·칩.
    - 젖은 손·장갑 낀 손으로도 누르도록 터치 영역 44px 이상.
    - 추천 카드는 크림색 면으로 떠올려 "지금 고를 메뉴"를 가장 먼저 보이게 한다. */
+/* ── EMBER NIGHT 토큰 (2026-11 리디자인) ─────────────────────────────
+   실제 화면에서 이기는 값은 여기 하나뿐입니다. 아래 "따뜻한 무드" 섹션은
+   스타일 규칙만 두고 토큰 재정의는 제거했습니다(이중 정의 → 유지보수 사고). */
 :root{
-  --bg:#0E2820; --surface:#17382D; --fg:#F4F1E3; --muted:#A8C1B5; --line:#2B4D41; --chip:#214A3D;
-  --brand:#F4735A; --brand-fg:#2A0E06; --cta:#F4735A; --cta-fg:#2A0E06;
-  --hero-bg:#1B4A3B; --hero-fg:#F7F5E8;
-  --pop:#EEF3B2; --pop-fg:#1B2610; --ember:#FF9C84; --soft:#3A2420; --ok:#8ED9B2; --ok-fg:#0B2619;
-  --cream:#F6F4DA; --cream-fg:#16291F; --cream-muted:#4D6257; --cream-line:#DCD8B3; --cream-chip:#E7E5C3;
-  --shadow:0 8px 24px rgba(0,0,0,.28); --shadow-up:0 14px 36px rgba(0,0,0,.45);
+  --bg:#0A2018; --bg-deep:#06170F; --surface:#13382A; --surface-2:#173F2F;
+  --fg:#F5EFE2; --muted:#9FB6A6; --line:#2B4A39; --chip:#173A2C;
+  /* brand = 코랄 강조(텍스트·선). 면을 채울 때는 반드시 brand-fg 를 글자색으로. */
+  --brand:#FF7A59; --brand-fg:#2A0E06; --cta:#FF7A59; --cta-fg:#2A0E06;
+  --cta-grad:linear-gradient(135deg,#FF7A59 0%,#F0502E 100%);
+  --hero-bg:#123528; --hero-top:#26563F; --hero-deep:#08190F; --hero-fg:#F5EFE2;
+  --pop:#E6ECAF; --pop-fg:#1B2610;
+  --ember:#FF7A59; --ember-deep:#B33A18; --ember-fg:#2A0E06; --soft:#3A2A22;
+  --ok:#6FD3A0; --ok-fg:#08261A;
+  --cream:#F6F2E7; --cream-fg:#13261D; --cream-muted:#4F6457; --cream-line:#DFD8C4; --cream-chip:#ECE7D6;
+  --sky:#8FC3D9;
+  --shadow:0 20px 40px -28px rgba(0,0,0,.9); --shadow-up:0 24px 44px -18px rgba(0,0,0,.95);
+  --r-sm:10px; --r-md:14px; --r-lg:18px; --r-card:22px; --r-sheet:28px;
   --font-display:'Do Hyeon','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --font-body:'Gothic A1','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   color-scheme:dark;
 }
-:root[data-theme="light"]{ --bg:#F3F0E4; --surface:#FFFFFF; --fg:#14291F; --muted:#5A6F64; --line:#E0DCCB; --chip:#ECE9D9;
-  --brand:#1F4D3C; --brand-fg:#FFFFFF; --cta:#D9462B; --cta-fg:#FFFFFF; --hero-bg:#1F4D3C; --hero-fg:#F7F5E8;
-  --pop:#EEF3B2; --pop-fg:#1B2610; --ember:#B3401A; --soft:#FCE9E1; --ok:#1E8A55; --ok-fg:#FFFFFF;
-  --cream:#F6F4DA; --cream-fg:#16291F; --cream-muted:#4D6257; --cream-line:#DCD8B3; --cream-chip:#E7E5C3;
-  --shadow:0 6px 20px rgba(20,41,31,.08); --shadow-up:0 12px 32px rgba(20,41,31,.18); color-scheme:light;
+:root[data-theme="light"]{
+  --bg:#F6F2E7; --bg-deep:#EFE8D6; --surface:#FFFFFF; --surface-2:#FBFAF4;
+  --fg:#13261D; --muted:#566B60; --line:#E3DDCB; --chip:#EDE8D8;
+  --brand:#1F4D3C; --brand-fg:#FFFFFF; --cta:#BE3614; --cta-fg:#FFFFFF;
+  --cta-grad:linear-gradient(135deg,#D2451F 0%,#B83315 100%);
+  --hero-bg:#1F4D3C; --hero-top:#35704F; --hero-deep:#153A2D; --hero-fg:#F7F5E8;
+  --pop:#E6ECAF; --pop-fg:#1B2610;
+  --ember:#C0391A; --ember-deep:#A8391A; --ember-fg:#FFFFFF; --soft:#FBE7DF;
+  --ok:#1B7A4B; --ok-fg:#FFFFFF;
+  --cream:#FFFDF6; --cream-fg:#13261D; --cream-muted:#4F6457; --cream-line:#E5DFCC; --cream-chip:#F0ECDF;
+  --sky:#3D7E99;
+  --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
 }
 @media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){ --bg:#F3F0E4; --surface:#FFFFFF; --fg:#14291F; --muted:#5A6F64; --line:#E0DCCB; --chip:#ECE9D9;
-  --brand:#1F4D3C; --brand-fg:#FFFFFF; --cta:#D9462B; --cta-fg:#FFFFFF; --hero-bg:#1F4D3C; --hero-fg:#F7F5E8;
-  --pop:#EEF3B2; --pop-fg:#1B2610; --ember:#B3401A; --soft:#FCE9E1; --ok:#1E8A55; --ok-fg:#FFFFFF;
-  --cream:#F6F4DA; --cream-fg:#16291F; --cream-muted:#4D6257; --cream-line:#DCD8B3; --cream-chip:#E7E5C3;
-  --shadow:0 6px 20px rgba(20,41,31,.08); --shadow-up:0 12px 32px rgba(20,41,31,.18); color-scheme:light;
+  :root:not([data-theme="dark"]){ --bg:#F6F2E7; --bg-deep:#EFE8D6; --surface:#FFFFFF; --surface-2:#FBFAF4;
+  --fg:#13261D; --muted:#566B60; --line:#E3DDCB; --chip:#EDE8D8;
+  --brand:#1F4D3C; --brand-fg:#FFFFFF; --cta:#BE3614; --cta-fg:#FFFFFF;
+  --cta-grad:linear-gradient(135deg,#D2451F 0%,#B83315 100%);
+  --hero-bg:#1F4D3C; --hero-top:#35704F; --hero-deep:#153A2D; --hero-fg:#F7F5E8;
+  --pop:#E6ECAF; --pop-fg:#1B2610;
+  --ember:#C0391A; --ember-deep:#A8391A; --ember-fg:#FFFFFF; --soft:#FBE7DF;
+  --ok:#1B7A4B; --ok-fg:#FFFFFF;
+  --cream:#FFFDF6; --cream-fg:#13261D; --cream-muted:#4F6457; --cream-line:#E5DFCC; --cream-chip:#F0ECDF;
+  --sky:#3D7E99;
+  --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
   }
 }
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:14px 120px}
@@ -109,7 +132,7 @@ button{font-family:var(--font-body)}
 .step button{appearance:none;border:0;background:var(--surface);color:var(--fg);width:44px;height:44px;border-radius:50%;font:700 22px/1 var(--font-body);cursor:pointer;box-shadow:var(--shadow)}
 .step output{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;font-weight:900;font-size:17px}
 .btn{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);font:700 15px/1.2 var(--font-body);min-height:52px;padding:0 20px;border-radius:18px;text-align:center;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-.btn.primary{background:var(--cta);border-color:var(--cta);color:var(--cta-fg);box-shadow:var(--shadow);font-weight:900}
+.btn.primary{background:var(--cta-grad);border-color:transparent;color:var(--cta-fg);box-shadow:0 16px 30px -14px rgba(240,80,46,.85);font-weight:900}
 .btn.pop{background:var(--pop);border-color:var(--pop);color:var(--pop-fg);box-shadow:var(--shadow)}
 .btn.big{min-height:58px;font-size:16px;border-radius:20px}
 .btn.wide{width:100%}
@@ -125,7 +148,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 
 /* 추천 카드 */
 .rec-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
-.rec{--surface:var(--cream);--fg:var(--cream-fg);--muted:var(--cream-muted);--line:var(--cream-line);--chip:var(--cream-chip);--bg:#FFFDEB;--brand:var(--cta);--brand-fg:var(--cta-fg);background:var(--cream);color:var(--cream-fg);border-color:transparent;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.rec{--surface:var(--cream);--fg:var(--cream-fg);--muted:var(--cream-muted);--line:var(--cream-line);--chip:var(--cream-chip);--bg:#FFFDF6;--brand:var(--cta);--brand-fg:var(--cta-fg);background:var(--cream);color:var(--cream-fg);border-color:transparent;box-shadow:0 10px 28px rgba(0,0,0,.22)}
 .rec h3{font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
 .time{flex:none;background:var(--cream-fg);color:var(--cream);font-weight:900;font-size:13px;border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums}
 .rec .why{margin:0 0 10px;color:var(--fg);font-weight:500}
@@ -138,7 +161,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .rec-img-ph{width:100%;min-height:132px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 14px;text-align:center;color:var(--brand-fg)}
 .rec-img-emoji{font-size:20px;line-height:1}
 .rec-img-name{font-family:var(--font-display);font-size:18px;line-height:1.25;word-break:keep-all;color:var(--brand-fg)}
-.rec-img-btn{background:#fff;color:var(--brand);border:0;font-weight:900;font-size:12.5px;min-height:38px;padding:0 14px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.rec-img-btn{background:#fff;color:var(--ember-deep);border:0;font-weight:900;font-size:12.5px;min-height:38px;padding:0 14px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.16)}
 .rec-img-note{font-size:12px;font-weight:700;line-height:1.35;opacity:.95;word-break:keep-all}
 .why-lab{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.04em;background:var(--pop);color:var(--pop-fg);border-radius:8px;padding:2px 8px;margin-right:6px;vertical-align:1px}
 .rec-ings{background:var(--bg);border-radius:14px;padding:10px 12px;margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.5}
@@ -314,7 +337,7 @@ details li{margin-bottom:8px}
 @media (max-width:420px){.wx-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* 전국 캠핑장 탐색 */
-.camp-browse-hero{background:linear-gradient(135deg,var(--hero-bg) 0%,#092c22 100%);color:var(--hero-fg);border-radius:24px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.camp-browse-hero{background:linear-gradient(135deg,var(--hero-bg) 0%,var(--hero-deep) 100%);color:var(--hero-fg);border-radius:24px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
 .camp-browse-hero h2{font-family:var(--font-display);font-size:26px;margin:0 0 4px}
 .camp-browse-hero p{margin:0;font-size:13px;opacity:.9}
 .camp-ctrls{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -341,12 +364,12 @@ details li{margin-bottom:8px}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 
 /* 장박 주간 식단표 스타일 */
-.plan-hero{background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%);color:var(--hero-fg);border-radius:24px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
-.plan-hero h2{font-family:var(--font-display);font-size:22px;margin:0 0 6px;color:#fff}
+.plan-hero{background:linear-gradient(160deg,var(--hero-top),var(--hero-deep) 90%);color:var(--hero-fg);border-radius:24px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.plan-hero h2{font-family:var(--font-display);font-size:22px;margin:0 0 6px;color:var(--hero-fg)}
 .plan-hero p{font-size:13px;color:rgba(255,255,255,.88);margin:0 0 12px;line-height:1.4}
 .plan-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:8px}
 
-.plan-gen-btn{width:100%;border:0;border-radius:16px;background:var(--ember);color:#fff;font-family:var(--font-display);font-size:17px;font-weight:900;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(224,93,56,.35);transition:all .15s ease}
+.plan-gen-btn{width:100%;border:0;border-radius:16px;background:var(--cta-grad);color:var(--ember-fg);font-family:var(--font-display);font-size:17px;font-weight:900;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(224,93,56,.35);transition:all .15s ease}
 .plan-gen-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .plan-gen-btn:active{transform:scale(.98)}
 
@@ -469,7 +492,7 @@ details li{margin-bottom:8px}
 .garden-marker-pin{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#ffffff;border:2.5px solid var(--brand);box-shadow:0 3px 10px rgba(0,0,0,.35);font-size:16px;position:relative;cursor:pointer;transition:transform .12s ease}
 .garden-marker-pin:hover{transform:scale(1.15)}
 .garden-marker-pin.private{border-color:var(--ember);background:#fff5f2}
-.garden-marker-pin .mini-lock{position:absolute;top:-4px;right:-4px;font-size:10px;background:var(--ember);color:#fff;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);line-height:1}
+.garden-marker-pin .mini-lock{position:absolute;top:-4px;right:-4px;font-size:10px;background:var(--ember);color:var(--ember-fg);border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);line-height:1}
 
 /* Leaflet 커스텀 스타일 (감성적이고 세련된 마커 상세 정보창) */
 .leaflet-popup-content-wrapper{
@@ -666,7 +689,7 @@ details li{margin-bottom:8px}
   height:35px;
   border-radius:9px;
   background:var(--brand);
-  color:#ffffff;
+  color:var(--brand-fg);
   border:0;
   font-size:12.5px;
   font-weight:900;
@@ -1096,7 +1119,7 @@ input,select,textarea{ font-size:16px !important; }
   :root:not([data-theme="dark"]) .pill{ background:color-mix(in srgb, var(--surface) 92%, transparent); }
 }
 /* 방명록 — 캠프 노트와 우편 엽서에서 가져온 따뜻한 게시판 */
-.guestbook-hero{background:linear-gradient(135deg,#173d30 0%,#2a6048 58%,#936343 150%)}
+.guestbook-hero{background:linear-gradient(135deg,var(--hero-deep) 0%,var(--hero-bg) 58%,var(--ember-deep) 150%)}
 .guestbook-hero .scene{opacity:.58}
 .guestbook-compose{padding:20px}
 .guestbook-section-head,.guestbook-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -1136,61 +1159,36 @@ input,select,textarea{ font-size:16px !important; }
 @media(max-width:380px){.guestbook-fields{grid-template-columns:1fr}.guestbook-compose{padding:16px}.guestbook-index{font-size:9px}}
 
 
-/* ── 손으로 그린 숲속 캠프 무드: 따뜻한 종이색, 이끼빛, 노을빛 포인트 ── */
-:root{
-  --bg:#172c25; --surface:#233c31; --fg:#f6f0dc; --muted:#bec7a9; --line:#405548; --chip:#304a3b;
-  --brand:#e9b36d; --brand-fg:#282518; --cta:#e99a67; --cta-fg:#302019; --hero-bg:#315f4b; --hero-fg:#fff6dc;
-  --pop:#f5d891; --pop-fg:#39321e; --ember:#efaa79; --soft:#4a3830; --ok:#acd29a; --ok-fg:#182d21;
-  --cream:#fff7df; --cream-fg:#29392d; --cream-muted:#71806a; --cream-line:#e7d9b7; --cream-chip:#eee5c9;
-  --shadow:0 9px 26px rgba(6,24,17,.22); --shadow-up:0 16px 38px rgba(5,22,15,.34);
-  color-scheme:dark;
-}
-:root[data-theme="light"]{
-  --bg:#f2eddb; --surface:#fffdf5; --fg:#293a2f; --muted:#75816d; --line:#e2dbc5; --chip:#e9e5cf;
-  --brand:#315f49; --brand-fg:#fffdf2; --cta:#cf714b; --cta-fg:#fffaf0; --hero-bg:#3d7557; --hero-fg:#fff8e6;
-  --pop:#f4d585; --pop-fg:#41351b; --ember:#a95637; --soft:#f7e5d8; --ok:#488256; --ok-fg:#fff;
-  --cream:#fff9e6; --cream-fg:#2c3c30; --cream-muted:#74806b; --cream-line:#e8dcbf; --cream-chip:#f0e8cf;
-  --shadow:0 7px 22px rgba(60,66,43,.10); --shadow-up:0 14px 34px rgba(52,63,43,.17); color-scheme:light;
-}
-@media(prefers-color-scheme:light){
-  :root:not([data-theme="dark"]){
-    --bg:#f2eddb; --surface:#fffdf5; --fg:#293a2f; --muted:#75816d; --line:#e2dbc5; --chip:#e9e5cf;
-    --brand:#315f49; --brand-fg:#fffdf2; --cta:#cf714b; --cta-fg:#fffaf0; --hero-bg:#3d7557; --hero-fg:#fff8e6;
-    --pop:#f4d585; --pop-fg:#41351b; --ember:#a95637; --soft:#f7e5d8; --ok:#488256; --ok-fg:#fff;
-    --cream:#fff9e6; --cream-fg:#2c3c30; --cream-muted:#74806b; --cream-line:#e8dcbf; --cream-chip:#f0e8cf;
-    --shadow:0 7px 22px rgba(60,66,43,.10); --shadow-up:0 14px 34px rgba(52,63,43,.17); color-scheme:light;
-  }
-}
+/* ── 표면·히어로 마감 (색은 위 :root 토큰에서만 가져온다) ── */
 body{
-  background-color:var(--bg);
-  background-image:radial-gradient(ellipse at 8% 0%,rgba(219,173,103,.10),transparent 34%),radial-gradient(ellipse at 100% 28%,rgba(96,139,96,.10),transparent 38%);
+  background-color:var(--bg-deep);
+  background-image:radial-gradient(ellipse at 8% 0%,rgba(255,122,89,.07),transparent 34%),radial-gradient(ellipse at 100% 28%,rgba(111,211,160,.05),transparent 38%);
 }
 .card,.camp-ctrls,.camp-item-card,.plan-day-card,.garden-card,.loc-card,.guestbook-compose,.guestbook-entry{
-  border-radius:23px; box-shadow:var(--shadow); border-color:var(--line);
+  border-radius:var(--r-card); box-shadow:var(--shadow); border-color:var(--line);
 }
-.card{background-image:linear-gradient(145deg,color-mix(in srgb,var(--surface) 98%,white),var(--surface));}
+.card{background-image:linear-gradient(145deg,color-mix(in srgb,var(--surface) 96%,white),var(--surface));}
 .hero{
   border:1px solid color-mix(in srgb,var(--hero-fg) 17%,transparent);
-  border-radius:30px;
-  box-shadow:0 14px 30px rgba(9,30,19,.2);
-  background-image:linear-gradient(150deg,color-mix(in srgb,var(--hero-bg) 82%,#91a877) 0%,var(--hero-bg) 52%,#244837 100%);
+  border-radius:var(--r-sheet);
+  box-shadow:var(--shadow);
+  background-image:linear-gradient(150deg,var(--hero-top) 0%,var(--hero-bg) 52%,var(--hero-deep) 100%);
 }
-.hero .scene{width:74%;max-width:350px;right:-10px;bottom:-3px;opacity:.92;z-index:0;filter:drop-shadow(0 7px 8px rgba(11,31,20,.12));}
+.hero .scene{width:74%;max-width:350px;right:-10px;bottom:-3px;opacity:.92;z-index:0;filter:drop-shadow(0 7px 8px rgba(0,0,0,.28));}
 .hero>:not(.scene){position:relative;z-index:1;}
 .hero-top{margin-bottom:28px;}
-.brand{letter-spacing:.08em;text-shadow:0 1px 5px rgba(10,30,20,.14);}
-.home h1 em{color:var(--pop);text-shadow:0 2px 12px rgba(23,36,19,.16);}
-.season{box-shadow:0 3px 10px rgba(22,34,18,.12);}
+.brand{letter-spacing:.08em;text-shadow:0 1px 5px rgba(0,0,0,.28);}
+.home h1 em{color:var(--pop);text-shadow:0 2px 12px rgba(0,0,0,.3);}
+.season{box-shadow:0 3px 10px rgba(0,0,0,.28);}
 .btn,.chip,.step button,.camp-item-card,.wx-menu-item{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background-color .16s ease;}
-.btn{border-radius:17px;}
-.btn.primary{box-shadow:0 5px 13px color-mix(in srgb,var(--cta) 28%,transparent);}
+.btn{border-radius:var(--r-lg);}
 .chip{border-color:color-mix(in srgb,var(--line) 68%,transparent);}
 .chip[aria-pressed="true"]{box-shadow:0 3px 10px color-mix(in srgb,var(--brand) 25%,transparent);}
-.tabs .pill{border-color:color-mix(in srgb,var(--line) 72%,transparent);background:color-mix(in srgb,var(--surface) 90%,transparent);box-shadow:0 8px 28px rgba(10,25,17,.18);}
-.tabs button[aria-current="page"]{background:color-mix(in srgb,var(--pop) 33%,var(--chip));color:var(--brand);}
+.tabs .pill{border-color:var(--line);background:color-mix(in srgb,var(--surface) 92%,transparent);}
+.tabs button[aria-current="page"]{background:var(--soft);color:var(--ember);}
 .visit-fab-card,.visit-chip{border-color:color-mix(in srgb,var(--line) 76%,transparent);}
-.rec{box-shadow:0 12px 28px rgba(22,34,18,.14);}
-.plan-hero,.camp-browse-hero{background-image:linear-gradient(150deg,color-mix(in srgb,var(--hero-bg) 82%,#91a877),var(--hero-bg) 58%,#244837);border-radius:25px;}
+.rec{box-shadow:0 18px 34px -20px rgba(0,0,0,.55);}
+.plan-hero,.camp-browse-hero{background-image:linear-gradient(150deg,var(--hero-top),var(--hero-bg) 58%,var(--hero-deep));border-radius:var(--r-card);}
 input,select,textarea{accent-color:var(--brand);}
 @media(max-width:480px){
   .hero .scene{width:66%;right:-11px;opacity:.66;}
@@ -3213,13 +3211,13 @@ body.auth-locked{padding-block:14px 40px}
         '<button class="btn '+(my?'pop':'primary')+' sm" type="button" data-a="loc-use" '+(ui.locBusy?'disabled':'')+' style="min-height:38px;padding:0 14px;font-size:13px">'+
           (ui.locBusy?'위치 찾는 중…':(my?'📍 내 위치 켜짐 (거리순)':'📍 내 위치 켜기 (가까운 순 정렬)'))+
         '</button>'+
-        '<button class="chip sm '+(isOnlyFav?'active':'')+'" type="button" data-a="camp-fav-toggle" aria-pressed="'+isOnlyFav+'" style="background:'+(isOnlyFav?'var(--ember)':'rgba(255,255,255,.2)')+';color:#fff">'+
+        '<button class="chip sm '+(isOnlyFav?'active':'')+'" type="button" data-a="camp-fav-toggle" aria-pressed="'+isOnlyFav+'" style="background:'+(isOnlyFav?'var(--ember)':'rgba(255,255,255,.2)')+';color:'+(isOnlyFav?'var(--ember-fg)':'#fff')+'\">'+
           '❤️ 찜한 캠핑장 ('+(ui.favCamps?ui.favCamps.length:0)+')'+
         '</button>'+
       '</div>'+
     '</section>';
 
-    h+='<div class="card" style="background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%);color:#fff;border-radius:18px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
+    h+='<div class="card" style="background:linear-gradient(160deg,var(--hero-top),var(--hero-deep) 90%);color:var(--hero-fg);border-radius:18px;padding:14px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">'+
       '<div>'+
         '<div style="font-size:11px;font-weight:900;background:var(--pop);color:var(--pop-fg);display:inline-block;padding:2px 8px;border-radius:999px;margin-bottom:4px">NEW 🌿</div>'+
         '<h3 style="font-size:16px;font-weight:900;margin:0 0 2px">나만의 비밀의 정원 (노지&amp;캠장) 등록</h3>'+
@@ -5390,9 +5388,9 @@ body.auth-locked{padding-block:14px 40px}
         '</div>'+
         '<div style="display:flex;gap:4px;align-items:center">'+
           '<span style="font-size:12px">정렬:</span>'+
-          '<button class="chip sm '+(ui.gardenSort==='newest'?'active':'')+'" type="button" data-a="garden-sort" data-v="newest" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='newest'?';background:var(--brand);color:#fff':'')+'">최신순</button>'+
-          '<button class="chip sm '+(ui.gardenSort==='likes'?'active':'')+'" type="button" data-a="garden-sort" data-v="likes" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='likes'?';background:var(--brand);color:#fff':'')+'">❤️ 찜순</button>'+
-          '<button class="chip sm '+(ui.gardenSort==='name'?'active':'')+'" type="button" data-a="garden-sort" data-v="name" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='name'?';background:var(--brand);color:#fff':'')+'">이름순</button>'+
+          '<button class="chip sm '+(ui.gardenSort==='newest'?'active':'')+'" type="button" data-a="garden-sort" data-v="newest" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='newest'?';background:var(--brand);color:var(--brand-fg)':'')+'">최신순</button>'+
+          '<button class="chip sm '+(ui.gardenSort==='likes'?'active':'')+'" type="button" data-a="garden-sort" data-v="likes" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='likes'?';background:var(--brand);color:var(--brand-fg)':'')+'">❤️ 찜순</button>'+
+          '<button class="chip sm '+(ui.gardenSort==='name'?'active':'')+'" type="button" data-a="garden-sort" data-v="name" style="font-size:11.5px;padding:3px 8px'+(ui.gardenSort==='name'?';background:var(--brand);color:var(--brand-fg)':'')+'">이름순</button>'+
         '</div>'+
       '</div>';
 
@@ -5565,7 +5563,7 @@ body.auth-locked{padding-block:14px 40px}
       '<span style="font-size:12px;font-weight:700;color:var(--muted)">인기 시설:</span>'+
       quickFacs.map(function(qf){
         var act = (ui.gardenFacFilter === qf.k);
-        return '<button class="plan-mini-btn '+(act?'owned':'')+'" type="button" data-a="garden-fac-filter" data-v="'+qf.k+'" style="'+(act?'background:var(--brand);color:#fff;border-color:var(--brand)':'')+'">'+qf.label+'</button>';
+        return '<button class="plan-mini-btn '+(act?'owned':'')+'" type="button" data-a="garden-fac-filter" data-v="'+qf.k+'" style="'+(act?'background:var(--brand);color:var(--brand-fg);border-color:var(--brand)':'')+'">'+qf.label+'</button>';
       }).join('')+
     '</div>';
 
@@ -6068,9 +6066,9 @@ body.auth-locked{padding-block:14px 40px}
     var wxi=(ui.wx&&profile.wxAware)?wxInfo(ui.wx):null;
     if(wxi)s='<span class="season" style="background:var(--chip);color:var(--muted)">'+wxi.icon+' '+deg(ui.wx.temp)+' '+wxi.label+'</span>'+s;
     if(ui.tab==='rec')return '<section class="hero home">'+SCENE+'<div class="hero-top"><span class="brand">캠핑음식 도우미'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>오늘 캠핑.<br><em>춘학아~ 뭐해먹지?</em></h1><p class="sub">장비와 인원만 고르면 메뉴부터 준비물까지 정리해 줘요.</p></section>';
-    if(ui.tab==='plan')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%)">'+SCENE+'<div class="hero-top"><span class="brand">장박 주간 식단 플래너'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>2박 3일+ 장박,<br><em>끼니 고민 끝!</em></h1><p class="sub">인원과 일정에 맞춘 끼니별 식단표와 전체 식재료·장비 자동 취합</p></section>';
+    if(ui.tab==='plan')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-top),var(--hero-deep) 90%)">'+SCENE+'<div class="hero-top"><span class="brand">장박 주간 식단 플래너'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>2박 3일+ 장박,<br><em>끼니 고민 끝!</em></h1><p class="sub">인원과 일정에 맞춘 끼니별 식단표와 전체 식재료·장비 자동 취합</p></section>';
     if(ui.tab==='camp')return '<section class="hero home" style="padding-bottom:18px">'+SCENE+'<div class="hero-top"><span class="brand">전국 캠핑장 찾기'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>전국 4,000+<br><em>어디로 떠날까?</em></h1><p class="sub">전국 캠핑장 탐색부터 날씨 맞춤 요리까지 한 번에 연결돼요.</p></section>';
-    if(ui.tab==='garden')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-bg),#1c4034 90%)">'+SCENE+'<div class="hero-top"><span class="brand">나만의 비밀의 정원'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>노지 · 차박 · 비밀 캠장<br><em>나만의 아지트 등록</em></h1><p class="sub">화장실, 개수대, 전기, 진입로까지 디테일하게 기록하고 관리하는 비밀 스팟</p></section>';
+    if(ui.tab==='garden')return '<section class="hero home" style="padding-bottom:18px;background:linear-gradient(160deg,var(--hero-top),var(--hero-deep) 90%)">'+SCENE+'<div class="hero-top"><span class="brand">나만의 비밀의 정원'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>노지 · 차박 · 비밀 캠장<br><em>나만의 아지트 등록</em></h1><p class="sub">화장실, 개수대, 전기, 진입로까지 디테일하게 기록하고 관리하는 비밀 스팟</p></section>';
     if(ui.tab==='guestbook')return '<section class="hero home guestbook-hero">'+SCENE+'<div class="hero-top"><span class="brand">CAMPING COMMUNITY'+planBadgeHtml()+'</span>'+'<span class="hero-badges">'+s+authTopHtml()+'</span>'+'</div><h1>캠핑의 추억을<br><em>남겨 주세요.</em></h1><p class="sub">다녀온 캠핑장, 맛있었던 메뉴, 다음 캠핑의 기대까지 함께 나눠요.</p></section>';
     return '<header class="bar"><h1>'+(ui.tab==='list'?'준비물 · 조리':'내 정보 · 일지')+'</h1>'+planBadgeHtml()+authTopHtml()+s+'</header>';
   }
@@ -6276,7 +6274,7 @@ body.auth-locked{padding-block:14px 40px}
       '<div class="chips" style="gap:6px;margin-bottom:12px;flex-wrap:wrap">'+
         coolerItems.map(function(item){
           var sel = (ui.coolerSelected || []).indexOf(item) >= 0;
-          return '<button class="chip sm '+(sel?'active':'')+'" type="button" data-a="cooler-toggle" data-v="'+esc(item)+'" style="'+(sel?'background:var(--brand);color:#fff;border-color:var(--brand)':'')+'">'+(sel?'✓ ':'')+esc(item)+'</button>';
+          return '<button class="chip sm '+(sel?'active':'')+'" type="button" data-a="cooler-toggle" data-v="'+esc(item)+'" style="'+(sel?'background:var(--brand);color:var(--brand-fg);border-color:var(--brand)':'')+'">'+(sel?'✓ ':'')+esc(item)+'</button>';
         }).join('')+
       '</div>'+
       (coolerSelectedCount > 0 ? 
@@ -6395,7 +6393,7 @@ body.auth-locked{padding-block:14px 40px}
       '<div class="cook-top">'+
         '<span class="cook-badge">현장 조리 모드 · 단계 '+(idx+1)+' / '+steps.length+'</span>'+
         '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">'+
-          '<button class="chip sm" type="button" data-a="cook-tts" style="min-height:32px;background:'+(ui.ttsSpeaking?'var(--ember)':'rgba(255,255,255,.2)')+';color:#fff;font-weight:700">'+(ui.ttsSpeaking?'⏹ 음성 중지':'🔊 단계 읽기')+'</button>'+
+          '<button class="chip sm" type="button" data-a="cook-tts" style="min-height:32px;background:'+(ui.ttsSpeaking?'var(--ember)':'rgba(255,255,255,.2)')+';color:'+(ui.ttsSpeaking?'var(--ember-fg)':'#fff')+';font-weight:700">'+(ui.ttsSpeaking?'⏹ 음성 중지':'🔊 단계 읽기')+'</button>'+
           '<button class="chip sm" type="button" data-a="cook-tts-auto" style="min-height:32px;background:'+(ui.ttsAuto?'var(--pop)':'rgba(255,255,255,.15)')+';color:'+(ui.ttsAuto?'var(--pop-fg)':'#fff')+'">'+(ui.ttsAuto?'자동읽기 ON':'자동읽기 OFF')+'</button>'+
           '<button class="chip sm" type="button" data-a="cookmode" style="min-height:32px;background:rgba(255,255,255,.15);color:#fff">'+(ui.wakeLockOn?'화면켜짐 유지중 · ':'')+'닫기 ✕</button>'+
         '</div>'+
@@ -6453,7 +6451,7 @@ body.auth-locked{padding-block:14px 40px}
         '</div>'+
         '<div style="display:flex;align-items:center;gap:6px">'+
           '<button class="btn sm" type="button" data-a="scale-people" data-v="dec" style="min-width:34px;font-weight:900" title="1명 줄이기">-</button>'+
-          '<span class="chip" style="font-weight:900;font-size:14px;min-width:44px;text-align:center;background:var(--brand);color:#fff">'+list.people+'인분</span>'+
+          '<span class="chip" style="font-weight:900;font-size:14px;min-width:44px;text-align:center;background:var(--brand);color:var(--brand-fg)">'+list.people+'인분</span>'+
           '<button class="btn sm" type="button" data-a="scale-people" data-v="inc" style="min-width:34px;font-weight:900" title="1명 늘리기">+</button>'+
           '<div style="display:flex;gap:4px;margin-left:4px">'+
             '<button class="chip sm '+(list.people===1?'active':'')+'" type="button" data-a="scale-people-to" data-v="1">1인</button>'+
