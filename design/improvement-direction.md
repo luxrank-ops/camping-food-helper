@@ -1,5 +1,9 @@
 # 디자인 개선방향 — 시각적(Visual) / 비주얼
 
+> 🆕 **2026-11 시안: [`redesign-2026-11/`](./redesign-2026-11/README.md) (EMBER NIGHT)**
+> 이 문서의 방향(야외 가시성 · 한 손 조작 · 태그 통일 · 플로팅 CTA)을 실제 화면 6종 + 클릭 프로토타입으로 구체화한 최신 안입니다.
+> 바로 보기: `design/redesign-2026-11/preview/index.html` · 요약: `preview/cover.png`
+
 > 기준: 2026-10-16 / 현재 `design/` PNG + `index.html` `:root` 디자인 시스템 기준
 > 방향: 야외 캠핑 환경(밝은 햇빛/반사) + 한 손 조작 + 빠른 정보 확인
 

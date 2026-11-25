@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>캠핑음식 도우미 — EMBER NIGHT 시안 (클릭 프로토타입)</title>
+<meta name="description" content="캠핑음식 도우미 앱 전체 리디자인 시안 — Ember Night. 6개 화면을 실제로 눌러 볼 수 있는 인터랙티브 프로토타입.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gothic+A1:wght@400;500;700;900&display=swap">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   EMBER NIGHT — 캠핑음식 도우미 리디자인 시안
+   현행 index.html 의 :root 토큰(深숲 #0E2820 / 크림 / 코랄 #F4735A)을
+   이어받아, 더 어두운 바탕 + 사진 중심 + 정돈된 타입 스케일로 다듬었다.
+   모든 화면은 실제 CSS 로만 그렸고(이미지 목업 아님), 서로 이동된다.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --bg0:#06170F; --bg1:#0A2018; --surface:#0E2A20; --surface2:#13382A;
+  --fg:#F5EFE2; --muted:#9FB6A6; --faint:#6F887A;
+  --line:rgba(245,239,226,.10); --line-soft:rgba(245,239,226,.06);
+  --ember:#FF7A59; --ember2:#F0502E; --ember-fg:#2A0E06;
+  --ember-soft:rgba(255,122,89,.12); --ember-line:rgba(255,122,89,.32);
+  --pop:#E6ECAF; --pop-fg:#1B2610; --ok:#6FD3A0; --sky:#8FC3D9;
+  --r-sm:10px; --r-md:14px; --r-lg:18px; --r-card:22px; --r-sheet:28px;
+  --shadow-card:0 20px 40px -28px rgba(0,0,0,.9);
+  --shadow-up:0 24px 44px -18px rgba(0,0,0,.95);
+  --font-display:'Do Hyeon','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --font-body:'Gothic A1','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color-scheme:dark;
+}
+/* 라이트(모닝) — 야외 가시성 모드: 기존 data-theme="light" 자리 */
+:root[data-theme="light"]{
+  --bg0:#F6F2E7; --bg1:#F6F2E7; --surface:#FFFFFF; --surface2:#FBFAF4;
+  --fg:#13261D; --muted:#5E7267; --faint:#93A79B;
+  --line:rgba(19,38,29,.10); --line-soft:rgba(19,38,29,.06);
+  --ember:#E04E2A; --ember2:#C93A19; --ember-fg:#FFFFFF;
+  --ember-soft:#FBE7DF; --ember-line:rgba(224,78,42,.28);
+  --pop:#1F4D3C; --pop-fg:#F7F5E8; --ok:#1E8A55; --sky:#3D7E99;
+  --shadow-card:0 18px 34px -24px rgba(19,38,29,.35);
+  --shadow-up:0 26px 44px -22px rgba(19,38,29,.4);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:#071A13;color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background-image:radial-gradient(900px 520px at 8% -8%,rgba(255,122,89,.13),transparent 62%),radial-gradient(760px 620px at 104% 108%,rgba(230,236,175,.07),transparent 60%);
+  background-attachment:fixed;
+}
+
+/* ── 문서 셸 ───────────────────────────────────────────── */
+/* 문서 셸 라이트(모닝) — 폰 밖 페이지도 같이 밝아진다 */
+html[data-theme="light"] body{background:#F1EDE1;color:#13261D;background-image:radial-gradient(900px 520px at 8% -8%,rgba(224,78,42,.1),transparent 62%),radial-gradient(760px 620px at 104% 108%,rgba(31,77,60,.08),transparent 60%)}
+html[data-theme="light"] .badge{background:#FBE7DF;border-color:rgba(224,78,42,.3);color:#C93A19}
+html[data-theme="light"] .subtitle{color:#D9462B}
+html[data-theme="light"] .lede,html[data-theme="light"] .doc-card p,html[data-theme="light"] .doc-card li,html[data-theme="light"] .side .panel p.lead,html[data-theme="light"] .side .diffs div{color:#4E6257}
+html[data-theme="light"] .brandline b{color:#5E7267}
+html[data-theme="light"] .toolbar{background:rgba(255,255,255,.86);border-color:rgba(19,38,29,.1)}
+html[data-theme="light"] .toolbar .seg{background:#F0ECE0;border-color:rgba(19,38,29,.1)}
+html[data-theme="light"] .toolbar .seg button{color:#5E7267}
+html[data-theme="light"] .toolbar .seg button[aria-pressed="true"]{background:#FFF;color:#13261D;box-shadow:0 0 0 1px rgba(224,78,42,.28)}
+html[data-theme="light"] .toolbar .hint{color:#93A79B}
+html[data-theme="light"] .kbd{color:#5E7267;background:#FFF;border-color:rgba(19,38,29,.1)}
+html[data-theme="light"] .toolbar a{color:#C93A19}
+html[data-theme="light"] .side .panel,html[data-theme="light"] .doc-card{background:rgba(255,255,255,.82);border-color:rgba(19,38,29,.1)}
+html[data-theme="light"] .nav-list button{background:#FBF9F1;border-color:rgba(19,38,29,.08);color:#13261D}
+html[data-theme="light"] .nav-list button:hover{background:#F5F2E7}
+html[data-theme="light"] .nav-list button[aria-pressed="true"]{background:#FBE7DF;border-color:rgba(224,78,42,.3)}
+html[data-theme="light"] .nav-list .t span,html[data-theme="light"] .nav-list .go{color:#93A79B}
+html[data-theme="light"] .nav-list button[aria-pressed="true"] .go{color:#C93A19}
+html[data-theme="light"] .sec-divider{border-color:rgba(19,38,29,.1)}
+html[data-theme="light"] .gallery figcaption b{color:#5E7267}
+html[data-theme="light"] .gallery figcaption span{color:#93A79B}
+html[data-theme="light"] .doc-card code{color:#C93A19;background:#FBE7DF}
+html[data-theme="light"] .side .diffs b{color:#13261D}
+html[data-theme="light"] .side .panel h2,html[data-theme="light"] .doc-card h3,html[data-theme="light"] .sec-divider h2{color:#13261D}
+html[data-theme="light"] .phone-unit .cap b{color:#5E7267}
+html[data-theme="light"] .phone-unit .cap span{color:#93A79B}
+html[data-theme="light"] footer.doc-foot{color:#93A79B;border-color:rgba(19,38,29,.1)}
+html[data-theme="light"] .phone{box-shadow:0 40px 70px -40px rgba(19,38,29,.4),0 0 0 8px rgba(19,38,29,.04)}
+
+.wrap{max-width:1420px;margin:0 auto;padding:34px 26px 90px}
+.doc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:26px}
+.brandline{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#FF9B6E,#E84A26);display:grid;place-items:center;flex:none}
+.mark svg{width:18px;height:18px}
+.brandline b{font-size:12.5px;letter-spacing:.02em;color:var(--muted);font-weight:900}
+.badge{display:inline-flex;align-items:center;height:23px;padding:0 9px;border-radius:999px;background:rgba(255,122,89,.14);border:1px solid rgba(255,122,89,.34);color:#FF9B7E;font-size:9.5px;font-weight:900;letter-spacing:.06em}
+h1.title{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,6.4vw,68px);line-height:1.02;margin:0;letter-spacing:.01em}
+.subtitle{font-family:var(--font-display);font-size:clamp(20px,2.6vw,29px);color:#FF7A59;margin:6px 0 0;letter-spacing:-.2px}
+.subtitle small{font-family:var(--font-body);font-size:12.5px;font-weight:700;color:var(--faint);margin-left:8px;letter-spacing:0}
+.lede{max-width:560px;margin:12px 0 0;font-size:12.5px;line-height:1.7;color:rgba(159,182,166,.92)}
+.doc-meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding-top:6px}
+.doc-meta b{font-family:var(--font-display);font-weight:400;font-size:15px}
+.doc-meta span{font-size:10.5px;font-weight:700;color:var(--faint)}
+
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 22px;padding:9px 11px;border-radius:16px;border:1px solid var(--line);background:rgba(14,42,32,.72);backdrop-filter:blur(10px)}
+.toolbar .seg{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:11px;padding:3px}
+.toolbar .seg button{appearance:none;border:0;background:none;color:var(--muted);font:800 11px var(--font-body);padding:0 11px;height:28px;border-radius:8px;cursor:pointer}
+.toolbar .seg button[aria-pressed="true"]{background:var(--surface2);color:var(--fg);box-shadow:0 0 0 1px var(--ember-line)}
+.toolbar .hint{font-size:10.5px;font-weight:700;color:var(--faint);margin-left:auto}
+.toolbar .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(255,255,255,.08);border:1px solid var(--line);font:800 10px/1 var(--font-body);color:var(--muted);margin:0 2px}
+.toolbar a{color:#FF9B7E;font-weight:900;text-decoration:none;font-size:10.5px;padding:0 4px}
+.toolbar a:hover{text-decoration:underline}
+
+/* ── 무대: 라이브 폰 + 요약 패널 ─────────────────────── */
+.stage{display:grid;grid-template-columns:390px minmax(0,1fr);gap:30px;align-items:start;padding:6px 2px 8px}
+@media (max-width:1000px){.stage{grid-template-columns:1fr;justify-items:center}}
+
+.phone-unit{display:flex;flex-direction:column;gap:11px;align-items:center;width:390px;flex:none}
+.phone-unit .cap{display:flex;flex-direction:column;align-items:center;gap:1px}
+.phone-unit .cap b{font-size:11.5px;font-weight:900;color:var(--muted);letter-spacing:-.2px}
+.phone-unit .cap span{font-size:9.5px;font-weight:700;color:var(--faint)}
+
+.phone{
+  position:relative;width:390px;height:844px;border-radius:44px;background:var(--bg0);
+  border:1px solid rgba(245,239,226,.14);overflow:hidden;flex:none;
+  box-shadow:0 44px 80px -40px rgba(0,0,0,.95),0 0 0 8px rgba(255,255,255,.028),inset 0 0 0 1px rgba(0,0,0,.4);
+}
+.phone::before{ /* 다이나믹 아일랜드 */
+  content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:104px;height:26px;border-radius:99px;background:#000;z-index:60;
+}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:var(--bg1)}
+.screen[data-on]{display:flex}
+.screen-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 132px;scrollbar-width:none;overscroll-behavior:contain}
+.screen-body::-webkit-scrollbar{display:none}
+.screen-body.wide{padding-bottom:96px}
+
+/* 요약 패널 */
+.side{display:flex;flex-direction:column;gap:16px;min-width:0;padding-top:4px}
+.side .panel{border-radius:22px;border:1px solid var(--line);background:rgba(14,42,32,.66);padding:18px 20px}
+.side .panel h2{font-family:var(--font-display);font-weight:400;font-size:19px;margin:0 0 4px;letter-spacing:-.2px}
+.side .panel p.lead{margin:0 0 14px;font-size:11px;line-height:1.6;color:rgba(159,182,166,.9)}
+.nav-list{display:flex;flex-direction:column;gap:6px}
+.nav-list button{appearance:none;display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;border-radius:13px;border:1px solid var(--line-soft);background:rgba(255,255,255,.035);padding:9px 12px;cursor:pointer;color:var(--fg);font-family:var(--font-body);transition:background .15s ease,border-color .15s ease,transform .12s ease}
+.nav-list button:hover{background:rgba(255,255,255,.07);transform:translateX(1px)}
+.nav-list button[aria-pressed="true"]{border-color:var(--ember-line);background:rgba(255,122,89,.1)}
+.nav-list .n{font-family:var(--font-display);font-size:11px;color:var(--ember);text-align:center}
+.nav-list .t b{display:block;font-size:11.5px;font-weight:900;letter-spacing:-.2px}
+.nav-list .t span{display:block;font-size:9px;font-weight:700;color:var(--faint);margin-top:1px}
+.nav-list .go{font-size:10px;color:var(--faint);font-weight:900}
+.nav-list button[aria-pressed="true"] .go{color:var(--ember)}
+.side .diffs{display:flex;flex-direction:column;gap:9px}
+.side .diffs div{display:flex;gap:8px;font-size:10.5px;line-height:1.55;color:rgba(159,182,166,.92)}
+.side .diffs div::before{content:"";width:4px;height:4px;border-radius:99px;background:var(--ember);flex:none;margin-top:6px}
+.side .diffs b{color:var(--fg);font-weight:900}
+.side .theme-row{display:flex;gap:6px;margin-top:12px}
+
+/* 정지 이미지 갤러리 */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:14px;margin-top:26px}
+.gallery figure{margin:0;display:flex;flex-direction:column;gap:7px}
+.gallery .shot{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-card);aspect-ratio:390/844;background:var(--surface)}
+.gallery .shot img{display:block;width:100%;height:100%;object-fit:cover}
+.gallery figcaption{display:flex;flex-direction:column;gap:1px}
+.gallery figcaption b{font-size:11px;font-weight:900;color:var(--muted);letter-spacing:-.2px}
+.gallery figcaption span{font-size:9px;font-weight:700;color:var(--faint)}
+.sec-divider{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 0;padding-top:22px;border-top:1px solid var(--line-soft)}
+.sec-divider h2{font-family:var(--font-display);font-weight:400;font-size:20px;margin:0;letter-spacing:-.2px}
+.sec-divider span{font-size:10px;font-weight:700;color:var(--faint)}
+
+/* 상태바 */
+.statusbar{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 26px 0;font:700 14.5px/1 var(--font-body);letter-spacing:-.3px;color:var(--fg);position:relative;z-index:20}
+.statusbar .icons{display:flex;align-items:center;gap:5px}
+.statusbar svg{display:block}
+
+/* 공통 타입 */
+.h-display{font-family:var(--font-display);font-weight:400;font-size:29px;line-height:1.2;letter-spacing:-.4px;margin:0}
+.h-title{font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.1;letter-spacing:-.3px;margin:0}
+.h-heading{font-size:14px;font-weight:900;letter-spacing:-.3px;margin:0}
+.t-muted{color:var(--muted)}.t-faint{color:var(--faint)}
+.t-sub{font-size:12px;letter-spacing:-.15px;margin:5px 0 0;color:var(--muted)}
+.px{padding-inline:20px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin:0 0 8px}
+.sec-head .lab{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:900;letter-spacing:.06em;color:var(--faint)}
+.sec-head .lab::before{content:"";width:14px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--ember),var(--ember2))}
+.sec-head .act{font-size:10px;font-weight:900;color:var(--muted);background:none;border:0;font-family:var(--font-body);cursor:pointer;padding:6px 0}
+
+/* 아이콘 버튼 */
+.ibtn{appearance:none;width:34px;height:34px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none;transition:background .15s ease,transform .12s ease}
+.ibtn:hover{background:rgba(255,255,255,.09)}
+.ibtn:active{transform:scale(.94)}
+.ibtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ibtn.round{border-radius:999px}
+.ibtn.ember{background:var(--ember-soft);border-color:var(--ember-line);color:var(--ember)}
+.ibtn.solid{background:#1F4D3C;border-color:transparent;color:#F6F2E7}
+
+/* 상단 앱바 */
+.appbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 20px;height:50px;flex:none}
+.appbar .who{display:flex;align-items:center;gap:10px;min-width:0}
+.appbar .who .txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.appbar .who b{font-size:14px;font-weight:900;letter-spacing:-.3px}
+.appbar .who span{font-size:8.5px;font-weight:900;letter-spacing:.12em;color:var(--faint)}
+.appbar .tools{display:flex;gap:6px}
+.appbar .page{display:flex;flex-direction:column;gap:2px}
+.appbar .page b{font-family:var(--font-display);font-weight:400;font-size:23px;line-height:1.1;letter-spacing:-.3px}
+.appbar .page span{font-size:9.5px;font-weight:700;color:var(--faint)}
+
+/* 히어로 타이틀 */
+.hero-title{padding:6px 22px 0}
+.hero-title .h-display em{font-style:normal;color:var(--ember);display:block}
+.hero-title p{margin:6px 0 0;font-size:12px;color:var(--muted);letter-spacing:-.15px}
+
+/* 사진 카드(날씨) */
+.photo-card{position:relative;margin:0 20px;border-radius:var(--r-card);overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-card);isolation:isolate}
+.photo-card img{display:block;width:100%;height:100%;object-fit:cover}
+.photo-card .scrim{position:absolute;inset:0}
+.photo-card .inner{position:absolute;inset:0;padding:12px 15px;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.photo-card.weather{height:106px}
+.photo-card.weather .scrim{background:linear-gradient(100deg,rgba(6,23,15,.95),rgba(6,23,15,.74) 48%,rgba(6,23,15,.16))}
+.wx-top{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;color:rgba(245,239,226,.82);letter-spacing:-.1px}
+.wx-top svg{width:11px;height:11px;stroke:var(--ember);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wx-top em{font-style:normal;color:var(--faint);font-weight:700}
+.wx-main{display:flex;align-items:center;gap:9px}
+.wx-main .deg{font-family:var(--font-display);font-size:33px;line-height:1;letter-spacing:-.5px}
+.wx-main .desc{display:flex;flex-direction:column;gap:1px}
+.wx-main .cond{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;letter-spacing:-.1px}
+.wx-main .cond svg{width:12px;height:12px;stroke:var(--sky);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.wx-main .det{font-size:9px;color:var(--muted);font-weight:700}
+.wx-tags{display:flex;gap:5px;margin-top:1px}
+.wx-tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font-size:8.5px;font-weight:900;letter-spacing:-.1px}
+.wx-tag.pop{background:rgba(230,236,175,.16);border:1px solid rgba(230,236,175,.3);color:var(--pop)}
+.wx-tag.dim{background:rgba(255,255,255,.1);color:rgba(245,239,226,.85)}
+
+/* 추천 카드 */
+.rec-card{position:relative;margin:0 20px;height:176px;border-radius:var(--r-card);overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-card)}
+.rec-card .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.rec-card .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,23,15,0) 26%,rgba(6,23,15,.62) 64%,rgba(6,23,15,.97))}
+.rec-card .tags{position:absolute;left:12px;top:11px;display:flex;gap:5px}
+.pill{display:inline-flex;align-items:center;gap:4px;height:23px;padding:0 9px;border-radius:999px;background:rgba(6,23,15,.64);border:1px solid rgba(255,255,255,.18);font-size:9px;font-weight:900;letter-spacing:-.1px;color:rgba(245,239,226,.9)}
+.pill.pop{color:var(--pop)}
+.pill svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.rec-card .bottom{position:absolute;left:13px;right:13px;bottom:10px;display:flex;flex-direction:column;gap:5px}
+.rec-card h3{font-family:var(--font-display);font-weight:400;font-size:23px;line-height:1.1;margin:0;letter-spacing:-.3px}
+.rec-facts{display:flex;align-items:center;gap:9px;font-size:10.5px;font-weight:800;color:rgba(245,239,226,.9)}
+.rec-facts i{display:flex;align-items:center;gap:3px;font-style:normal}
+.rec-facts svg{width:11px;height:11px;stroke:rgba(245,239,226,.78);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rec-foot{display:flex;align-items:center;justify-content:space-between;margin-top:1px}
+.rec-foot .why{font-size:9.5px;font-weight:700;color:rgba(245,239,226,.66);max-width:200px}
+.cta-mini{appearance:none;border:0;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 12px;border-radius:11px;background:linear-gradient(135deg,var(--ember),var(--ember2));color:var(--ember-fg);font:900 11px var(--font-body);letter-spacing:-.2px;cursor:pointer;box-shadow:0 10px 20px -10px rgba(240,80,46,.9);transition:transform .12s ease,filter .15s ease}
+.cta-mini:hover{filter:brightness(1.05)}
+.cta-mini:active{transform:scale(.96)}
+.cta-mini svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* 후보 가로 스크롤 */
+.hscroll{display:flex;gap:9px;overflow-x:auto;padding:0 20px 2px;scroll-snap-type:x proximity;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.mini-card{position:relative;flex:none;width:168px;height:104px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);scroll-snap-align:start;background:var(--surface);cursor:pointer;padding:0;text-align:left}
+.mini-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mini-card .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,23,15,0) 20%,rgba(6,23,15,.92))}
+.mini-card .txt{position:absolute;left:10px;right:10px;bottom:9px;display:flex;flex-direction:column;gap:2px;color:var(--fg)}
+.mini-card .txt b{font-family:var(--font-display);font-weight:400;font-size:16px;letter-spacing:-.2px}
+.mini-card .txt span{font-size:8.5px;font-weight:800;color:rgba(245,239,226,.82)}
+
+/* 준비물 진행 카드 */
+.progress-card{display:flex;align-items:center;gap:12px;margin:0 20px;padding:11px 14px 11px 16px;border-radius:19px;background:rgba(19,56,42,.7);border:1px solid var(--line);position:relative;overflow:hidden}
+.progress-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--pop),var(--ember))}
+.progress-card .col{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.progress-card .row{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:900;letter-spacing:-.2px}
+.progress-card .row em{font-style:normal;color:var(--pop);font-size:10.5px}
+.bar{height:5px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--pop),var(--ember))}
+.progress-card .sub{font-size:9px;font-weight:700;color:var(--faint)}
+.ring{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;background:var(--ember-soft);border:1px solid var(--ember-line);color:var(--ember);flex:none}
+.ring svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* 버튼 */
+.btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--fg);font:800 13px/1.2 var(--font-body);min-height:48px;padding:0 18px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;letter-spacing:-.2px;transition:transform .12s ease,filter .15s ease,background .15s ease}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(135deg,var(--ember),var(--ember2));border-color:transparent;color:var(--ember-fg);font-weight:900;box-shadow:0 16px 30px -14px rgba(240,80,46,.85)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.pop{background:var(--pop);border-color:transparent;color:var(--pop-fg);font-weight:900}
+.btn.ghost{background:transparent;border-style:dashed;color:var(--muted)}
+.btn.block{width:100%}
+.btn.sm{min-height:38px;font-size:11.5px;border-radius:12px;padding:0 13px}
+
+/* 칩 */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--fg);font:800 11px/1 var(--font-body);letter-spacing:-.2px;cursor:pointer;white-space:nowrap;transition:transform .12s ease,background .15s ease}
+.chip svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:linear-gradient(135deg,var(--ember),var(--ember2));border-color:transparent;color:var(--ember-fg);font-weight:900;box-shadow:0 10px 22px -12px rgba(240,80,46,.9)}
+.chip-row{display:flex;gap:6px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+
+/* 세그먼트 */
+.seg-tabs{display:flex;margin:0 20px;padding:3px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid var(--line);gap:0}
+.seg-tabs button{appearance:none;flex:1;border:1px solid transparent;background:none;color:var(--muted);font:900 10.5px var(--font-body);height:32px;border-radius:10px;cursor:pointer;letter-spacing:-.2px}
+.seg-tabs button[aria-pressed="true"]{background:var(--surface2);border-color:var(--ember-line);color:var(--fg)}
+
+/* 카드 */
+.card{border-radius:var(--r-card);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card);overflow:hidden;margin:0 20px}
+.card .head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line-soft)}
+.card .head b{font-size:12px;font-weight:900;letter-spacing:-.2px}
+
+/* 준비물 리스트 */
+.list{list-style:none;margin:0;padding:0}
+.item{display:flex;align-items:center;gap:11px;padding:9px 14px;border-top:1px solid var(--line-soft);min-height:50px;cursor:pointer;transition:background .15s ease}
+.item:first-child{border-top:0}
+.item:hover{background:rgba(255,255,255,.025)}
+.item .box{width:23px;height:23px;border-radius:8px;border:1.6px solid rgba(245,239,226,.24);display:grid;place-items:center;flex:none;transition:background .15s ease,border-color .15s ease}
+.item .box svg{width:13px;height:13px;stroke:var(--ember-fg);fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);transition:opacity .15s ease,transform .15s ease}
+.item .nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:0;line-height:1.25}
+.item .nm b{font-size:12.5px;font-weight:800;letter-spacing:-.25px;transition:color .15s ease}
+.item .nm span{font-size:9.5px;font-weight:700;color:var(--muted)}
+.item .tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:7px;font-size:8.5px;font-weight:900;letter-spacing:-.1px;flex:none}
+.tag.prep{background:rgba(126,166,255,.13);border:1px solid rgba(126,166,255,.3);color:#A8C7FF}
+.tag.pack{background:rgba(230,236,175,.13);border:1px solid rgba(230,236,175,.28);color:var(--pop)}
+.tag.buy{background:var(--ember-soft);border:1px solid var(--ember-line);color:var(--ember)}
+.item .chev{width:11px;height:11px;stroke:rgba(245,239,226,.22);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.item.done .box{background:linear-gradient(135deg,var(--ember),var(--ember2));border-color:transparent}
+.item.done .box svg{opacity:1;transform:none}
+.item.done .nm b{color:var(--faint);text-decoration:line-through}
+.item.done .nm span{color:rgba(111,136,122,.7)}
+.list-foot{display:flex;align-items:center;justify-content:center;gap:5px;min-height:42px;background:rgba(255,255,255,.025);color:var(--muted);font:900 10px var(--font-body);border:0;width:100%;cursor:pointer}
+.list-foot svg{width:10px;height:10px;stroke:var(--faint);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* 통계 링 */
+.stat-card{display:flex;align-items:center;gap:13px;margin:0 20px;padding:12px 15px;border-radius:20px;background:rgba(19,56,42,.68);border:1px solid var(--line)}
+.stat-card .donut{width:54px;height:54px;border-radius:999px;display:grid;place-items:center;flex:none;background:conic-gradient(var(--ember) 0deg 235deg,rgba(255,255,255,.09) 235deg 360deg)}
+.stat-card .donut b{width:42px;height:42px;border-radius:999px;display:grid;place-items:center;background:var(--bg1);font-size:11.5px;color:var(--pop)}
+.stat-card .body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.stat-card .body b{font-size:12.5px;letter-spacing:-.25px}
+.legend{display:flex;gap:10px;font-size:9px;font-weight:800;color:var(--muted)}
+.legend i{display:inline-flex;align-items:center;gap:4px;font-style:normal}
+.legend .dot{width:6px;height:6px;border-radius:99px;display:inline-block}
+.stat-card .note{font-size:8.5px;font-weight:700;color:var(--faint)}
+
+/* 레시피 */
+.recipe-hero{position:relative;height:286px;flex:none}
+.recipe-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.recipe-hero .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,23,15,.62),rgba(6,23,15,.05) 34%,rgba(6,23,15,.55) 74%,var(--bg1))}
+.recipe-hero .topbar{position:absolute;left:0;right:0;top:54px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:5}
+.recipe-hero .circle{width:36px;height:36px;border-radius:999px;background:rgba(6,23,15,.5);border:1px solid rgba(255,255,255,.2);display:grid;place-items:center;color:var(--fg);cursor:pointer;appearance:none}
+.recipe-hero .circle svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.recipe-hero .info{position:absolute;left:20px;right:20px;bottom:14px;display:flex;flex-direction:column;gap:7px}
+.recipe-hero h2{font-family:var(--font-display);font-weight:400;font-size:30px;line-height:1.14;margin:0;letter-spacing:-.4px}
+.recipe-hero p{margin:0;font-size:10.5px;line-height:1.55;color:rgba(245,239,226,.68);letter-spacing:-.15px;max-width:336px}
+.facts3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 20px}
+.facts3 .cell{border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line);padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.facts3 .cell .k{display:flex;align-items:center;gap:4px;font-size:8.5px;font-weight:800;color:var(--faint);letter-spacing:.02em}
+.facts3 .cell svg{width:11px;height:11px;stroke:var(--ember);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.facts3 .cell b{font-size:15px;font-weight:900;letter-spacing:-.3px}
+
+.steps{display:flex;flex-direction:column}
+.step{display:flex;align-items:center;gap:11px;padding:11px 14px;border-top:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .15s ease}
+.step:first-child{border-top:0}
+.step .num{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;flex:none;border:1.5px solid rgba(245,239,226,.16);color:rgba(245,239,226,.32);font-size:11px;font-weight:900}
+.step .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.step .txt b{font-size:11.5px;font-weight:800;letter-spacing:-.2px;line-height:1.3}
+.step .txt span{font-size:9px;font-weight:700;color:var(--faint)}
+.step.done .num{background:rgba(111,211,160,.14);border-color:rgba(111,211,160,.32);color:var(--ok)}
+.step.done .num svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.step.done .txt b{color:var(--faint);text-decoration:line-through}
+.step.now{background:var(--ember-soft);box-shadow:inset 3px 0 0 var(--ember)}
+.step.now .num{background:linear-gradient(135deg,var(--ember),var(--ember2));border-color:transparent;color:var(--ember-fg)}
+.step.now .txt b{font-size:12.5px;font-weight:900;letter-spacing:-.25px}
+.timer{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 10px;border-radius:10px;background:var(--ember);color:var(--ember-fg);font:900 11px var(--font-body);font-variant-numeric:tabular-nums;border:0;cursor:pointer;flex:none}
+.timer.paused{background:rgba(255,255,255,.1);color:var(--fg)}
+
+/* 라이트 테마 내부 오버라이드 */
+.phone[data-theme="light"]{--bg0:#F6F2E7;--bg1:#F6F2E7;--surface:#FFF;--surface2:#FBFAF4;--fg:#13261D;--muted:#5E7267;--faint:#93A79B;--line:rgba(19,38,29,.1);--line-soft:rgba(19,38,29,.06);--ember:#E04E2A;--ember2:#C93A19;--ember-fg:#fff;--ember-soft:#FBE7DF;--ember-line:rgba(224,78,42,.28);--pop:#1F4D3C;--pop-fg:#F7F5E8;--ok:#1E8A55;--sky:#3D7E99;--shadow-card:0 18px 34px -24px rgba(19,38,29,.3);color-scheme:light}
+.phone[data-theme="light"] .progress-card{background:#FFF}
+.phone[data-theme="light"] .progress-card .bar{background:#EDE7D8}
+.phone[data-theme="light"] .progress-card .bar>span{background:linear-gradient(90deg,#E04E2A,#F08B5E)}
+.phone[data-theme="light"] .progress-card .row em{color:var(--ember)}
+.phone[data-theme="light"] .progress-card .sub{color:#93A79B}
+.phone[data-theme="light"] .stat-card{background:#FFF}
+.phone[data-theme="light"] .stat-card .donut b{background:#FFF}
+.phone[data-theme="light"] .photo-card.weather .scrim{background:linear-gradient(100deg,rgba(27,63,48,.97),rgba(27,63,48,.82) 52%,rgba(27,63,48,.28))}
+.phone[data-theme="light"] .photo-card.weather .inner{color:#F7F5E8}
+.phone[data-theme="light"] .wx-top{color:rgba(247,245,232,.88)}
+.phone[data-theme="light"] .wx-top svg{stroke:#FFB59E}
+.phone[data-theme="light"] .wx-top em,.phone[data-theme="light"] .wx-main .det{color:rgba(247,245,232,.62)}
+.phone[data-theme="light"] .wx-tag.dim{background:rgba(255,255,255,.16);color:#F7F5E8}
+.phone[data-theme="light"] .rec-card{height:auto;min-height:212px;background:#FFF;display:block}
+.phone[data-theme="light"] .rec-card .bg{position:absolute;top:0;left:0;height:124px}
+.phone[data-theme="light"] .rec-card .scrim{display:none}
+.phone[data-theme="light"] .rec-card .tags{top:10px}
+.phone[data-theme="light"] .rec-card .pill{background:rgba(255,255,255,.94);border-color:transparent;color:var(--ember)}
+.phone[data-theme="light"] .rec-card .pill.pop{color:var(--ember)}
+.phone[data-theme="light"] .rec-card .pill svg{stroke:var(--ember)}
+.phone[data-theme="light"] .rec-card .bottom{position:absolute;left:0;right:0;top:124px;bottom:auto;padding:11px 13px 12px;gap:6px}
+.phone[data-theme="light"] .rec-card h3{font-size:21px;color:var(--fg)}
+.phone[data-theme="light"] .rec-facts{color:var(--muted)}
+.phone[data-theme="light"] .rec-facts svg{stroke:var(--muted)}
+.phone[data-theme="light"] .rec-foot .why{color:var(--faint)}
+.phone[data-theme="light"] .mini-card .scrim{background:linear-gradient(180deg,rgba(6,23,15,0) 20%,rgba(6,23,15,.9))}
+.phone[data-theme="light"] .sheet{background:#FFF;border-color:var(--line)}
+.phone[data-theme="light"] .sheet .grab{background:rgba(19,38,29,.18)}
+.phone[data-theme="light"] .menu-card{background:#F6F2E7}
+.phone[data-theme="light"] .menu-card:hover{background:#EFEADC}
+.phone[data-theme="light"] .menu-card .chev{stroke:rgba(19,38,29,.25)}
+.phone[data-theme="light"] .sheet .account{background:#F6F2E7}
+.phone[data-theme="light"] .tabbar .pill{background:rgba(255,255,255,.94)}
+.phone[data-theme="light"] .tabbar button{color:var(--faint)}
+.phone[data-theme="light"] .tabbar button[aria-current="page"]{color:var(--ember);background:var(--ember-soft)}
+.phone[data-theme="light"] .searchbar,.phone[data-theme="light"] .seg-tabs{background:#FFF}
+.phone[data-theme="light"] .seg-tabs button[aria-pressed="true"]{background:var(--ember-soft);border-color:var(--ember-line);color:var(--fg)}
+.phone[data-theme="light"] .fact,.phone[data-theme="light"] .facts3 .cell{background:#FFF}
+.phone[data-theme="light"] .add-spot{background:#FFF;border-color:rgba(19,38,29,.22)}
+.phone[data-theme="light"] .card{background:#FFF}
+.phone[data-theme="light"] .item .box{border-color:rgba(19,38,29,.22)}
+.phone[data-theme="light"] .item .chev{stroke:rgba(19,38,29,.22)}
+.phone[data-theme="light"] .camp .tags span{background:#F0ECE0;border-color:var(--line);color:var(--muted)}
+.phone[data-theme="light"] .camp .nav{background:#F0ECE0;color:var(--muted)}
+.phone[data-theme="light"] .meal .chev{stroke:rgba(19,38,29,.24)}
+.phone[data-theme="light"] .budget{background:#FAF7EC;color:var(--muted)}
+.phone[data-theme="light"] .day-card .head .no{color:var(--ember)}
+.phone[data-theme="light"] .step .num{border-color:rgba(19,38,29,.16);color:rgba(19,38,29,.32)}
+.phone[data-theme="light"] .step .txt span{color:#93A79B}
+.phone[data-theme="light"] .step.done .num{background:#DFF2E8;border-color:rgba(30,138,85,.3);color:#1E8A55}
+.phone[data-theme="light"] .rec-card .bottom{background:none}
+.phone[data-theme="light"] .bar{background:#EDE7D8}
+.phone[data-theme="light"] .bar>span{background:linear-gradient(90deg,#E04E2A,#F08B5E)}
+
+/* 하단 탭바 */
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:40;pointer-events:none}
+.tabbar .pill{pointer-events:auto;width:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px;border-radius:26px;background:rgba(14,42,32,.92);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);box-shadow:var(--shadow-up)}
+.phone[data-theme="light"] .tabbar .pill{background:rgba(255,255,255,.94);border-color:var(--line)}
+.tabbar button{appearance:none;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;border-radius:20px;color:var(--faint);font:700 10px/1.1 var(--font-body);letter-spacing:-.2px;cursor:pointer;transition:background .15s ease,color .15s ease}
+.tabbar svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{background:var(--ember-soft);color:var(--ember);font-weight:900}
+.tabbar button[aria-current="page"] svg{stroke-width:2.1}
+.tabbar button:active{transform:scale(.96)}
+
+/* 전체메뉴 시트 */
+.sheet-screen{justify-content:flex-end}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(3,12,8,.62);backdrop-filter:blur(2px);border:0;padding:0;cursor:pointer}
+.sheet{position:relative;border-radius:28px 28px 0 0;background:#0B231A;border:1px solid rgba(245,239,226,.14);border-bottom:0;box-shadow:0 -30px 60px rgba(0,0,0,.6);padding:10px 20px 22px;display:flex;flex-direction:column;gap:0;animation:sheetUp .24s cubic-bezier(.2,.9,.3,1)}
+@keyframes sheetUp{from{transform:translateY(28px);opacity:.6}to{transform:none;opacity:1}}
+.sheet .grab{width:44px;height:4px;border-radius:99px;background:rgba(245,239,226,.22);margin:0 auto 14px}
+.sheet .head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sheet .head .h-title{font-size:25px}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu-card{appearance:none;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:96px;padding:11px 12px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--fg);cursor:pointer;font-family:var(--font-body);transition:background .15s ease,transform .12s ease,border-color .15s ease}
+.menu-card:hover{background:rgba(255,255,255,.07)}
+.menu-card:active{transform:scale(.98)}
+.menu-card[aria-current="page"]{background:rgba(255,122,89,.1);border-color:var(--ember-line)}
+.menu-card .row1{display:flex;align-items:center;justify-content:space-between}
+.menu-card .ico{width:30px;height:30px;border-radius:10px;border:1px solid var(--line-soft);background:rgba(255,255,255,.06);display:grid;place-items:center;color:var(--muted)}
+.menu-card[aria-current="page"] .ico{background:var(--ember-soft);border-color:var(--ember-line);color:var(--ember)}
+.menu-card .ico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.menu-card .now{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:6px;background:var(--ember);color:var(--ember-fg);font-size:8px;font-weight:900}
+.menu-card .chev{width:12px;height:12px;stroke:rgba(245,239,226,.2);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.menu-card b{display:block;font-size:12px;font-weight:900;letter-spacing:-.3px;margin-bottom:2px}
+.menu-card span.d{display:block;font-size:8px;font-weight:700;color:var(--faint);line-height:1.35;letter-spacing:-.1px}
+.sheet .account{display:flex;align-items:center;gap:10px;margin-top:13px;padding:11px 13px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.sheet .account .avatar{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;flex:none;background:linear-gradient(135deg,var(--ember),var(--ember2));font-family:var(--font-display);font-size:15px;color:var(--ember-fg)}
+.sheet .account .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.sheet .account .who b{font-size:11px;font-weight:900;letter-spacing:-.2px}
+.sheet .account .who span{font-size:8.5px;font-weight:700;color:var(--faint)}
+.sheet .account .left{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:8px;background:var(--pop);color:var(--pop-fg);font-size:8px;font-weight:900}
+.sheet .legal{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:8.5px;font-weight:700;color:rgba(111,136,122,.85)}
+
+/* 캠핑지 */
+.searchbar{display:flex;align-items:center;gap:9px;margin:0 20px;padding:0 13px;height:46px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:text}
+.searchbar svg{width:16px;height:16px;stroke:var(--faint);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.searchbar input{flex:1;min-width:0;border:0;background:none;color:var(--fg);font:700 11.5px var(--font-body);outline:none;letter-spacing:-.1px}
+.searchbar input::placeholder{color:var(--faint)}
+.searchbar .geo{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border-radius:8px;background:var(--ember-soft);border:1px solid var(--ember-line);color:var(--ember);font:900 9px var(--font-body);cursor:pointer;white-space:nowrap}
+.searchbar .geo svg{width:10px;height:10px;stroke:currentColor}
+.map-card{position:relative;margin:0 20px;height:148px;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.map-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.map-card .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,23,15,.55),rgba(6,23,15,.15) 45%,rgba(6,23,15,.82))}
+.map-card .pin{position:absolute;width:22px;height:22px;border-radius:999px;background:var(--ember);border:3px solid rgba(255,255,255,.9);box-shadow:0 6px 14px rgba(0,0,0,.5)}
+.map-card .dot{position:absolute;width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.75);border:2px solid rgba(6,23,15,.4)}
+.map-card .see{position:absolute;left:11px;top:11px;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:8px;background:rgba(6,23,15,.6);border:1px solid rgba(255,255,255,.16);color:rgba(245,239,226,.9);font:900 9px var(--font-body);cursor:pointer}
+.map-card .cap{position:absolute;left:11px;bottom:10px;display:flex;flex-direction:column;gap:1px}
+.map-card .cap b{font-size:12px;letter-spacing:-.2px}
+.map-card .cap span{font-size:9px;font-weight:700;color:rgba(245,239,226,.6)}
+
+.camp-list{display:flex;flex-direction:column;gap:9px;padding:0 20px}
+.camp{display:flex;flex-direction:column;border-radius:20px;border:1px solid var(--line);background:var(--surface);overflow:hidden;box-shadow:var(--shadow-card);cursor:pointer;transition:border-color .15s ease,transform .15s ease}
+.camp:hover{transform:translateY(-1px)}
+.camp.active{border-color:var(--ember-line);box-shadow:0 20px 40px -26px rgba(240,80,46,.5)}
+.camp .main{display:flex;gap:11px;padding:12px 14px}
+.camp .thumb{width:58px;height:58px;border-radius:15px;overflow:hidden;flex:none;position:relative}
+.camp .thumb img{width:100%;height:100%;object-fit:cover}
+.camp .col{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.camp .title-row{display:flex;align-items:center;gap:5px}
+.camp .title-row b{font-size:13px;font-weight:900;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camp .badge-here{display:inline-flex;height:18px;padding:0 6px;border-radius:6px;align-items:center;background:var(--ember);color:var(--ember-fg);font-size:8px;font-weight:900;flex:none}
+.camp .where{display:flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:var(--muted)}
+.camp .where svg{width:10px;height:10px;stroke:var(--faint);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.camp .tags{display:flex;gap:4px;margin-top:2px;flex-wrap:wrap}
+.camp .tags span{display:inline-flex;height:19px;padding:0 6px;border-radius:6px;align-items:center;background:rgba(255,255,255,.055);border:1px solid var(--line-soft);font-size:8px;font-weight:800;color:rgba(245,239,226,.6);letter-spacing:-.1px}
+.camp .right{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;height:54px;flex:none}
+.camp .score{display:flex;align-items:baseline;gap:2px}
+.camp .score b{font-family:var(--font-display);font-weight:400;font-size:17px;color:var(--pop);line-height:1}
+.camp .score span{font-size:8px;font-weight:800;color:var(--faint)}
+.camp .nav{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:7px;background:rgba(255,255,255,.06);color:var(--muted);font-size:8px;font-weight:900;border:0;cursor:pointer}
+.camp .wx{display:flex;align-items:center;gap:9px;padding:0 14px 11px}
+.camp .wx .rain{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:8px;background:rgba(143,195,217,.13);border:1px solid rgba(143,195,217,.26);font-size:8.5px;font-weight:900;color:#A9D2E4}
+.camp .wx .rain svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.camp .wx span{font-size:8.5px;font-weight:700;color:var(--faint)}
+.add-spot{display:flex;align-items:center;gap:10px;margin:0 20px;padding:0 14px;min-height:52px;border-radius:16px;border:1px dashed rgba(245,239,226,.18);background:rgba(255,255,255,.045);cursor:pointer;font-family:var(--font-body);color:var(--muted);width:calc(100% - 40px);text-align:left}
+.add-spot .plus{width:28px;height:28px;border-radius:9px;background:var(--ember-soft);display:grid;place-items:center;flex:none;color:var(--ember)}
+.add-spot .plus svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.add-spot b{flex:1;font-size:10px;font-weight:800;letter-spacing:-.2px}
+
+/* 식단표 */
+.plan-hero{position:relative;margin:0 20px;height:96px;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.plan-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.plan-hero .scrim{position:absolute;inset:0;background:linear-gradient(95deg,rgba(6,23,15,.94),rgba(6,23,15,.66) 55%,rgba(6,23,15,.2))}
+.plan-hero .info{position:absolute;left:15px;top:13px;display:flex;flex-direction:column;gap:3px}
+.plan-hero .info .when{font-size:9px;font-weight:800;color:rgba(245,239,226,.6);letter-spacing:.02em}
+.plan-hero .info b{font-family:var(--font-display);font-weight:400;font-size:21px;letter-spacing:-.3px}
+.plan-hero .info .stats{display:flex;align-items:center;gap:8px;margin-top:1px;font-size:9px;font-weight:800;color:rgba(245,239,226,.7)}
+.plan-hero .info .stats em{font-style:normal;color:var(--pop);font-weight:900}
+.plan-hero .info .split{width:1px;height:9px;background:rgba(255,255,255,.2)}
+.days{display:flex;gap:6px;padding:0 20px}
+.days button{appearance:none;flex:1;height:38px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.035);color:var(--muted);font:900 11px var(--font-body);cursor:pointer;letter-spacing:-.2px}
+.days button[aria-pressed="true"]{background:var(--surface2);border-color:var(--ember-line);color:var(--fg)}
+.day-card{display:flex;flex-direction:column;margin:0 20px;border-radius:20px;border:1px solid var(--line);background:var(--surface);overflow:hidden;box-shadow:var(--shadow-card)}
+.day-card .head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+.day-card .head .l{display:flex;align-items:center;gap:7px}
+.day-card .head .no{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--ember-soft);border:1px solid var(--ember-line);color:var(--ember);font-size:11px;font-weight:900}
+.day-card .head b{font-size:11.5px;font-weight:900;letter-spacing:-.2px}
+.day-card .head .muted{font-size:9px;font-weight:800;color:var(--faint)}
+.day-card .head .add{display:inline-flex;align-items:center;gap:3px;background:none;border:0;color:var(--ember);font:900 9px var(--font-body);cursor:pointer}
+.day-card .head .add svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.meal{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:0;background:none;width:100%;text-align:left;font-family:var(--font-body);color:var(--fg);border-top:1px solid var(--line-soft);transition:background .15s ease}
+.meal:hover{background:rgba(255,255,255,.025)}
+.meal:first-of-type{border-top:0}
+.meal .m-thumb{width:42px;height:42px;border-radius:12px;overflow:hidden;flex:none}
+.meal .m-thumb img{width:100%;height:100%;object-fit:cover}
+.meal .m-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.meal .m-title{display:flex;align-items:center;gap:5px}
+.meal b{font-size:12px;font-weight:900;letter-spacing:-.25px}
+.meal span.s{font-size:9px;font-weight:700;color:var(--muted)}
+.meal .chev{width:12px;height:12px;stroke:rgba(245,239,226,.24);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.meal .wx-mini{display:inline-flex;align-items:center;gap:3px;height:17px;padding:0 5px;border-radius:5px;background:rgba(143,195,217,.14);border:1px solid rgba(143,195,217,.26);color:#A9D2E4;font-size:7.5px;font-weight:900}
+.meal .wx-mini svg{width:8px;height:8px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.budget{display:flex;align-items:center;justify-content:space-between;margin:0 12px 12px;padding:9px 11px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line-soft);font-size:9px;font-weight:800;color:rgba(245,239,226,.66)}
+.budget .l{display:flex;align-items:center;gap:6px}
+.budget svg{width:12px;height:12px;stroke:var(--pop);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.budget em{font-style:normal;color:var(--ember);font-weight:900}
+.meal.empty{cursor:pointer}
+.meal.empty .m-thumb{display:grid;place-items:center;background:rgba(255,255,255,.045);border:1px dashed rgba(245,239,226,.18);color:rgba(245,239,226,.35)}
+.meal.empty .m-thumb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.meal.empty b{color:rgba(245,239,226,.55);font-size:11px}
+.meal .pick{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:7px;background:var(--ember-soft);border:1px solid var(--ember-line);color:var(--ember);font-size:8.5px;font-weight:900;flex:none}
+
+/* 주문형 요소 */
+.stack{display:flex;flex-direction:column;gap:10px}
+.stack.tight{gap:6px}
+.stack.loose{gap:14px}
+.grow{flex:1}
+
+/* ── 하단 문서 섹션 ──────────────────────────────────── */
+.doc-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:34px}
+.doc-card{border-radius:22px;border:1px solid var(--line);background:rgba(14,42,32,.65);padding:20px 22px}
+.doc-card h3{font-family:var(--font-display);font-weight:400;font-size:19px;margin:0 0 10px;letter-spacing:-.2px}
+.doc-card p{margin:0 0 12px;font-size:11.5px;line-height:1.7;color:rgba(159,182,166,.94)}
+.doc-card ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.doc-card li{display:flex;gap:8px;font-size:11px;line-height:1.55;color:rgba(159,182,166,.9)}
+.doc-card li::before{content:"";width:4px;height:4px;border-radius:99px;background:var(--ember);flex:none;margin-top:7px}
+.doc-card code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--pop);background:rgba(230,236,175,.1);padding:1px 4px;border-radius:4px}
+.doc-card .swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.doc-card .sw{width:58px;display:flex;flex-direction:column;gap:4px;font-size:8px;font-weight:800;color:var(--faint)}
+.doc-card .sw i{display:block;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.1)}
+footer.doc-foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:10px;font-weight:700;color:var(--faint)}
+footer.doc-foot b{color:var(--ember)}
+
+@media (max-width:760px){
+  .wrap{padding:22px 14px 70px}
+  .doc-meta{align-items:flex-start}
+  .stage{gap:16px}
+  .phone{width:344px;height:760px}
+  .phone::before{width:92px;height:23px}
+  .tabbar{padding:0 12px 8px}
+  .statusbar{height:50px;padding-top:4px}
+  .phone-unit{width:344px}
+  .toolbar .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <div>
+    <div class="brandline">
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z" fill="#2A0E06"/></svg></span>
+      <b>캠핑음식 도우미</b>
+      <span class="badge">R E D E S I G N   P R O P O S A L</span>
+    </div>
+    <h1 class="title">EMBER NIGHT</h1>
+    <p class="subtitle">불 앞에서, 가장 선명하게.<small>앱 전체 화면 시안 · 클릭해서 이동해 보세요</small></p>
+    <p class="lede">지금의 深숲 다크 · 크림 카드 · 코랄 CTA라는 정체성은 그대로 살리고, 사진 중심 카드·정돈된 타입 스케일·명확한 상태 표시로 한 단계 올린 안입니다. 아래 폰은 목업 이미지가 아니라 실제 CSS·JS로 동작하며, 하단 탭과 카드를 눌러 6개 화면을 오갈 수 있습니다.</p>
+  </div>
+  <div class="doc-meta">
+    <b>2026.11 · v1 시안</b>
+    <span>다크(EMBER) / 라이트(MORNING) 2테마</span>
+    <span>현행 index.html :root 토큰 대응표 포함</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="seg" role="group" aria-label="테마 전환">
+    <button type="button" data-theme="dark" aria-pressed="true">🌙 Ember Night</button>
+    <button type="button" data-theme="light" aria-pressed="false">☀️ Morning</button>
+  </div>
+  <div class="hint"><span class="kbd">←</span><span class="kbd">→</span> 화면 이동 · 하단 탭·카드·체크박스가 실제로 눌립니다 · <a href="#gallery">정지 이미지 보기 ↓</a></div>
+</div>
+
+<main class="stage" aria-label="화면 시안">
+
+  <!-- ══════════════════ 01 홈 ══════════════════ -->
+  <div class="phone-unit live">
+    <div class="phone" id="phone">
+      <div class="screen" data-screen="home" data-on>
+        <div class="statusbar"><span>9:41</span><span class="icons" aria-hidden="true"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg><svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 6.2 8.6a3.6 3.6 0 0 1 4.6 0Z" fill="currentColor"/><path d="M4.6 6.9a6.6 6.6 0 0 1 7.8 0M2.4 4.4a10 10 0 0 1 12.2 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".6" y=".6" width="21" height="10.8" rx="3.2" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" fill="none"/><rect x="2.4" y="2.4" width="15.4" height="7.2" rx="1.8" fill="currentColor"/></svg></span></div>
+
+        <div class="screen-body">
+          <div class="appbar">
+            <div class="who">
+              <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z" fill="#2A0E06"/></svg></span>
+              <span class="txt"><b>캠핑음식 도우미</b><span>EMBERS · 김춘학의 캠프</span></span>
+            </div>
+            <div class="tools">
+              <button class="ibtn" type="button" aria-label="알림"><svg viewBox="0 0 24 24"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4 1.5 5.5 1.5 5.5H5S6.5 14 6.5 10Z"/><path d="M10 19a2.2 2.2 0 0 0 4 0"/></svg></button>
+              <button class="ibtn" type="button" data-a="theme" aria-label="라이트 테마로 보기" title="야외 가시성(라이트) 모드"><svg viewBox="0 0 24 24"><path d="M20 14.4A8.4 8.4 0 0 1 9.6 4 8.5 8.5 0 1 0 20 14.4Z"/></svg></button>
+            </div>
+          </div>
+
+          <div class="hero-title">
+            <p class="h-display">오늘 캠핑,<em>춘학아~ 뭐 해먹지?</em></p>
+            <p>장비와 인원만 고르면 메뉴부터 장보기까지 한 번에.</p>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="photo-card weather">
+            <img src="../images/campfire-night.jpg" alt="별이 뜬 밤, 모닥불 옆 캠핑 테이블">
+            <span class="scrim"></span>
+            <div class="inner">
+              <div class="wx-top"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/></svg>경남 창원 · 불모산 <em>21:40 기준</em></div>
+              <div class="wx-main">
+                <span class="deg">12°</span>
+                <span class="desc">
+                  <span class="cond"><svg viewBox="0 0 24 24"><path d="M7.4 15.5h9.9a4 4 0 0 0 .5-8A6 6 0 0 0 6.3 9.1a3.3 3.3 0 0 0 1.1 6.4Z"/><path d="M8.6 18.2 7.4 20.4M13 18.2l-1.2 2.2M17.4 18.2l-1.2 2.2"/></svg>비 · 강수 60%</span>
+                  <span class="det">체감 9° · 바람 3.2m/s · 일몰 18:42</span>
+                </span>
+              </div>
+              <div class="wx-tags"><span class="wx-tag pop">국물 요리 추천일</span><span class="wx-tag dim">타프 챙기기</span></div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="sec-head">
+            <span class="lab">오늘의 추천</span>
+            <button class="act" type="button">다시 고르기 ›</button>
+          </div>
+
+          <article class="rec-card">
+            <img class="bg" src="../images/food-jjigae.jpg" alt="모닥불 위에서 끓는 김치찌개">
+            <span class="scrim"></span>
+            <div class="tags"><span class="pill pop"><svg viewBox="0 0 24 24"><path d="M12 3.2c.6 3.6 2.4 5.4 6 6-3.6.6-5.4 2.4-6 6-.6-3.6-2.4-5.4-6-6 3.6-.6 5.4-2.4 6-6Z"/></svg>AI 추천 1순위</span><span class="pill">비 오는 날</span></div>
+            <div class="bottom">
+              <h3>김치찌개 + 라면 사리</h3>
+              <div class="rec-facts">
+                <i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3 1.8"/></svg>25분</i>
+                <i><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.4 19.5c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/></svg>4인분</i>
+                <i><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg>난이도 하</i>
+              </div>
+              <div class="rec-foot">
+                <span class="why">체감 9° · 뜨끈한 국물이 딱</span>
+                <button class="cta-mini" type="button" data-goto="prep">준비물 만들기 <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+              </div>
+            </div>
+          </article>
+
+          <div style="height:11px"></div>
+
+          <div class="sec-head"><span class="lab">다른 후보 2</span><span style="font-size:9.5px;font-weight:700;color:var(--faint)">옆으로 넘겨 보세요</span></div>
+          <div class="hscroll">
+            <button class="mini-card" type="button">
+              <img src="../images/campsite-golden.jpg" alt=""><span class="scrim"></span>
+              <span class="txt"><b>부대찌개</b><span>20분 · 4인</span></span>
+            </button>
+            <button class="mini-card" type="button">
+              <img src="../images/camp-morning.jpg" alt=""><span class="scrim"></span>
+              <span class="txt"><b>감바스 알 아히요</b><span>18분 · 2인</span></span>
+            </button>
+          </div>
+
+          <div style="height:11px"></div>
+
+          <div class="progress-card">
+            <div class="col">
+              <div class="row"><span>이번 캠핑 준비물</span><em>15 / 23</em></div>
+              <div class="bar"><span style="width:65%"></span></div>
+              <span class="sub">집에서 손질 2 · 현장 구입 3 남았어요</span>
+            </div>
+            <span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span>
+          </div>
+        </div>
+
+        <nav class="tabbar" aria-label="화면 이동">
+          <div class="pill">
+            <button type="button" data-goto="home" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg>추천</button>
+            <button type="button" data-goto="camp"><svg viewBox="0 0 24 24"><path d="M12 4 3.5 20h17L12 4Z"/><path d="M12 4v16"/><path d="m12 13 3.6 7M12 13l-3.6 7"/></svg>캠핑지</button>
+            <button type="button" data-goto="prep"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>준비물</button>
+            <button type="button" data-goto="plan"><svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="16" rx="3.4"/><path d="M3.2 10h17.6M8.4 3v4M15.6 3v4"/></svg>식단표</button>
+            <button type="button" data-goto="menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>전체</button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- ══════════════════ 02 준비물 ══════════════════ -->
+      <div class="screen" data-screen="prep">
+        <div class="statusbar"><span>9:41</span><span class="icons" aria-hidden="true"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg><svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 6.2 8.6a3.6 3.6 0 0 1 4.6 0Z" fill="currentColor"/><path d="M4.6 6.9a6.6 6.6 0 0 1 7.8 0M2.4 4.4a10 10 0 0 1 12.2 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".6" y=".6" width="21" height="10.8" rx="3.2" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" fill="none"/><rect x="2.4" y="2.4" width="15.4" height="7.2" rx="1.8" fill="currentColor"/></svg></span></div>
+
+        <div class="screen-body">
+          <div class="appbar">
+            <div class="page"><b>준비물 · 장보기</b><span style="color:var(--ember)">김치찌개 <span style="color:var(--faint)">· 4인분 · 비 오는 날</span></span></div>
+            <div class="tools">
+              <button class="ibtn" type="button" aria-label="목록 복사"><svg viewBox="0 0 24 24"><rect x="8.6" y="8.6" width="12" height="12" rx="3"/><path d="M15.4 5.4H6.4a3 3 0 0 0-3 3v9"/></svg></button>
+              <button class="ibtn" type="button" aria-label="항목 추가"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+            </div>
+          </div>
+          <div style="height:10px"></div>
+
+          <div class="seg-tabs" role="group" aria-label="준비물 필터">
+            <button type="button" aria-pressed="true">전체 23</button>
+            <button type="button" aria-pressed="false">집에서 6</button>
+            <button type="button" aria-pressed="false">챙기기 11</button>
+            <button type="button" aria-pressed="false">현장 6</button>
+          </div>
+
+          <div style="height:10px"></div>
+
+          <div class="stat-card">
+            <div class="donut" aria-hidden="true"><b id="prepPct">65%</b></div>
+            <div class="body">
+              <b id="prepLeft">8개만 더 챙기면 끝나요</b>
+              <div class="legend">
+                <i><span class="dot" style="background:#7EA6FF"></span>집에서 2</i>
+                <i><span class="dot" style="background:var(--pop)"></span>챙기기 4</i>
+                <i><span class="dot" style="background:var(--ember)"></span>현장 2</i>
+              </div>
+              <span class="note">가장 늦은 출발 3시간 전까지는 끝내요</span>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="sec-head">
+            <span class="lab" style="color:rgba(245,239,226,.9)"><span style="width:5px;height:14px;border-radius:3px;background:#7EA6FF;display:inline-block;margin-right:2px"></span>먹거리 · 재료 <span style="color:var(--faint);font-size:10px">8</span></span>
+            <button class="act" type="button" data-a="select-all">전체 선택</button>
+          </div>
+
+          <div class="card" style="margin-bottom:10px">
+            <ul class="list" data-checklist>
+              <li class="item done" tabindex="0" role="checkbox" aria-checked="true"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>배추김치</b><span>1/2포기</span></span><span class="tag pack">챙기기</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item done" tabindex="0" role="checkbox" aria-checked="true"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>돼지고기 앞다리</b><span>600g</span></span><span class="tag buy">현장 구입</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item done" tabindex="0" role="checkbox" aria-checked="true"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>두부</b><span>1모</span></span><span class="tag pack">챙기기</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item" tabindex="0" role="checkbox" aria-checked="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>대파</b><span>1단</span></span><span class="tag prep">집에서 손질</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item" tabindex="0" role="checkbox" aria-checked="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>양파</b><span>2개</span></span><span class="tag pack">챙기기</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item done" tabindex="0" role="checkbox" aria-checked="true"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>라면 사리</b><span>2봉</span></span><span class="tag pack">챙기기</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item" tabindex="0" role="checkbox" aria-checked="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>다시마·멸치</b><span>소량</span></span><span class="tag prep">집에서 손질</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+            </ul>
+            <button class="list-foot" type="button">대체 재료 제안 받기 <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+          </div>
+
+          <div class="sec-head">
+            <span class="lab" style="color:rgba(245,239,226,.9)"><span style="width:5px;height:14px;border-radius:3px;background:var(--ember);display:inline-block;margin-right:2px"></span>장비 · 소모품 <span style="color:var(--faint);font-size:10px">5</span></span>
+            <button class="act" type="button" data-a="select-all">전체 선택</button>
+          </div>
+
+          <div class="card">
+            <ul class="list" data-checklist>
+              <li class="item done" tabindex="0" role="checkbox" aria-checked="true"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>그리들 + 버너</b><span>1세트</span></span><span class="tag pack">챙기기</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item" tabindex="0" role="checkbox" aria-checked="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>알루미늄 호일</b><span>1롤</span></span><span class="tag buy">현장 구입</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+              <li class="item" tabindex="0" role="checkbox" aria-checked="false"><span class="box"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="nm"><b>키친타월 · 물티슈</b><span>각 1</span></span><span class="tag pack">챙기기</span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></li>
+            </ul>
+          </div>
+        </div>
+
+        <nav class="tabbar" aria-label="화면 이동">
+          <div class="pill">
+            <button type="button" data-goto="home"><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg>추천</button>
+            <button type="button" data-goto="camp"><svg viewBox="0 0 24 24"><path d="M12 4 3.5 20h17L12 4Z"/><path d="M12 4v16"/><path d="m12 13 3.6 7M12 13l-3.6 7"/></svg>캠핑지</button>
+            <button type="button" data-goto="prep" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>준비물</button>
+            <button type="button" data-goto="plan"><svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="16" rx="3.4"/><path d="M3.2 10h17.6M8.4 3v4M15.6 3v4"/></svg>식단표</button>
+            <button type="button" data-goto="menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>전체</button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- ══════════════════ 03 레시피 ══════════════════ -->
+      <div class="screen" data-screen="recipe">
+        <div class="recipe-hero">
+          <img src="../images/food-jjigae.jpg" alt="모닥불 위 무쇠 냄비 김치찌개">
+          <span class="scrim"></span>
+          <div class="statusbar" style="position:absolute;left:0;right:0;top:0"><span>9:41</span><span class="icons" aria-hidden="true"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".6" y=".6" width="21" height="10.8" rx="3.2" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" fill="none"/><rect x="2.4" y="2.4" width="15.4" height="7.2" rx="1.8" fill="currentColor"/></svg></span></div>
+          <div class="topbar">
+            <button class="circle" type="button" data-goto="home" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+            <span style="display:flex;gap:7px"><button class="circle" type="button" aria-label="즐겨찾기"><svg viewBox="0 0 24 24"><path d="M12 20.4S3.6 15.6 3.6 9.7A4.6 4.6 0 0 1 12 6.9a4.6 4.6 0 0 1 8.4 2.8c0 5.9-8.4 10.7-8.4 10.7Z"/></svg></button><button class="circle" type="button" aria-label="공유"><svg viewBox="0 0 24 24"><rect x="8.6" y="8.6" width="12" height="12" rx="3"/><path d="M15.4 5.4H6.4a3 3 0 0 0-3 3v9"/></svg></button></span>
+          </div>
+          <div class="info">
+            <span style="display:flex;gap:5px"><span class="pill pop"><svg viewBox="0 0 24 24"><path d="M12 3.2c.6 3.6 2.4 5.4 6 6-3.6.6-5.4 2.4-6 6-.6-3.6-2.4-5.4-6-6 3.6-.6 5.4-2.4 6-6Z"/></svg>AI 추천</span><span class="pill">국물 · 한 냄비</span></span>
+            <h2>김치찌개 + 라면 사리</h2>
+            <p>묵은지와 돼지고기를 볶아 끓이다가, 마지막에 라면 사리를 넣어 국물까지 든든하게.</p>
+          </div>
+        </div>
+
+        <div class="screen-body wide" style="margin-top:-1px">
+          <div style="height:14px"></div>
+          <div class="facts3">
+            <div class="cell"><span class="k"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3 1.8"/></svg>조리</span><b>25분</b></div>
+            <div class="cell"><span class="k"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.4 19.5c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/></svg>인원</span><b>4인분</b></div>
+            <div class="cell"><span class="k"><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg>난이도</span><b>쉬움</b></div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="sec-head">
+            <span class="lab">조리 순서 · 5단계</span>
+            <button class="chip" type="button" data-a="timer-toggle" style="height:24px;font-size:9px;color:var(--ember);background:var(--ember-soft);border-color:var(--ember-line)"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.4" r="7.4"/><path d="M12 9.6v3.8l2.4 1.6M9.4 2.6h5.2"/></svg>타이머 <span id="timerMode">대기</span></button>
+          </div>
+
+          <div class="card" style="margin-bottom:0">
+            <div class="steps" data-steps>
+              <div class="step done"><span class="num"><svg viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg></span><span class="txt"><b>묵은지를 참기름에 볶기</b><span>3분 · 중불</span></span></div>
+              <div class="step now"><span class="num">2</span><span class="txt"><b>돼지고기 넣고 겉면만 익히기</b><span>5분 · 센불</span></span><button class="timer" type="button" id="timerBtn">04:12</button></div>
+              <div class="step"><span class="num">3</span><span class="txt"><b>물 800ml 붓고 끓이기</b><span>8분 · 강불</span></span></div>
+              <div class="step"><span class="num">4</span><span class="txt"><b>두부·대파 넣고 간 맞추기</b><span>4분 · 중불</span></span></div>
+              <div class="step"><span class="num">5</span><span class="txt"><b>라면 사리 넣고 30초</b><span>1분 · 강불</span></span></div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div style="margin:0 20px;display:flex;gap:8px">
+            <button class="btn" type="button" data-goto="prep" style="width:104px;min-height:52px;border-radius:16px;font-size:11px"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>재료</button>
+            <button class="btn primary grow" type="button" data-a="timer-toggle" style="min-height:52px;border-radius:16px;font-size:13.5px"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.4" r="7.4"/><path d="M12 9.6v3.8l2.4 1.6M9.4 2.6h5.2"/></svg>조리 모드 시작</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════ 04 캠핑지 ══════════════════ -->
+      <div class="screen" data-screen="camp">
+        <div class="statusbar"><span>9:41</span><span class="icons" aria-hidden="true"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg><svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 6.2 8.6a3.6 3.6 0 0 1 4.6 0Z" fill="currentColor"/><path d="M4.6 6.9a6.6 6.6 0 0 1 7.8 0M2.4 4.4a10 10 0 0 1 12.2 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".6" y=".6" width="21" height="10.8" rx="3.2" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" fill="none"/><rect x="2.4" y="2.4" width="15.4" height="7.2" rx="1.8" fill="currentColor"/></svg></span></div>
+
+        <div class="screen-body">
+          <div class="appbar">
+            <div class="page"><b>캠핑지 찾기</b><span>전국 4,018곳 · 내 주변부터</span></div>
+            <button class="ibtn ember" type="button" aria-label="내 위치로 찾기"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/></svg></button>
+          </div>
+          <div style="height:11px"></div>
+
+          <div class="searchbar">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4"/><path d="m16 16 4.4 4.4"/></svg>
+            <input type="search" placeholder="캠핑지 이름 · 지역 · 초성 검색" aria-label="캠핑지 검색">
+            <button class="geo" type="button"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/></svg>내 위치</button>
+          </div>
+
+          <div style="height:10px"></div>
+          <div class="chip-row">
+            <button class="chip" type="button" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/></svg>거리순</button>
+            <button class="chip" type="button" aria-pressed="false">노지</button>
+            <button class="chip" type="button" aria-pressed="false">오토캠핑</button>
+            <button class="chip" type="button" aria-pressed="false">반려견</button>
+            <button class="chip" type="button" aria-pressed="false">계곡</button>
+          </div>
+
+          <div style="height:11px"></div>
+
+          <div class="map-card">
+            <img src="../images/campsite-golden.jpg" alt="소나무 숲 캠핑지 지도 배경">
+            <span class="scrim"></span>
+            <span class="pin" style="left:150px;top:46px"></span>
+            <span class="dot" style="left:74px;top:84px"></span>
+            <span class="dot" style="left:256px;top:96px"></span>
+            <button class="see" type="button">지도로 보기 ›</button>
+            <div class="cap"><b>창원 · 김해 인근 42곳</b><span>반경 30km · 차로 40분 이내</span></div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="sec-head"><span class="lab">추천 캠핑지</span><button class="act" type="button">리뷰 많은 순</button></div>
+
+          <div class="camp-list">
+            <article class="camp active">
+              <div class="main">
+                <span class="thumb"><img src="../images/campsite-golden.jpg" alt=""></span>
+                <span class="col">
+                  <span class="title-row"><b>불모산 자연휴양림</b><span class="badge-here">추천</span></span>
+                  <span class="where"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/></svg>경남 창원 · 12.4km</span>
+                  <span class="tags"><span>노지</span><span>계곡</span><span>조용함</span></span>
+                </span>
+                <span class="right"><span class="score"><b>4.9</b><span>점</span></span><button class="nav" type="button">길찾기</button></span>
+              </div>
+              <div class="wx"><span class="rain"><svg viewBox="0 0 24 24"><path d="M7.4 15.5h9.9a4 4 0 0 0 .5-8A6 6 0 0 0 6.3 9.1a3.3 3.3 0 0 0 1.1 6.4Z"/><path d="M8.6 18.2 7.4 20.4M13 18.2l-1.2 2.2"/></svg>오늘 비 60%</span><span>주말 최저 6° · 타프 권장</span></div>
+            </article>
+            <article class="camp">
+              <div class="main">
+                <span class="thumb"><img src="../images/camp-morning.jpg" alt=""></span>
+                <span class="col">
+                  <span class="title-row"><b>주남저수지 오토캠핑장</b></span>
+                  <span class="where"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/></svg>경남 창원 · 8.1km</span>
+                  <span class="tags"><span>오토</span><span>반려견</span><span>전기</span></span>
+                </span>
+                <span class="right"><span class="score"><b>4.7</b><span>점</span></span><button class="nav" type="button">길찾기</button></span>
+              </div>
+            </article>
+            <article class="camp">
+              <div class="main">
+                <span class="thumb"><img src="../images/campfire-night.jpg" alt=""></span>
+                <span class="col">
+                  <span class="title-row"><b>진해 해양솔라파크</b></span>
+                  <span class="where"><svg viewBox="0 0 24 24"><path d="M12 21s6.6-6 6.6-11a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21 12 21Z"/></svg>경남 창원 · 19.8km</span>
+                  <span class="tags"><span>오토</span><span>바다</span><span>전기</span></span>
+                </span>
+                <span class="right"><span class="score"><b>4.6</b><span>점</span></span><button class="nav" type="button">길찾기</button></span>
+              </div>
+            </article>
+            <button class="add-spot" type="button" style="margin:0">
+              <span class="plus"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+              <b>스팟이 없나요? 비밀의 정원에 직접 등록</b>
+              <svg width="11" height="11" viewBox="0 0 24 24" style="stroke:var(--faint);fill:none;stroke-width:2.4;stroke-linecap:round"><path d="m9 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <nav class="tabbar" aria-label="화면 이동">
+          <div class="pill">
+            <button type="button" data-goto="home"><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg>추천</button>
+            <button type="button" data-goto="camp" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 4 3.5 20h17L12 4Z"/><path d="M12 4v16"/><path d="m12 13 3.6 7M12 13l-3.6 7"/></svg>캠핑지</button>
+            <button type="button" data-goto="prep"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>준비물</button>
+            <button type="button" data-goto="plan"><svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="16" rx="3.4"/><path d="M3.2 10h17.6M8.4 3v4M15.6 3v4"/></svg>식단표</button>
+            <button type="button" data-goto="menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>전체</button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- ══════════════════ 05 식단표 ══════════════════ -->
+      <div class="screen" data-screen="plan">
+        <div class="statusbar"><span>9:41</span><span class="icons" aria-hidden="true"><svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg><svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 6.2 8.6a3.6 3.6 0 0 1 4.6 0Z" fill="currentColor"/><path d="M4.6 6.9a6.6 6.6 0 0 1 7.8 0M2.4 4.4a10 10 0 0 1 12.2 0" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".6" y=".6" width="21" height="10.8" rx="3.2" stroke="currentColor" stroke-opacity=".45" stroke-width="1.2" fill="none"/><rect x="2.4" y="2.4" width="15.4" height="7.2" rx="1.8" fill="currentColor"/></svg></span></div>
+
+        <div class="screen-body">
+          <div class="appbar">
+            <div class="page"><b>주간 식단표</b><span>2박 3일 · 4인 · 끼니 6번</span></div>
+            <div class="tools">
+              <button class="ibtn" type="button" aria-label="식단 설정"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.6a7.6 7.6 0 0 0 0-3.2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-2.8-1.6L14 2.5h-4l-.3 2.4A7.6 7.6 0 0 0 6.9 6.5l-2.3-1-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3.2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 2.8 1.6l.3 2.4h4l.3-2.4a7.6 7.6 0 0 0 2.8-1.6l2.3 1 2-3.4Z"/></svg></button>
+              <button class="btn primary sm" type="button" style="min-height:34px;border-radius:11px;font-size:10px"><svg viewBox="0 0 24 24"><path d="M12 3.2c.6 3.6 2.4 5.4 6 6-3.6.6-5.4 2.4-6 6-.6-3.6-2.4-5.4-6-6 3.6-.6 5.4-2.4 6-6Z"/></svg>자동 채우기</button>
+            </div>
+          </div>
+          <div style="height:11px"></div>
+
+          <div class="plan-hero">
+            <img src="../images/campsite-golden.jpg" alt="">
+            <span class="scrim"></span>
+            <div class="info">
+              <span class="when">11.28(금) → 11.30(일)</span>
+              <b>이번 주말, 불멍 2박</b>
+              <div class="stats"><em>끼니 6</em><span class="split"></span>재료 31<span class="split"></span>예상 장보기 87,000원</div>
+            </div>
+          </div>
+
+          <div style="height:11px"></div>
+          <div class="days" role="group" aria-label="날짜 선택">
+            <button type="button" aria-pressed="true">11.28 금</button>
+            <button type="button" aria-pressed="false">11.29 토</button>
+            <button type="button" aria-pressed="false">11.30 일</button>
+          </div>
+          <div style="height:11px"></div>
+
+          <div class="day-card">
+            <div class="head">
+              <span class="l"><span class="no">1</span><b>11.28 (금)</b><span class="muted">저녁</span></span>
+              <button class="add" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>끼니 추가</button>
+            </div>
+            <button class="meal" type="button" data-goto="recipe">
+              <span class="m-thumb"><img src="../images/food-jjigae.jpg" alt=""></span>
+              <span class="m-body">
+                <span class="m-title"><b>숯불 부대찌개</b><span class="wx-mini"><svg viewBox="0 0 24 24"><path d="M7.4 15.5h9.9a4 4 0 0 0 .5-8A6 6 0 0 0 6.3 9.1a3.3 3.3 0 0 0 1.1 6.4Z"/></svg>비</span></span>
+                <span class="s">4인 · 25분 · 버너 + 냄비</span>
+              </span>
+              <svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+            </button>
+            <div class="budget">
+              <span class="l"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>합산 재료 14 · 장보기 32,400원</span>
+              <span><em>목록 반영</em></span>
+            </div>
+            <button class="meal empty" type="button">
+              <span class="m-thumb"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+              <span class="m-body"><b>아침 메뉴 고르기</b><span class="s">어제 AI 추천 3개 중에서 고르거나 직접 입력</span></span>
+              <span class="pick">추천</span>
+            </button>
+          </div>
+
+          <div style="height:9px"></div>
+
+          <div class="day-card">
+            <div class="head">
+              <span class="l"><span class="no" style="background:rgba(255,255,255,.055);border-color:var(--line-soft);color:var(--muted)">2</span><b>11.29 (토)</b><span class="muted">아침 · 저녁</span></span>
+              <button class="add" type="button" style="color:var(--muted)">펼치기</button>
+            </div>
+            <button class="meal" type="button">
+              <span class="m-thumb"><img src="../images/camp-morning.jpg" alt=""></span>
+              <span class="m-body"><b>베이컨 에그 샌드위치</b><span class="s">4인 · 12분 · 그리들</span></span>
+              <svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+            </button>
+            <button class="meal" type="button">
+              <span class="m-thumb"><img src="../images/campsite-golden.jpg" alt=""></span>
+              <span class="m-body"><b>숯불 삼겹살 + 된장찌개</b><span class="s">4인 · 40분 · 화로대</span></span>
+              <svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <div style="height:10px"></div>
+
+          <div style="margin:0 20px">
+            <button class="btn primary block" type="button" data-goto="prep" style="min-height:54px;border-radius:18px;font-size:13px"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>6끼니 재료 · 장비 한 번에 취합</button>
+          </div>
+        </div>
+
+        <nav class="tabbar" aria-label="화면 이동">
+          <div class="pill">
+            <button type="button" data-goto="home"><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg>추천</button>
+            <button type="button" data-goto="camp"><svg viewBox="0 0 24 24"><path d="M12 4 3.5 20h17L12 4Z"/><path d="M12 4v16"/><path d="m12 13 3.6 7M12 13l-3.6 7"/></svg>캠핑지</button>
+            <button type="button" data-goto="prep"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg>준비물</button>
+            <button type="button" data-goto="plan" aria-current="page"><svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="16" rx="3.4"/><path d="M3.2 10h17.6M8.4 3v4M15.6 3v4"/></svg>식단표</button>
+            <button type="button" data-goto="menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>전체</button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- ══════════════════ 06 전체메뉴 ══════════════════ -->
+      <div class="screen sheet-screen" data-screen="menu">
+        <button class="sheet-backdrop" type="button" data-goto="home" aria-label="메뉴 닫기"></button>
+        <div class="sheet" role="dialog" aria-modal="true" aria-label="전체 메뉴">
+          <span class="grab" aria-hidden="true"></span>
+          <div class="head">
+            <div>
+              <span style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--ember)"><span class="mark" style="width:20px;height:20px;border-radius:7px"><svg viewBox="0 0 24 24" fill="none" style="width:11px;height:11px"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z" fill="#2A0E06"/></svg></span>전체 메뉴</span>
+              <h2 class="h-title" style="margin-top:3px">어디로 갈까요?</h2>
+              <p style="margin:3px 0 0;font-size:10px;font-weight:700;color:var(--faint)">누르면 그 화면으로 바로 이동해요.</p>
+            </div>
+            <button class="ibtn round" type="button" data-goto="home" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </div>
+          <div class="menu-grid">
+            <button class="menu-card" type="button" data-goto="home" aria-current="page">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2.5c1.2 4.6 6 7 6 12.2A6 6 0 0 1 6 14.7c0-2.4 1.2-3.8 2.6-5.1-.1 2 .8 3.2 2.1 3.4C10.3 9 10 6 12 2.5Z"/></svg></span><span class="now">현재</span></span>
+              <span><b>오늘 메뉴 추천</b><span class="d">3초 만에 오늘 먹을 메뉴 고르기</span></span>
+            </button>
+            <button class="menu-card" type="button" data-goto="plan">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="16" rx="3.4"/><path d="M3.2 10h17.6M8.4 3v4M15.6 3v4"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>주간 식단표</b><span class="d">2박 3일 장박 끼니·장보기 한 번에</span></span>
+            </button>
+            <button class="menu-card" type="button" data-goto="camp">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 4 3.5 20h17L12 4Z"/><path d="M12 4v16"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>캠핑지 찾기</b><span class="d">전국 4,018곳 · 거리·테마별 탐색</span></span>
+            </button>
+            <button class="menu-card" type="button">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><path d="M20 4C10.2 4 4.4 8.6 4.4 15.6c0 1.6.4 3 .9 4.4 5-7.6 9-9.4 14.7-10.4-5 2.4-8.6 5.4-10.7 10.4C16.2 21.4 20 15 20 4Z"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>비밀의 정원</b><span class="d">노지·차박 아지트 기록하고 공유</span></span>
+            </button>
+            <button class="menu-card" type="button" data-goto="prep">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.2l2.3 10.4h10.9L21 7H6"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>준비물 · 장보기</b><span class="d">챙길 것과 살 것을 목록 하나로</span></span>
+            </button>
+            <button class="menu-card" type="button" data-goto="recipe">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3.5 8.5h3.2l1.5-2.2h7.6l1.5 2.2h3.2v10.2H3.5Z"/><circle cx="12" cy="13.2" r="3.4"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>요리 일지</b><span class="d">다녀온 요리 사진·평점 남기기</span></span>
+            </button>
+            <button class="menu-card" type="button">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>방명록</b><span class="d">캠핑의 추억과 메뉴 이야기</span></span>
+            </button>
+            <button class="menu-card" type="button">
+              <span class="row1"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.6 20.4c0-3.6 3.3-5.8 7.4-5.8s7.4 2.2 7.4 5.8"/></svg></span><svg class="chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></span>
+              <span><b>내 정보 · 요금제</b><span class="d">취향·장비·플랜 관리</span></span>
+            </button>
+          </div>
+          <div class="account">
+            <span class="avatar">춘</span>
+            <span class="who"><b>김춘학 · PRO</b><span>이번 달 AI 추천 28 / 50회 · 남은 22회</span></span>
+            <span class="left">15일 남음</span>
+          </div>
+          <div class="legal"><span>이용약관</span><span>개인정보</span><span>문의하기</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="cap"><b id="phoneCaption">홈 · 오늘의 추천</b><span id="phoneCaptionSub">01 · 사진 히어로 + 3초 픽 · 실제 클릭 가능</span></div>
+  </div>
+
+  <!-- 사이드 요약 패널 -->
+  <aside class="side" aria-label="시안 요약">
+    <div class="panel">
+      <h2>화면 6개, 이 순서로 보세요</h2>
+      <p class="lead">폰 안에서 바로 이동됩니다. 하단 탭·카드·체크박스·타이머가 실제로 동작하고, ← → 키로도 화면을 넘길 수 있어요.</p>
+      <div class="nav-list">
+        <button type="button" data-goto="home" aria-pressed="true"><span class="n">01</span><span class="t"><b>홈 · 오늘의 추천</b><span>날씨 → 3초 픽 → 후보 → 준비물 진행</span></span><span class="go">보기 →</span></button>
+        <button type="button" data-goto="prep" aria-pressed="false"><span class="n">02</span><span class="t"><b>준비물 · 장보기</b><span>집에서/챙기기/현장 구입 3분류 · 체크리스트</span></span><span class="go">보기 →</span></button>
+        <button type="button" data-goto="recipe" aria-pressed="false"><span class="n">03</span><span class="t"><b>레시피 · 조리 모드</b><span>단계별 진행 · 타이머 · 큰 CTA</span></span><span class="go">보기 →</span></button>
+        <button type="button" data-goto="camp" aria-pressed="false"><span class="n">04</span><span class="t"><b>캠핑지 탐색</b><span>지도 프리뷰 · 거리 필터 · 날씨 배지</span></span><span class="go">보기 →</span></button>
+        <button type="button" data-goto="plan" aria-pressed="false"><span class="n">05</span><span class="t"><b>주간 식단표</b><span>2박 3일 끼니 · 예산 · 한 번에 취합</span></span><span class="go">보기 →</span></button>
+        <button type="button" data-goto="menu" aria-pressed="false"><span class="n">06</span><span class="t"><b>전체 메뉴 시트</b><span>8개 진입점 · 계정 · 요금제</span></span><span class="go">보기 →</span></button>
+      </div>
+      <div class="theme-row">
+        <button class="chip" type="button" data-theme="dark" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M20 14.4A8.4 8.4 0 0 1 9.6 4 8.5 8.5 0 1 0 20 14.4Z"/></svg>Ember Night</button>
+        <button class="chip" type="button" data-theme="light" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2"/></svg>Morning</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>이 3가지만 바뀝니다</h2>
+      <div class="diffs">
+        <div><b>바탕은 더 어둡게, 정보는 더 밝게.</b> 기존 <code style="font-family:ui-monospace,monospace;color:var(--pop)">#0E2820</code> → <code style="font-family:ui-monospace,monospace;color:var(--pop)">#06170F</code>. 카드가 떠 보여 사진과 CTA가 먼저 눈에 들어옵니다.</div>
+        <div><b>사진이 주인공.</b> 날씨·추천 카드는 사진을 깔고 하단 스크림 위에 정보를 올립니다. 한 눈에 '지금 상황'이 읽힙니다.</div>
+        <div><b>상태를 두 번 말하기.</b> 완료·진행·오프라인은 색 + 아이콘 + 문장을 함께. 야외에서도, 장갑 낀 손에서도 구분됩니다.</div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<section class="sec-divider" id="gallery" aria-label="전체 화면 정지 이미지">
+  <h2>전체 화면 한눈에 보기</h2>
+  <span>클릭 없이 비교할 때 쓰는 정지 이미지 · 클릭 시 프로토타입으로</span>
+</section>
+
+<div class="gallery">
+  <figure>
+    <a class="shot" href="01-home.png" target="_blank" rel="noopener" aria-label="홈 화면 크게 보기"><img src="01-home.png" alt="홈 화면 시안"></a>
+    <figcaption><b>01 · 홈</b><span>사진 히어로 + 3초 픽</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="02-prep-list.png" target="_blank" rel="noopener" aria-label="준비물 화면 크게 보기"><img src="02-prep-list.png" alt="준비물 화면 시안"></a>
+    <figcaption><b>02 · 준비물</b><span>태그 · 진행률 · 체크</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="03-recipe-cook.png" target="_blank" rel="noopener" aria-label="레시피 화면 크게 보기"><img src="03-recipe-cook.png" alt="레시피 화면 시안"></a>
+    <figcaption><b>03 · 레시피</b><span>단계 · 타이머</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="04-camp-find.png" target="_blank" rel="noopener" aria-label="캠핑지 화면 크게 보기"><img src="04-camp-find.png" alt="캠핑지 화면 시안"></a>
+    <figcaption><b>04 · 캠핑지</b><span>지도 · 거리 필터</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="05-weekly-plan.png" target="_blank" rel="noopener" aria-label="식단표 화면 크게 보기"><img src="05-weekly-plan.png" alt="주간 식단표 시안"></a>
+    <figcaption><b>05 · 식단표</b><span>2박 3일 장박</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="06-menu-sheet.png" target="_blank" rel="noopener" aria-label="전체메뉴 시트 크게 보기"><img src="06-menu-sheet.png" alt="전체 메뉴 시트 시안"></a>
+    <figcaption><b>06 · 전체메뉴</b><span>8개 진입점</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="07-home-light.png" target="_blank" rel="noopener" aria-label="라이트 테마 크게 보기"><img src="07-home-light.png" alt="라이트 테마 홈 시안"></a>
+    <figcaption><b>07 · 홈 (Morning)</b><span>야외 가시성 모드</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="00-design-system.png" target="_blank" rel="noopener" aria-label="디자인 시스템 크게 보기"><img src="00-design-system.png" alt="디자인 시스템 스펙 시트"></a>
+    <figcaption><b>00 · 디자인 시스템</b><span>토큰 · 타입 · 컴포넌트</span></figcaption>
+  </figure>
+  <figure>
+    <a class="shot" href="cover.png" target="_blank" rel="noopener" aria-label="표지 크게 보기"><img src="cover.png" alt="표지 이미지"></a>
+    <figcaption><b>표지</b><span>6개 화면 한 장 요약</span></figcaption>
+  </figure>
+</div>
+
+<!-- ── 문서: 무엇을 바꿨는지 ── -->
+<section class="doc-sections">
+  <article class="doc-card">
+    <h3>달라진 점 3가지</h3>
+    <ul>
+      <li><b>바탕이 더 조용해졌습니다.</b> #0E2820 → #06170F. 어두운 바탕에서 카드가 '떠 보이게' 되어 사진과 CTA가 먼저 눈에 들어옵니다.</li>
+      <li><b>사진이 주인공.</b> 날씨·추천 카드에 실제 요리/캠핑 사진을 깔고, 하단 그라데이션 스크림 위에 정보를 올려 5초 안에 상황을 판단하게 합니다.</li>
+      <li><b>상태를 두 번 말합니다.</b> 완료·진행·오프라인은 색 + 아이콘 + 문장을 함께 씁니다. 밝은 야외 화면, 장갑 낀 손에서도 구분됩니다.</li>
+    </ul>
+  </article>
+
+  <article class="doc-card">
+    <h3>현행 토큰 → 새 토큰</h3>
+    <div class="swatches">
+      <span class="sw"><i style="background:#0E2820"></i>#0E2820<br>기존 bg</span>
+      <span class="sw"><i style="background:#06170F"></i>#06170F<br>새 bg0</span>
+      <span class="sw"><i style="background:#F4735A"></i>#F4735A<br>기존 cta</span>
+      <span class="sw"><i style="background:#FF7A59"></i>#FF7A59<br>새 ember</span>
+      <span class="sw"><i style="background:#F6F4DA"></i>#F6F4DA<br>기존 cream</span>
+      <span class="sw"><i style="background:#E6ECAF"></i>#E6ECAF<br>새 pop</span>
+    </div>
+    <p style="margin-top:12px">코랄은 채도를 4%만 올려 사진 위에서 살아나게 하고, 크림은 모스빛 노랑(#E6ECAF)으로 정리해 배지·진행률에만 씁니다. 라이트 테마는 <code>data-theme="light"</code> 그대로 이어받아 야외 모드로 씁니다.</p>
+  </article>
+
+  <article class="doc-card">
+    <h3>적용 순서 (권장)</h3>
+    <ul>
+      <li><b>1단계 — 토큰만 교체.</b> <code>index.html</code>의 <code>:root</code> 변수 값만 바꿔도 절반은 적용됩니다. 마크업 수정 없음.</li>
+      <li><b>2단계 — 카드 3종.</b> 추천 카드·준비물 리스트·캠핑지 카드에 사진/스크림/태그 규칙을 적용.</li>
+      <li><b>3단계 — 상태 표현.</b> 체크박스·진행률·오프라인 배지를 새 토큰으로 통일.</li>
+      <li><b>4단계 — 라이트 모드 점검.</b> 대비 4.5:1, 44px 터치, 사진 위 텍스트 스크림 유지 확인.</li>
+    </ul>
+  </article>
+
+  <article class="doc-card">
+    <h3>가이드 · 지켜야 할 것</h3>
+    <ul>
+      <li>한 화면에 Display(Do Hyeon) 1개. 제목은 두 줄을 넘기지 않습니다.</li>
+      <li>숫자는 <code>tabular-nums</code>로 흔들리지 않게 — 온도·타이머·개수.</li>
+      <li>본문 최소 10px, 중요 정보 11px 이상. 대비 4.5:1 미만 금지.</li>
+      <li>터치 영역 44×44px 이상, 하단 주요 CTA는 엄지 반경 안(하단 1/3).</li>
+      <li>빈 화면 금지 — 안내 문장 + 다음 행동 버튼 1개를 항상 둡니다.</li>
+      <li>이모지는 최소화, 아이콘은 1.8px 인라인 SVG로 통일.</li>
+    </ul>
+  </article>
+</section>
+
+<footer class="doc-foot">
+  <span>캠핑음식 도우미 · <b>design/redesign-2026-11</b> · 구현 전 시안 (2026.11)</span>
+  <span>이미지: 시안용 생성 이미지 · 폰트: Do Hyeon / Gothic A1 (Google Fonts)</span>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var phone = document.getElementById('phone');
+  var screens = Array.prototype.slice.call(phone.querySelectorAll('[data-screen]'));
+  var NAMES = {home:'홈 · 오늘의 추천', prep:'준비물 · 장보기', recipe:'레시피 · 조리 모드', camp:'캠핑지 탐색', plan:'주간 식단표', menu:'전체 메뉴 시트'};
+  var DESC = {home:'01 · 사진 히어로 + 3초 픽', prep:'02 · 태그 · 진행률 · 체크', recipe:'03 · 단계 · 타이머', camp:'04 · 지도 · 거리 필터', plan:'05 · 2박 3일 장박', menu:'06 · 8개 진입점'};
+  var ORDER = ['home','prep','recipe','camp','plan','menu'];
+  var current = 'home';
+  var capB = document.getElementById('phoneCaption');
+  var capS = document.getElementById('phoneCaptionSub');
+
+  function show(name){
+    if(!NAMES[name]) return;
+    current = name;
+    screens.forEach(function(s){ s.toggleAttribute('data-on', s.getAttribute('data-screen')===name); });
+    capB.textContent = NAMES[name];
+    capS.textContent = DESC[name];
+    document.querySelectorAll('.side [data-goto]').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-goto')===name));
+    });
+    var body = phone.querySelector('[data-screen="'+name+'"] .screen-body');
+    if(body && name!=='menu') body.scrollTop = 0;
+  }
+
+  // 화면 이동(위임) — 폰 안 버튼과 사이드 패널이 같은 동작을 쓴다
+  document.addEventListener('click', function(e){
+    var goto = e.target.closest('[data-goto]');
+    if(goto){ e.preventDefault(); show(goto.getAttribute('data-goto')); }
+  });
+
+  // 테마 — 문서 셸(툴바·사이드패널)과 폰 안쪽을 같이 바꾼다
+  var root = document.documentElement;
+  function setTheme(t, fromPhone){
+    root.setAttribute('data-theme', t);
+    phone.setAttribute('data-theme', t);
+    document.querySelectorAll('[data-theme][aria-pressed]').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-theme')===t));
+    });
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-theme]');
+    if(t && t.tagName==='BUTTON'){ e.preventDefault(); setTheme(t.getAttribute('data-theme')); return; }
+    var toggle = e.target.closest('[data-a="theme"]');
+    if(toggle){ setTheme(phone.getAttribute('data-theme')==='light' ? 'dark' : 'light'); }
+  });
+
+  // 체크리스트
+  var TOTAL = 23;
+  function refreshPrep(){
+    var items = Array.prototype.slice.call(phone.querySelectorAll('[data-checklist] .item'));
+    if(!items.length) return;
+    var done = items.filter(function(i){ return i.classList.contains('done'); }).length;
+    var pct = Math.round(15 / TOTAL * 100 + (done - 4) * 2.2);
+    var pctEl = document.getElementById('prepPct');
+    var leftEl = document.getElementById('prepLeft');
+    if(pctEl) pctEl.textContent = Math.max(0, Math.min(100, pct)) + '%';
+    if(leftEl) leftEl.textContent = Math.max(0, 8 - (done - 4)) + '개만 더 챙기면 끝나요';
+  }
+  phone.addEventListener('click', function(e){
+    var item = e.target.closest('[data-checklist] .item');
+    if(item){
+      item.classList.toggle('done');
+      item.setAttribute('aria-checked', String(item.classList.contains('done')));
+      refreshPrep();
+      return;
+    }
+    var all = e.target.closest('[data-a="select-all"]');
+    if(all){
+      var group = all.closest('.sec-head').nextElementSibling;
+      if(group){
+        Array.prototype.forEach.call(group.querySelectorAll('.item'), function(it){
+          it.classList.add('done'); it.setAttribute('aria-checked','true');
+        });
+        refreshPrep();
+      }
+    }
+  });
+  phone.addEventListener('keydown', function(e){
+    if((e.key===' '||e.key==='Enter') && e.target.classList && e.target.classList.contains('item')){
+      e.preventDefault(); e.target.click();
+    }
+  });
+
+  // 세그먼트/칩/날짜 토글
+  function exclusiveGroup(btn, selector){
+    var group = btn.closest(selector);
+    if(!group) return;
+    Array.prototype.forEach.call(group.querySelectorAll('button'), function(b){ b.setAttribute('aria-pressed','false'); });
+    btn.setAttribute('aria-pressed','true');
+  }
+  phone.addEventListener('click', function(e){
+    var seg = e.target.closest('.seg-tabs button');
+    if(seg){ exclusiveGroup(seg, '.seg-tabs'); return; }
+    var day = e.target.closest('.days button');
+    if(day){ exclusiveGroup(day, '.days'); return; }
+    var chip = e.target.closest('.chip-row .chip');
+    if(chip){ chip.setAttribute('aria-pressed', chip.getAttribute('aria-pressed')==='true' ? 'false' : 'true'); return; }
+  });
+
+  // 타이머 데모
+  var secs = 252, running = false, tick = null;
+  var btn = document.getElementById('timerBtn');
+  var mode = document.getElementById('timerMode');
+  function fmt(s){ var m = Math.floor(s/60), r = s%60; return (m<10?'0':'')+m+':'+(r<10?'0':'')+r; }
+  function renderTimer(){
+    if(btn) btn.textContent = fmt(secs);
+    if(mode) mode.textContent = running ? '작동 중' : '대기';
+    if(btn){ btn.classList.toggle('paused', !running); }
+  }
+  phone.addEventListener('click', function(e){
+    if(e.target.closest('[data-a="timer-toggle"]') || e.target.closest('#timerBtn')){
+      running = !running;
+      if(running){
+        clearInterval(tick);
+        tick = setInterval(function(){
+          if(secs>0){ secs--; renderTimer(); }
+          else { clearInterval(tick); running = false; renderTimer(); }
+        }, 1000);
+      } else if(tick){ clearInterval(tick); tick = null; }
+      renderTimer();
+    }
+  });
+  renderTimer();
+
+  // 키보드 좌우 이동
+  document.addEventListener('keydown', function(e){
+    if(e.target.matches('input, textarea')) return;
+    if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
+      var i = ORDER.indexOf(current);
+      var next = (i + (e.key==='ArrowRight' ? 1 : ORDER.length-1)) % ORDER.length;
+      show(ORDER[next]);
+    }
+    if(e.key==='Escape') show('home');
+  });
+
+  setTheme('dark');
+  show('home');
+})();
+</script>
+</body>
+</html>
