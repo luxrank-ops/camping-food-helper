@@ -55,6 +55,10 @@
   --tag-prep-bg:rgba(126,166,255,.13); --tag-prep-line:rgba(126,166,255,.30); --tag-prep-fg:#A8C7FF;
   --tag-pack-bg:rgba(230,236,175,.13); --tag-pack-line:rgba(230,236,175,.28); --tag-pack-fg:var(--pop);
   --tag-buy-bg:var(--soft);            --tag-buy-line:rgba(255,122,89,.32);  --tag-buy-fg:var(--ember);
+  /* 완료 상태 — 체크박스 채움과 체크 표시 */
+  --cb-on:#6FD3A0; --cb-mark:#08261A;
+  /* 진행률 요약 점 — 히어로(어두운 면) 위 기준 */
+  --dot-prep:#A8C7FF; --dot-pack:#E6ECAF; --dot-buy:#FFB69F;
   --shadow:0 20px 40px -28px rgba(0,0,0,.9); --shadow-up:0 24px 44px -18px rgba(0,0,0,.95);
   --r-sm:10px; --r-md:14px; --r-lg:18px; --r-card:22px; --r-sheet:28px;
   --font-display:'Do Hyeon','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
@@ -75,6 +79,8 @@
   --tag-prep-bg:rgba(37,86,168,.10); --tag-prep-line:rgba(37,86,168,.26); --tag-prep-fg:#1E5296;
   --tag-pack-bg:rgba(31,77,60,.08);  --tag-pack-line:rgba(31,77,60,.20);  --tag-pack-fg:#1F4D3C;
   --tag-buy-bg:var(--soft);          --tag-buy-line:rgba(192,57,26,.28);  --tag-buy-fg:var(--ember);
+  --cb-on:#1B7A4B; --cb-mark:#FFFFFF;
+  --dot-prep:#A8C7FF; --dot-pack:#E6ECAF; --dot-buy:#FFB69F;
   --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
 }
 @media (prefers-color-scheme: light){
@@ -91,6 +97,8 @@
   --tag-prep-bg:rgba(37,86,168,.10); --tag-prep-line:rgba(37,86,168,.26); --tag-prep-fg:#1E5296;
   --tag-pack-bg:rgba(31,77,60,.08);  --tag-pack-line:rgba(31,77,60,.20);  --tag-pack-fg:#1F4D3C;
   --tag-buy-bg:var(--soft);          --tag-buy-line:rgba(192,57,26,.28);  --tag-buy-fg:var(--ember);
+  --cb-on:#1B7A4B; --cb-mark:#FFFFFF;
+  --dot-prep:#A8C7FF; --dot-pack:#E6ECAF; --dot-buy:#FFB69F;
   --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
   }
 }
@@ -217,8 +225,24 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .dish-pill{font-size:12px;font-weight:700;background:rgba(255,255,255,.18);color:var(--hero-fg);padding:4px 10px;border-radius:999px}
 .prog{display:flex;align-items:center;gap:12px;margin-top:20px;font-size:14px;font-variant-numeric:tabular-nums}
 .prog b{font-size:20px;font-weight:900;color:var(--pop)}
-.track{flex:1;height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
-.track i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.prog .pct{font-size:12px;font-weight:900;color:var(--pop);white-space:nowrap}
+.track{flex:1;height:8px;background:rgba(255,255,255,.16);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--pop),var(--ember));
+  transition:width .35s cubic-bezier(.22,1,.36,1)}
+.track.is-done i{background:linear-gradient(90deg,var(--ok),var(--pop))}
+/* 진행 요약 — "집에서 2 · 챙기기 4 · 현장 2 남았어요" */
+.prog-sub{margin-top:8px;font-size:12px;font-weight:700;color:var(--hero-fg);opacity:.82;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.prog-sub .pd{display:inline-flex;align-items:center;gap:5px}
+.prog-sub .pd+.pd{padding-left:2px}
+.prog-sub .sep{opacity:.45;font-weight:900}
+.prog-sub .rest{margin-left:6px;opacity:.72}
+.prog-sub .pd i{width:7px;height:7px;border-radius:99px;display:inline-block;flex:none}
+/* 점은 히어로(항상 어두운 면) 위에 놓이므로 카드용 --tag-*-fg 를 쓰지 않는다 */
+.prog-sub .pd.prep i{background:var(--dot-prep)}
+.prog-sub .pd.pack i{background:var(--dot-pack)}
+.prog-sub .pd.buy i{background:var(--dot-buy)}
+.prog-sub .pd b{font-weight:900;opacity:1}
 .group h3{font-size:17px;font-weight:900;margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline;letter-spacing:-.3px}
 .group h3 small{font-size:12px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;
   background:var(--chip);border-radius:999px;padding:2px 9px}
@@ -227,9 +251,14 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .item{border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
 .item label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;cursor:pointer}
-.item input{appearance:none;-webkit-appearance:none;position:relative;width:26px;height:26px;margin:0;border:2px solid var(--muted);border-radius:50%;background:transparent;cursor:pointer}
-.item input:checked{background:var(--ok);border-color:var(--ok);box-shadow:0 3px 10px color-mix(in srgb,var(--ok) 34%,transparent)}
-.item input:checked::after{content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;border:solid var(--ok-fg);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.item input{appearance:none;-webkit-appearance:none;position:relative;width:26px;height:26px;margin:0;
+  border:1.8px solid color-mix(in srgb,var(--muted) 60%,transparent);border-radius:9px;background:transparent;cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+@media (hover:hover){.item input:hover{border-color:var(--ok)}}
+.item input:checked{background:var(--cb-on);border-color:transparent;
+  box-shadow:0 4px 12px -2px color-mix(in srgb,var(--cb-on) 55%,transparent)}
+.item input:checked::after{content:"";position:absolute;left:8px;top:4px;width:6px;height:11px;
+  border:solid var(--cb-mark);border-width:0 2.8px 2.8px 0;transform:rotate(44deg);border-radius:1px}
 .item .txt{min-width:0;overflow-wrap:anywhere}
 .item .txt b{font-weight:700}
 .item .txt small{display:block;color:var(--muted);font-size:13px}
@@ -1201,6 +1230,20 @@ input,select,textarea{ font-size:16px !important; }
 @media(max-width:380px){.guestbook-fields{grid-template-columns:1fr}.guestbook-compose{padding:16px}.guestbook-index{font-size:9px}}
 
 
+/* ── 오프라인 배지 — 네트워크가 끊겨도 조리 모드는 계속 쓸 수 있음을 알린다 ── */
+.offline-badge{position:fixed;left:50%;transform:translateX(-50%);top:calc(8px + env(safe-area-inset-top,0px));
+  z-index:80;display:none;align-items:center;gap:7px;max-width:calc(100vw - 24px);
+  padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:800;letter-spacing:-.2px;
+  background:var(--soft);color:var(--ember);border:1px solid var(--tag-buy-line);
+  box-shadow:0 12px 28px -10px rgba(0,0,0,.6);
+  animation:offline-in .24s ease}
+.offline-badge[data-on="true"]{display:inline-flex}
+.offline-badge .dot{width:7px;height:7px;border-radius:99px;background:var(--ember);flex:none;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--ember) 26%,transparent)}
+@keyframes offline-in{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(prefers-reduced-motion:reduce){.offline-badge{animation:none}}
+body.is-offline .offline-only{display:block}
+
 /* ── 표면·히어로 마감 (색은 위 :root 토큰에서만 가져온다) ── */
 body{
   background-color:var(--bg-deep);
@@ -1282,6 +1325,11 @@ body.auth-locked{padding-block:14px 40px}
 </head>
 <body>
 <div class="app" id="app"></div>
+<!-- 오프라인 배지: 네트워크가 끊겨도 조리 모드는 계속 쓸 수 있다는 걸 알린다 -->
+<div class="offline-badge" id="offline-badge" role="status" aria-live="polite" data-on="false">
+  <span class="dot" aria-hidden="true"></span>
+  <span id="offline-badge-text">오프라인 · 저장된 정보로 계속 쓸 수 있어요</span>
+</div>
 <!-- 방문자 카운터 플로팅 위젯: 오늘 방문자 · 누적 방문자 (화면을 다시 그려도 사라지지 않게 #app 밖에 둔다) -->
 <aside class="visit-fab" id="visit-fab" data-open="false" aria-label="방문자 통계">
   <div class="visit-fab-card">
@@ -6481,7 +6529,15 @@ body.auth-locked{padding-block:14px 40px}
     if(ui.err)h+='<p class="err" role="alert">'+esc(ui.err)+'</p>';
     h+='<section class="hero dish">'+SCENE+'<p class="brand">'+list.people+'명 기준 · '+dishes.length+'가지 메뉴</p><h2>'+esc(list.dish)+'</h2><p class="sum">'+esc(list.summary||list.reason)+'</p>'+
     (dishes.length>1?'<div class="dish-pills">'+dishes.map(function(d){return '<span class="dish-pill">⛺ '+esc(d)+'</span>'}).join('')+'</div>':'')+
-    '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div>'+
+    '<div class="prog"><span>챙김 <b>'+done+'</b>/'+total+'</span><div class="track'+(total&&done===total?' is-done':'')+'" role="progressbar" aria-label="챙긴 비율" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div><span class="pct">'+pct+'%</span></div>'+
+    (function(){
+      var left={prep:0,pack:0,buy:0};
+      list.items.forEach(function(x){ if(!x.checked && left[x.tag]!=null) left[x.tag]++; });
+      var chips=[['prep','집에서'],['pack','챙기기'],['buy','현장']].filter(function(p){return left[p[0]]>0})
+        .map(function(p){return '<span class="pd '+p[0]+'"><i></i>'+p[1]+' <b>'+left[p[0]]+'</b></span>'});
+      if(!chips.length) return '<p class="prog-sub">✅ 전부 챙겼어요. 좋은 캠핑 되세요!</p>';
+      return '<p class="prog-sub">'+chips.join('<span class="sep" aria-hidden="true">·</span>')+'<span class="rest">남았어요</span></p>';
+    })()+
     '<div style="margin-top:12px;font-size:14px;color:var(--hero-fg);opacity:.9"><span id="total-budget-line">💰 총 예산: '+formatCurrency(calculateTotalBudget())+'</span>'+
     (getPrepItems().length>0?'<span style="margin-left:12px">📋 집에서 미리 손질: '+getPrepItems().length+'개</span>':'')+'</div></section>';
 
@@ -8340,6 +8396,26 @@ body.auth-locked{padding-block:14px 40px}
     }
   });
 
+  /* 오프라인 감지 — 배지 표시 + body 클래스로 하위 UI 가 반응할 수 있게 한다.
+     캠핑장은 전파가 약한 곳이 많아 "지금 저장된 것만으로도 쓸 수 있다"를 알려 주는 게 목적. */
+  function initOfflineBadge(){
+    var badge=document.getElementById('offline-badge');
+    if(!badge||typeof navigator==='undefined'||typeof navigator.onLine!=='boolean')return;
+    function sync(){
+      var off=!navigator.onLine;
+      badge.setAttribute('data-on',off?'true':'false');
+      document.body.classList.toggle('is-offline',off);
+      // 조리 모드 중에는 문구를 바꿔 다음 단계로 넘어갈 수 있음을 강조한다.
+      var txt=document.getElementById('offline-badge-text');
+      if(txt)txt.textContent=(ui.tab==='list'&&ui.cookMode)
+        ? '오프라인 · 조리 단계는 그대로 볼 수 있어요'
+        : '오프라인 · 저장된 정보로 계속 쓸 수 있어요';
+    }
+    window.addEventListener('online',sync);
+    window.addEventListener('offline',sync);
+    sync();
+  }
+
   /* 로그인 확인 뒤에만 앱을 그린다(비로그인 상태에서는 로그인·회원가입 화면만 보인다). */
   var APP_STARTED=false;
   function startApp(){
@@ -8352,6 +8428,7 @@ body.auth-locked{padding-block:14px 40px}
     normalizePersistedState();
     render();
     initVisitorCounter();
+    initOfflineBadge();
   (async function(){
     try{sampleFn=(window.claude&&window.claude.use)?await window.claude.use('sample'):null}catch(e){sampleFn=null}
     if(!sampleFn){
