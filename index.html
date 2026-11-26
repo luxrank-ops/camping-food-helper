@@ -59,6 +59,8 @@
   --cb-on:#6FD3A0; --cb-mark:#08261A;
   /* 진행률 요약 점 — 히어로(어두운 면) 위 기준 */
   --dot-prep:#A8C7FF; --dot-pack:#E6ECAF; --dot-buy:#FFB69F;
+  /* 입력 필드 테두리 — 컨트롤 경계는 3:1(WCAG 1.4.11). --line 은 장식용이라 더 옅다 */
+  --line-field:#6A8D77;
   --shadow:0 20px 40px -28px rgba(0,0,0,.9); --shadow-up:0 24px 44px -18px rgba(0,0,0,.95);
   --r-sm:10px; --r-md:14px; --r-lg:18px; --r-card:22px; --r-sheet:28px;
   --font-display:'Do Hyeon','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
@@ -81,6 +83,7 @@
   --tag-buy-bg:var(--soft);          --tag-buy-line:rgba(192,57,26,.28);  --tag-buy-fg:var(--ember);
   --cb-on:#1B7A4B; --cb-mark:#FFFFFF;
   --dot-prep:#A8C7FF; --dot-pack:#E6ECAF; --dot-buy:#FFB69F;
+  --line-field:#8C8369;
   --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
 }
 @media (prefers-color-scheme: light){
@@ -99,6 +102,7 @@
   --tag-buy-bg:var(--soft);          --tag-buy-line:rgba(192,57,26,.28);  --tag-buy-fg:var(--ember);
   --cb-on:#1B7A4B; --cb-mark:#FFFFFF;
   --dot-prep:#A8C7FF; --dot-pack:#E6ECAF; --dot-buy:#FFB69F;
+  --line-field:#8C8369;
   --shadow:0 18px 34px -24px rgba(19,38,29,.35); --shadow-up:0 26px 44px -22px rgba(19,38,29,.4); color-scheme:light;
   }
 }
@@ -179,13 +183,15 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .rec>.rec-facts{padding-inline:16px}
 .rec>.rec-ings{margin-inline:16px;margin-bottom:14px}
 .rec .rec-img-name{font-size:22px;letter-spacing:-.3px}
-/* 사진 위 그라데이션 스크림 — 흰 글씨 규칙(시안 §2) */
+/* 사진 위 그라데이션 스크림 — 흰 글씨 규칙(시안 §2)
+   주의: 그라데이션 끝이 --pop(연한 모스)이라 스크림이 약하면 흰 글씨가 1.4:1 까지 떨어진다.
+   위쪽부터 최소 .60 을 깔아 전 구간에서 4.5:1 을 넘긴다(실측 최악 4.88). */
 .rec .rec-img-ph{position:relative;isolation:isolate}
 .rec .rec-img-ph::after{content:"";position:absolute;inset:0;z-index:-1;
-  background:linear-gradient(180deg,rgba(6,23,15,0) 26%,rgba(6,23,15,.55) 68%,rgba(6,23,15,.88))}
+  background:linear-gradient(180deg,rgba(6,23,15,.60) 0%,rgba(6,23,15,.74) 46%,rgba(6,23,15,.92) 100%)}
 .rec .rec-img-ph,.rec .rec-img-ph *{color:#F5EFE2}
-.rec .rec-img-name{text-shadow:0 1px 8px rgba(6,23,15,.5)}
-.rec .rec-img-btn{background:rgba(255,255,255,.94);color:var(--ember-deep)}
+.rec .rec-img-name{text-shadow:0 1px 8px rgba(6,23,15,.55)}
+.rec .rec-img-btn{background:rgba(255,255,255,.96);color:#8E2C12}
 .rec h3{font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.2;min-width:0;overflow-wrap:anywhere;letter-spacing:-.4px}
 .rec .rec-top+.rec-facts{margin-top:2px}
 .rec .btn.primary,.rec .btn.pop{border-radius:var(--r-md)}
@@ -197,9 +203,9 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .rec-facts .fact{font-size:13px;color:var(--muted);background:var(--bg);border:1px solid var(--cream-line);border-radius:999px;padding:5px 11px;font-variant-numeric:tabular-nums;font-weight:700}
 .rec-facts .fact b{color:var(--fg);font-weight:900}
 /* 추천 카드 사진 자리 — 사진은 '요청 시에만' 생성하므로 기본은 버튼이 있는 자리표시 카드 */
-.rec-img-ph{width:100%;min-height:132px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 14px;text-align:center;color:var(--brand-fg)}
+.rec-img-ph{width:100%;min-height:132px;background:linear-gradient(135deg,var(--brand),var(--pop));border-radius:14px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 14px;text-align:center;color:#F5EFE2}
 .rec-img-emoji{font-size:20px;line-height:1}
-.rec-img-name{font-family:var(--font-display);font-size:18px;line-height:1.25;word-break:keep-all;color:var(--brand-fg)}
+.rec-img-name{font-family:var(--font-display);font-size:18px;line-height:1.25;word-break:keep-all}
 .rec-img-btn{background:#fff;color:var(--ember-deep);border:0;font-weight:900;font-size:12.5px;min-height:38px;padding:0 14px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.16)}
 .rec-img-note{font-size:12px;font-weight:700;line-height:1.35;opacity:.95;word-break:keep-all}
 .why-lab{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.04em;background:var(--pop);color:var(--pop-fg);border-radius:8px;padding:2px 8px;margin-right:6px;vertical-align:1px}
@@ -208,7 +214,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 
 /* 직접 입력, 입력줄 */
 .addrow{display:flex;gap:8px;margin-top:12px}
-.addrow input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
+.addrow input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line-field);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
 .addrow .btn{min-height:48px;border-radius:16px}
 
 /* 로딩 */
@@ -322,7 +328,7 @@ details li{margin-bottom:8px}
 @media(max-width:420px){.loc-head{flex-wrap:wrap;gap:4px}.loc-card .loc-heading{flex:1 1 100%}.loc-head-actions{width:100%;justify-content:space-between;gap:8px}.loc-head-actions .link{font-size:12px!important}}
 .ac-wrap{position:relative}
 .loc-row{display:flex;gap:8px;align-items:stretch}
-.loc-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
+.loc-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line-field);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 14px;font:inherit}
 .loc-row .btn{min-height:48px;border-radius:16px;white-space:nowrap}
 .ac-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-up);max-height:min(56vh,360px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .ac-list[hidden]{display:none}
@@ -410,7 +416,7 @@ details li{margin-bottom:8px}
 .camp-browse-hero p{margin:0;font-size:13px;opacity:.9}
 .camp-ctrls{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .camp-search-bar{display:flex;gap:8px;align-items:stretch;position:relative}
-.camp-search-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 36px 0 14px;font:inherit}
+.camp-search-input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line-field);background:var(--bg);color:var(--fg);border-radius:16px;padding:0 36px 0 14px;font:inherit}
 .camp-search-clear{position:absolute;right:84px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;padding:8px}
 .camp-scroll-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
 .camp-scroll-row::-webkit-scrollbar{display:none}
@@ -1181,6 +1187,8 @@ input,select,textarea{ font-size:16px !important; }
 @media (pointer:coarse){
   .chip,.btn,.loc-title-toggle,.fold-head,.wx-title-toggle,.ac-item,.camp-item-name{ min-height:44px; }
   .visit-fab-toggle{ min-width:30px; min-height:30px; }
+  /* 별점은 40px 원본 → 손가락 기준 44px 로. 아이콘 비율은 그대로 */
+  .star-btn{ width:44px; height:44px; }
 }
 
 /* ── 다크모드·라이트모드 탭바 가독성 — S24 Ultra AMOLED/밝은 야외 ── */
